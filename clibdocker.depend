@@ -1,8 +1,10 @@
 # depslib dependency file v1.0
-1544362212 source:/home/abhishek/programs/clibdocker/main.c
+1544366716 source:/home/abhishek/programs/clibdocker/main.c
 	<stdio.h>
 	<stdlib.h>
+	<string.h>
 	<curl/curl.h>
+	<json-c/json.h>
 
 1540815057 /usr/include/x86_64-linux-gnu/curl/curl.h
 	"curlver.h"

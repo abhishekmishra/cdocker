@@ -34,7 +34,13 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add directory="/usr/include/x86_64-linux-gnu" />
+			<Add directory="/usr/include/json-c" />
 		</Compiler>
+		<Linker>
+			<Add library="curl" />
+			<Add library="json-c" />
+		</Linker>
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>

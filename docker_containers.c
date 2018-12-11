@@ -89,6 +89,18 @@ DockerContainersList* docker_containers_list() {
 	    free(commandObj);
 	    printf("Command is %s.\n\n", listItem->command);
 
+	    json_object* createdObj;
+	    if (json_object_object_get_ex(containers_arr->array[i], "Created", &createdObj)) {
+	        const char* created = json_object_get_string(createdObj);
+	        sscanf(created, "%d", &(listItem->created));
+	    }
+	    free(createdObj);
+	    printf("Created is %ld.\n\n", listItem->created);
+
+//	    json_object* commandObj;
+//	    if (json_object_object_get_ex(containers_arr->array[i], "Command", &commandObj)) {
+//
+//	    }
 	}
 
 	return NULL;

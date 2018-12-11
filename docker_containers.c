@@ -45,8 +45,50 @@ DockerContainersList* docker_containers_list() {
 	        listItem->id = (char*)malloc((strlen(container_id) + 1) * sizeof(char));
 	        strcpy(listItem->id, container_id);
 	    }
+	    free(idObj);
+	    printf("Container id is %s.\n\n", listItem->id);
 
-	    printf("Container id is %s\n\n.", listItem->id);
+	    json_object* namesObj;
+	    if (json_object_object_get_ex(containers_arr->array[i], "Names", &namesObj)) {
+	    	struct array_list* names_arr = json_object_get_array(namesObj);
+	    	listItem->names = (char**)malloc(names_arr->length * sizeof(char*));
+	    	for(int ni = 0; ni < names_arr->length; ni++) {
+		        const char* name_str = json_object_get_string(names_arr->array[ni]);
+		        printf("%s\n", name_str);
+		        listItem->names[ni] = (char*)malloc((strlen(name_str) + 1) * sizeof(char));
+		        strcpy(listItem->names[ni], name_str);
+	    	}
+	    	listItem->num_names = names_arr->length;
+	    }
+	    free(namesObj);
+
+	    json_object* imageObj;
+	    if (json_object_object_get_ex(containers_arr->array[i], "Image", &imageObj)) {
+	        const char* image = json_object_get_string(imageObj);
+	        listItem->image = (char*)malloc((strlen(image) + 1) * sizeof(char));
+	        strcpy(listItem->image, image);
+	    }
+	    free(imageObj);
+	    printf("Image is %s.\n\n", listItem->image);
+
+	    json_object* imageIdObj;
+	    if (json_object_object_get_ex(containers_arr->array[i], "ImageID", &imageIdObj)) {
+	        const char* imageId = json_object_get_string(imageIdObj);
+	        listItem->image_id = (char*)malloc((strlen(imageId) + 1) * sizeof(char));
+	        strcpy(listItem->image_id, imageId);
+	    }
+	    free(imageIdObj);
+	    printf("Image ID is %s.\n\n", listItem->image_id);
+
+	    json_object* commandObj;
+	    if (json_object_object_get_ex(containers_arr->array[i], "Command", &commandObj)) {
+	        const char* command = json_object_get_string(commandObj);
+	        listItem->command = (char*)malloc((strlen(command) + 1) * sizeof(char));
+	        strcpy(listItem->command, command);
+	    }
+	    free(commandObj);
+	    printf("Command is %s.\n\n", listItem->command);
+
 	}
 
 	return NULL;

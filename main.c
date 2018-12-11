@@ -6,6 +6,7 @@
 #include <json-c/json.h>
 
 #include "docker_connection_util.h"
+#include "docker_containers.h"
 
 char* docker_create_container()
 {
@@ -22,8 +23,8 @@ char* docker_create_container()
         char* container_id = json_object_get_string(idObj);
         id = (char*)malloc((strlen(container_id) + 1) * sizeof(char));
         strcpy(id, container_id);
-        printf("Container Id = %s\n", container_id);
-        printf("Container Id = %s\n", id);
+//        printf("Container Id = %s\n", container_id);
+//        printf("Container Id = %s\n", id);
     }
     else
     {
@@ -98,6 +99,10 @@ int main()
     docker_start_container(id);
     docker_wait_container(id);
     docker_stdout_container(id);
+
+    printf("Docker containers list");
+
+    docker_containers_list();
 
     curl_global_cleanup();
     return 0;

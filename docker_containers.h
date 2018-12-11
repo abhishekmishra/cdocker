@@ -76,4 +76,11 @@ typedef struct docker_containers_list_item_t {
 	int num_mounts;
 } DockerContainersListItem;
 
+typedef struct docker_containers_list_t {
+	DockerContainersListItem** containers;
+	int num_containers;
+} DockerContainersList;
+
+DockerContainersList* docker_containers_list();
+
 #endif /* DOCKER_CONTAINERS_H_ */

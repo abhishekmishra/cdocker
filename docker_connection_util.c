@@ -86,7 +86,7 @@ int docker_api_post(char* url, char* post_data, struct MemoryStruct *chunk)
              */
 
             printf("%lu bytes retrieved\n", (unsigned long)chunk->size);
-            printf("Data is [%s].\n", chunk->memory);
+            //printf("Data is [%s].\n", chunk->memory);
         }
         /* always cleanup */
         curl_easy_cleanup(curl);
@@ -140,7 +140,7 @@ int docker_api_get(char* url, struct MemoryStruct *chunk)
              */
 
             printf("%lu bytes retrieved\n", (unsigned long)chunk->size);
-            printf("Data is [%s].\n", chunk->memory);
+            //printf("Data is [%s].\n", chunk->memory);
         }
         /* always cleanup */
         curl_easy_cleanup(curl);

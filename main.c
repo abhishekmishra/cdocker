@@ -20,7 +20,7 @@ char* docker_create_container()
     json_object* idObj;
     if (json_object_object_get_ex(new_obj, "Id", &idObj))
     {
-        char* container_id = json_object_get_string(idObj);
+        const char* container_id = json_object_get_string(idObj);
         id = (char*)malloc((strlen(container_id) + 1) * sizeof(char));
         strcpy(id, container_id);
 //        printf("Container Id = %s\n", container_id);

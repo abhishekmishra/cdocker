@@ -75,12 +75,18 @@ DockerContainersList* docker_containers_list() {
 	struct array_list* containers_arr = json_object_get_array(new_obj);
 	int len = containers_arr->length;
 
+	DockerContainersList* clist = (DockerContainersList*) malloc(
+			sizeof(DockerContainersList));
+	clist->num_containers = len;
+	clist->containers = (DockerContainersListItem**) malloc(
+			len * sizeof(DockerContainersListItem));
+
 	for (int i = 0; i < containers_arr->length; i++) {
 		printf("Item #%d is %s\n", i,
 				json_object_to_json_string(containers_arr->array[i]));
 		DockerContainersListItem* listItem = (DockerContainersListItem*) malloc(
 				sizeof(DockerContainersListItem));
-
+		clist->containers[i] = listItem;
 		listItem->id = get_attr_str(containers_arr->array[i], "Id");
 
 		json_object* namesObj;
@@ -187,8 +193,11 @@ DockerContainersList* docker_containers_list() {
 										* sizeof(DockerContainerNetworkSettingsNetwork*));
 				int ns_count = 0;
 				json_object_object_foreach(networksObj, k, v) {
+					listItem->network_settings->network_items[ns_count] =
+							(DockerContainerNetworkSettingsNetwork*) malloc(
+									sizeof(DockerContainerNetworkSettingsNetwork));
 					listItem->network_settings->network_items[ns_count]->name =
-							k;
+							make_defensive_copy(k);
 					listItem->network_settings->network_items[ns_count]->item =
 							(DockerContainerNetworkSettingsNetworkItem*) malloc(
 									sizeof(DockerContainerNetworkSettingsNetworkItem));
@@ -224,20 +233,29 @@ DockerContainersList* docker_containers_list() {
 			listItem->mounts = (DockerContainerMount**) malloc(
 					mounts_arr->length * sizeof(DockerContainerMount*));
 			for (int ni = 0; ni < mounts_arr->length; ni++) {
-				listItem->mounts[ni] = (DockerContainerMount*)malloc(sizeof(DockerContainerMount));
-				listItem->mounts[ni]->name = get_attr_str(mounts_arr->array[ni], "Name");
-				listItem->mounts[ni]->type = get_attr_str(mounts_arr->array[ni], "Type");
-				listItem->mounts[ni]->source = get_attr_str(mounts_arr->array[ni], "Source");
-				listItem->mounts[ni]->destination = get_attr_str(mounts_arr->array[ni], "Destination");
-				listItem->mounts[ni]->driver = get_attr_str(mounts_arr->array[ni], "Driver");
-				listItem->mounts[ni]->mode = get_attr_str(mounts_arr->array[ni], "Mode");
-				listItem->mounts[ni]->rw = get_attr_int(mounts_arr->array[ni], "Read");
-				listItem->mounts[ni]->propagation = get_attr_str(mounts_arr->array[ni], "Propagation");
+				listItem->mounts[ni] = (DockerContainerMount*) malloc(
+						sizeof(DockerContainerMount));
+				listItem->mounts[ni]->name = get_attr_str(mounts_arr->array[ni],
+						"Name");
+				listItem->mounts[ni]->type = get_attr_str(mounts_arr->array[ni],
+						"Type");
+				listItem->mounts[ni]->source = get_attr_str(
+						mounts_arr->array[ni], "Source");
+				listItem->mounts[ni]->destination = get_attr_str(
+						mounts_arr->array[ni], "Destination");
+				listItem->mounts[ni]->driver = get_attr_str(
+						mounts_arr->array[ni], "Driver");
+				listItem->mounts[ni]->mode = get_attr_str(mounts_arr->array[ni],
+						"Mode");
+				listItem->mounts[ni]->rw = get_attr_int(mounts_arr->array[ni],
+						"Read");
+				listItem->mounts[ni]->propagation = get_attr_str(
+						mounts_arr->array[ni], "Propagation");
 			}
 			listItem->num_names = mounts_arr->length;
 			free(mountsObj);
 		}
 	}
 
-	return NULL;
+	return clist;
 }

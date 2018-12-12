@@ -47,6 +47,7 @@ typedef struct docker_container_network_settings_t {
 
 typedef struct docker_container_mount_t {
 	char* name;
+	char* type;
 	char* source;
 	char* destination;
 	char* driver;
@@ -71,6 +72,7 @@ typedef struct docker_containers_list_item_t {
 	int num_labels;
 	long long size_rw;
 	long long size_root_fs;
+	DockerContainerHostConfig* hostConfig;
 	DockerContainerNetworkSettings* network_settings;
 	DockerContainerMount** mounts;
 	int num_mounts;

@@ -12,6 +12,46 @@
 #include "docker_containers.h"
 #include "docker_connection_util.h"
 
+char* make_defensive_copy(const char* from) {
+	char* to = (char*) malloc((strlen(from) + 1) * sizeof(char));
+	strcpy(to, from);
+	return to;
+}
+
+char* get_attr_str(json_object* obj, char* name) {
+	json_object* extractObj;
+	char* attr = NULL;
+	if (json_object_object_get_ex(obj, name, &extractObj)) {
+		attr = make_defensive_copy(json_object_get_string(extractObj));
+		free(extractObj);
+	}
+	printf("%s is |%s|.\n\n", name, attr);
+	return attr;
+}
+
+int get_attr_int(json_object* obj, char* name) {
+	json_object* extractObj;
+	int attr = -1;
+	if (json_object_object_get_ex(obj, name, &extractObj)) {
+		sscanf(json_object_get_string(extractObj), "%d", &attr);
+		free(extractObj);
+	}
+	printf("%s is |%d|.\n\n", name, attr);
+	return attr;
+}
+
+long long get_attr_long_long(json_object* obj, char* name) {
+	json_object* extractObj;
+	long long attr = -1;
+	if (json_object_object_get_ex(obj, name, &extractObj)) {
+		sscanf(json_object_get_string(extractObj), "%lld", &attr);
+		free(extractObj);
+	}
+	printf("%s is |%lld|.\n\n", name, attr);
+	return attr;
+}
+
+
 DockerContainersList* docker_containers_list() {
 	char* method = "json";
 	char* containers = "containers/";
@@ -39,68 +79,51 @@ DockerContainersList* docker_containers_list() {
 		DockerContainersListItem* listItem = (DockerContainersListItem*) malloc(
 				sizeof(DockerContainersListItem));
 
-	    json_object* idObj;
-	    if (json_object_object_get_ex(containers_arr->array[i], "Id", &idObj)) {
-	        const char* container_id = json_object_get_string(idObj);
-	        listItem->id = (char*)malloc((strlen(container_id) + 1) * sizeof(char));
-	        strcpy(listItem->id, container_id);
-	    }
-	    free(idObj);
-	    printf("Container id is %s.\n\n", listItem->id);
+		listItem->id = get_attr_str(containers_arr->array[i], "Id");
 
-	    json_object* namesObj;
-	    if (json_object_object_get_ex(containers_arr->array[i], "Names", &namesObj)) {
-	    	struct array_list* names_arr = json_object_get_array(namesObj);
-	    	listItem->names = (char**)malloc(names_arr->length * sizeof(char*));
-	    	for(int ni = 0; ni < names_arr->length; ni++) {
-		        const char* name_str = json_object_get_string(names_arr->array[ni]);
-		        printf("%s\n", name_str);
-		        listItem->names[ni] = (char*)malloc((strlen(name_str) + 1) * sizeof(char));
-		        strcpy(listItem->names[ni], name_str);
-	    	}
-	    	listItem->num_names = names_arr->length;
-	    }
-	    free(namesObj);
+		json_object* namesObj;
+		if (json_object_object_get_ex(containers_arr->array[i], "Names",
+				&namesObj)) {
+			struct array_list* names_arr = json_object_get_array(namesObj);
+			listItem->names = (char**) malloc(
+					names_arr->length * sizeof(char*));
+			for (int ni = 0; ni < names_arr->length; ni++) {
+				listItem->names[ni] = make_defensive_copy(json_object_get_string(
+						names_arr->array[ni]));
+			}
+			listItem->num_names = names_arr->length;
+		}
+		free(namesObj);
 
-	    json_object* imageObj;
-	    if (json_object_object_get_ex(containers_arr->array[i], "Image", &imageObj)) {
-	        const char* image = json_object_get_string(imageObj);
-	        listItem->image = (char*)malloc((strlen(image) + 1) * sizeof(char));
-	        strcpy(listItem->image, image);
-	    }
-	    free(imageObj);
-	    printf("Image is %s.\n\n", listItem->image);
+		listItem->image = get_attr_str(containers_arr->array[i], "Image");
+		listItem->image_id = get_attr_str(containers_arr->array[i], "ImageID");
+		listItem->command = get_attr_str(containers_arr->array[i], "Command");
+		listItem->created = get_attr_long_long(containers_arr->array[i], "Created");
+		listItem->state = get_attr_str(containers_arr->array[i], "State");
+		listItem->status = get_attr_str(containers_arr->array[i], "Status");
 
-	    json_object* imageIdObj;
-	    if (json_object_object_get_ex(containers_arr->array[i], "ImageID", &imageIdObj)) {
-	        const char* imageId = json_object_get_string(imageIdObj);
-	        listItem->image_id = (char*)malloc((strlen(imageId) + 1) * sizeof(char));
-	        strcpy(listItem->image_id, imageId);
-	    }
-	    free(imageIdObj);
-	    printf("Image ID is %s.\n\n", listItem->image_id);
+		json_object* portsObj;
+		if (json_object_object_get_ex(containers_arr->array[i], "Ports",
+				&portsObj)) {
+			struct array_list* ports_arr = json_object_get_array(portsObj);
+			listItem->ports = (DockerContainerPorts**) malloc(
+					ports_arr->length * sizeof(DockerContainerPorts*));
+			listItem->num_ports = ports_arr->length;
+			for (int ni = 0; ni < ports_arr->length; ni++) {
+				listItem->ports[ni] = (DockerContainerPorts*) malloc(
+						sizeof(DockerContainerPorts));
 
-	    json_object* commandObj;
-	    if (json_object_object_get_ex(containers_arr->array[i], "Command", &commandObj)) {
-	        const char* command = json_object_get_string(commandObj);
-	        listItem->command = (char*)malloc((strlen(command) + 1) * sizeof(char));
-	        strcpy(listItem->command, command);
-	    }
-	    free(commandObj);
-	    printf("Command is %s.\n\n", listItem->command);
+				listItem->ports[ni]->private_port = get_attr_int(ports_arr->array[ni], "PrivatePort");
+				listItem->ports[ni]->public_port = get_attr_int(ports_arr->array[ni], "PublicPort");
+				listItem->ports[ni]->type = get_attr_str(ports_arr->array[ni], "Type");
+			}
+		}
+		free(portsObj);
 
-	    json_object* createdObj;
-	    if (json_object_object_get_ex(containers_arr->array[i], "Created", &createdObj)) {
-	        const char* created = json_object_get_string(createdObj);
-	        sscanf(created, "%d", &(listItem->created));
-	    }
-	    free(createdObj);
-	    printf("Created is %ld.\n\n", listItem->created);
+		//TODO: Labels
 
-//	    json_object* commandObj;
-//	    if (json_object_object_get_ex(containers_arr->array[i], "Command", &commandObj)) {
-//
-//	    }
+		listItem->size_rw = get_attr_long_long(containers_arr->array[i], "SizeRW");
+		listItem->size_root_fs = get_attr_long_long(containers_arr->array[i], "SizeRootFs");
 	}
 
 	return NULL;

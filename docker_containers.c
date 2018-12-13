@@ -5,11 +5,16 @@
  *      Author: abhishek
  */
 
+#include "docker_containers.h"
+
+#include <json-c/arraylist.h>
+#include <json-c/json_object.h>
+#include <json-c/json_tokener.h>
+#include <json-c/linkhash.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <json-c/json.h>
-#include "docker_containers.h"
+
 #include "docker_connection_util.h"
 
 char* make_defensive_copy(const char* from) {
@@ -86,6 +91,22 @@ DockerContainersList* docker_containers_list(int all, int limit, int size,
 		params[num_params] = (url_param*) malloc(sizeof(url_param));
 		params[num_params]->k = "size";
 		params[num_params]->v = "true";
+		num_params++;
+	}
+
+	if (filters) {
+		params[num_params] = (url_param*) malloc(sizeof(url_param));
+		params[num_params]->k = "filters";
+		//params[num_params]->v = (char*) malloc(1024 * sizeof(char));
+		json_object* fobj = json_object_new_object();
+		if (filters->num_name > 0) {
+			json_object* arr = json_object_new_array();
+			for(int j = 0; j < filters->num_name;j++) {
+				json_object_array_add(arr, json_object_new_string(filters->name[j]));
+			}
+			json_object_object_add(fobj, "name", arr);
+		}
+		params[num_params]->v = json_object_to_json_string(fobj);
 		num_params++;
 	}
 

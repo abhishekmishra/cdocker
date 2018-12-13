@@ -2,25 +2,33 @@
     "version": "0.2.1",
     "tasks": [
         {
-            "taskName": "run-clibdocker",
-            "appliesTo": "/",
-            "type": "default",
+            "taskName": "Run",
+            "appliesTo": "*",
+            "type": "launch",
             "command": "${env.COMSPEC}",
-            "args": [ "PATH=C:\\cygwin64\\bin;%PATH% && c:\\cygwin64\\bin\\bash /cygdrive/c/Users/abhis/code/clibdocker/run_cygwin_clibdocker.sh" ]
+            "args": [
+                "PATH=C:\\cygwin64\\bin;%PATH% && c:\\cygwin64\\bin\\bash /cygdrive/c/Users/abhis/code/clibdocker/run_cygwin_clibdocker.sh"
+            ]
         },
         {
-            "taskName": "build-clibdocker",
-            "appliesTo": "/",
-            "type": "default",
+            "taskName": "Build",
+            "appliesTo": "*.c",
+            "contextType": "build",
+            "type": "launch",
             "command": "${env.COMSPEC}",
-            "args": [ "PATH=C:\\cygwin64\\bin;%PATH% && c:\\cygwin64\\bin\\bash -c \"make -f Makefile.win64 all\"" ]
+            "args": [
+                "PATH=C:\\cygwin64\\bin;%PATH% && c:\\cygwin64\\bin\\bash -c \"make -f Makefile.win64 all\""
+            ]
         },
         {
-            "taskName": "clean-clibdocker",
-            "appliesTo": "/",
+            "taskName": "Clean",
+            "appliesTo": "*",
+            "contextType": "clean",
             "type": "default",
             "command": "${env.COMSPEC}",
-            "args": [ "PATH=C:\\cygwin64\\bin;%PATH% && c:\\cygwin64\\bin\\bash -c \"make clean -f Makefile.win64\"" ]
+            "args": [
+                "PATH=C:\\cygwin64\\bin;%PATH% && c:\\cygwin64\\bin\\bash -c \"make clean -f Makefile.win64\""
+            ]
         }
     ]
 }

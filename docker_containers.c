@@ -54,7 +54,7 @@ long long get_attr_long_long(json_object* obj, char* name) {
 	return attr;
 }
 
-DockerContainersList* docker_containers_list() {
+DockerContainersList* docker_containers_list(int all, int limit, int size, DockerContainersListFilter* filters) {
 	char* method = "json";
 	char* containers = "containers/";
 	char* url = (char*) malloc(

@@ -83,6 +83,24 @@ typedef struct docker_containers_list_t {
 	int num_containers;
 } DockerContainersList;
 
-DockerContainersList* docker_containers_list();
+typedef struct docker_containers_list_filter_t {
+	char* ancestor;
+	char* before;
+	char* expose;
+	int exited;
+	char* health;
+	char* id;
+	char* isolation;
+	int is_task;
+	char* label;
+	char* name;
+	char* network;
+	char* publish;
+	char* since;
+	char* status;
+	char* volume;
+}DockerContainersListFilter;
+
+DockerContainersList* docker_containers_list(int all, int limit, int size, DockerContainersListFilter* filters);
 
 #endif /* DOCKER_CONTAINERS_H_ */

@@ -102,7 +102,7 @@ int main()
 
     printf("Docker containers list");
 
-    DockerContainersList* containers = docker_containers_list();
+    DockerContainersList* containers = docker_containers_list(0, 0, 0, NULL);
     printf("Read %d containers.\n", containers->num_containers);
 
     curl_global_cleanup();

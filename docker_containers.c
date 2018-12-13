@@ -54,7 +54,8 @@ long long get_attr_long_long(json_object* obj, char* name) {
 	return attr;
 }
 
-DockerContainersList* docker_containers_list(int all, int limit, int size, DockerContainersListFilter* filters) {
+DockerContainersList* docker_containers_list(int all, int limit, int size,
+		DockerContainersListFilter* filters) {
 	char* method = "json";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
@@ -63,9 +64,35 @@ DockerContainersList* docker_containers_list(int all, int limit, int size, Docke
 	sprintf(url, "%s%s%s", URL, containers, method);
 	printf("List url is %s\n", url);
 
+	url_param** params = (url_param**) malloc(sizeof(url_param*) * 4);
+	int num_params = 0;
+
+	if (all > 0) {
+		params[num_params] = (url_param*) malloc(sizeof(url_param));
+		params[num_params]->k = "all";
+		params[num_params]->v = "true";
+		num_params++;
+	}
+
+	if (limit > 0) {
+		params[num_params] = (url_param*) malloc(sizeof(url_param));
+		params[num_params]->k = "limit";
+		params[num_params]->v = (char*) malloc(128 * sizeof(char));
+		sprintf(params[num_params]->v, "%d", limit);
+		num_params++;
+	}
+
+	if (size > 0) {
+		params[num_params] = (url_param*) malloc(sizeof(url_param));
+		params[num_params]->k = "size";
+		params[num_params]->v = "true";
+		num_params++;
+	}
+
 	json_object *new_obj;
 	struct MemoryStruct chunk;
-	docker_api_get(url, &chunk);
+	docker_api_get(url, params, num_params, &chunk);
+	free(params);
 
 	//need to skip 8 bytes of binary junk
 	//printf("Output is \n%s\n", chunk.memory);
@@ -257,5 +284,6 @@ DockerContainersList* docker_containers_list(int all, int limit, int size, Docke
 		}
 	}
 
+	free(url);
 	return clist;
 }

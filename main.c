@@ -13,7 +13,7 @@ char* docker_create_container()
     char* id;
     json_object *new_obj;
     struct MemoryStruct chunk;
-    docker_api_post("http://192.168.1.33:2376/containers/create", "{\"Image\": \"alpine\", \"Cmd\": [\"echo\", \"hello world\"]}", &chunk);
+    docker_api_post("http://192.168.1.33:2376/containers/create", NULL, 0, "{\"Image\": \"alpine\", \"Cmd\": [\"echo\", \"hello world\"]}", &chunk);
 
     new_obj = json_tokener_parse(chunk.memory);
     printf("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
@@ -44,7 +44,7 @@ int docker_start_container(char* id)
 
     json_object *new_obj;
     struct MemoryStruct chunk;
-    docker_api_post(url, "", &chunk);
+    docker_api_post(url, NULL, 0, "", &chunk);
 
     new_obj = json_tokener_parse(chunk.memory);
     printf("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
@@ -62,7 +62,7 @@ int docker_wait_container(char* id)
 
     json_object *new_obj;
     struct MemoryStruct chunk;
-    docker_api_post(url, "", &chunk);
+    docker_api_post(url, NULL, 0, "", &chunk);
 
     new_obj = json_tokener_parse(chunk.memory);
     printf("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
@@ -79,7 +79,7 @@ int docker_stdout_container(char* id)
     printf("Stdout url is %s\n", url);
 
     struct MemoryStruct chunk;
-    docker_api_get(url, &chunk);
+    docker_api_get(url, NULL, 0, &chunk);
 
     //need to skip 8 bytes of binary junk
     printf("Output is \n%s\n", chunk.memory+8);
@@ -91,18 +91,18 @@ int main()
 {
     curl_global_init(CURL_GLOBAL_ALL);
 
-    char* id;
-    id = docker_create_container();
+//    char* id;
+//    id = docker_create_container();
+//
+//    printf("Docker container id is %s\n", id);
+//
+//    docker_start_container(id);
+//    docker_wait_container(id);
+//    docker_stdout_container(id);
 
-    printf("Docker container id is %s\n", id);
+    printf("\n\n========== Docker containers list.=========\n");
 
-    docker_start_container(id);
-    docker_wait_container(id);
-    docker_stdout_container(id);
-
-    printf("Docker containers list");
-
-    DockerContainersList* containers = docker_containers_list(0, 0, 0, NULL);
+    DockerContainersList* containers = docker_containers_list(1, 5, 1, NULL);
     printf("Read %d containers.\n", containers->num_containers);
 
     curl_global_cleanup();

@@ -18,7 +18,7 @@
 #include "docker_connection_util.h"
 
 #define ADD_FILTER_STR_ATTR(name) \
-	void containers_filter_add_ ## name(DockerContainersListFilter* filter, char* val) { \
+	void containers_filter_add_ ## name(docker_containers_list_filter* filter, char* val) { \
 		if (filter->num_ ## name == 0) { \
 			filter->name = (char**) malloc(128 * sizeof(char*)); \
 		} \
@@ -27,7 +27,7 @@
 	}
 
 #define ADD_FILTER_INT_ATTR(name) \
-	void containers_filter_add_ ## name(DockerContainersListFilter* filter, int val) { \
+	void containers_filter_add_ ## name(docker_containers_list_filter* filter, int val) { \
 		if (filter->num_ ## name == 0) { \
 			filter->name = (int*) malloc(128 * sizeof(int)); \
 		} \
@@ -77,9 +77,9 @@ long long get_attr_long_long(json_object* obj, char* name) {
 	return attr;
 }
 
-DockerContainersListFilter* make_docker_containers_list_filter() {
-	DockerContainersListFilter* filter = (DockerContainersListFilter*) malloc(
-			sizeof(DockerContainersListFilter));
+docker_containers_list_filter* make_docker_containers_list_filter() {
+	docker_containers_list_filter* filter = (docker_containers_list_filter*) malloc(
+			sizeof(docker_containers_list_filter));
 	filter->num_ancestor = 0;
 	filter->num_before = 0;
 	filter->num_expose = 0;
@@ -136,8 +136,8 @@ void extract_filter_field_int(json_object* fobj, char* filter_name,
 	}
 }
 
-DockerContainersList* docker_containers_list(int all, int limit, int size,
-		DockerContainersListFilter* filters) {
+docker_containers_list* docker_container_list(int all, int limit, int size,
+		docker_containers_list_filter* filters) {
 	char* method = "json";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
@@ -224,17 +224,17 @@ DockerContainersList* docker_containers_list(int all, int limit, int size,
 	struct array_list* containers_arr = json_object_get_array(new_obj);
 	int len = containers_arr->length;
 
-	DockerContainersList* clist = (DockerContainersList*) malloc(
-			sizeof(DockerContainersList));
+	docker_containers_list* clist = (docker_containers_list*) malloc(
+			sizeof(docker_containers_list));
 	clist->num_containers = len;
-	clist->containers = (DockerContainersListItem**) malloc(
-			len * sizeof(DockerContainersListItem));
+	clist->containers = (docker_containers_list_item**) malloc(
+			len * sizeof(docker_containers_list_item));
 
 	for (int i = 0; i < containers_arr->length; i++) {
 		printf("Item #%d is %s\n", i,
 				json_object_to_json_string(containers_arr->array[i]));
-		DockerContainersListItem* listItem = (DockerContainersListItem*) malloc(
-				sizeof(DockerContainersListItem));
+		docker_containers_list_item* listItem = (docker_containers_list_item*) malloc(
+				sizeof(docker_containers_list_item));
 		clist->containers[i] = listItem;
 		listItem->id = get_attr_str(containers_arr->array[i], "Id");
 
@@ -264,12 +264,12 @@ DockerContainersList* docker_containers_list(int all, int limit, int size,
 		if (json_object_object_get_ex(containers_arr->array[i], "Ports",
 				&portsObj)) {
 			struct array_list* ports_arr = json_object_get_array(portsObj);
-			listItem->ports = (DockerContainerPorts**) malloc(
-					ports_arr->length * sizeof(DockerContainerPorts*));
+			listItem->ports = (docker_container_ports**) malloc(
+					ports_arr->length * sizeof(docker_container_ports*));
 			listItem->num_ports = ports_arr->length;
 			for (int ni = 0; ni < ports_arr->length; ni++) {
-				listItem->ports[ni] = (DockerContainerPorts*) malloc(
-						sizeof(DockerContainerPorts));
+				listItem->ports[ni] = (docker_container_ports*) malloc(
+						sizeof(docker_container_ports));
 
 				listItem->ports[ni]->private_port = get_attr_int(
 						ports_arr->array[ni], "PrivatePort");
@@ -289,13 +289,13 @@ DockerContainersList* docker_containers_list(int all, int limit, int size,
 				listItem->num_labels += 1;
 			}
 			printf("Num labels is %d\n", listItem->num_labels);
-			listItem->labels = (DockerContainerLabel**) malloc(
-					listItem->num_labels * sizeof(DockerContainerLabel*));
+			listItem->labels = (docker_container_label**) malloc(
+					listItem->num_labels * sizeof(docker_container_label*));
 			int lbl_count = 0;
 			json_object_object_foreach(labelsObj, key1, val1)
 			{
-				listItem->labels[lbl_count] = (DockerContainerLabel*) malloc(
-						sizeof(DockerContainerLabel));
+				listItem->labels[lbl_count] = (docker_container_label*) malloc(
+						sizeof(docker_container_label));
 				listItem->labels[lbl_count]->key = make_defensive_copy(key1);
 				listItem->labels[lbl_count]->value = make_defensive_copy(
 						json_object_get_string((json_object *) val1));
@@ -314,8 +314,8 @@ DockerContainersList* docker_containers_list(int all, int limit, int size,
 		json_object* hostConfigObj;
 		if (json_object_object_get_ex(containers_arr->array[i], "HostConfig",
 				&hostConfigObj)) {
-			listItem->hostConfig = (DockerContainerHostConfig*) malloc(
-					sizeof(DockerContainerHostConfig));
+			listItem->hostConfig = (docker_container_host_config*) malloc(
+					sizeof(docker_container_host_config));
 			listItem->hostConfig->network_mode = get_attr_str(hostConfigObj,
 					"NetworkMode");
 		}
@@ -328,8 +328,8 @@ DockerContainersList* docker_containers_list(int all, int limit, int size,
 			if (json_object_object_get_ex(networkSettingsObj, "Networks",
 					&networksObj)) {
 				listItem->network_settings =
-						(DockerContainerNetworkSettings*) malloc(
-								sizeof(DockerContainerNetworkSettings));
+						(docker_container_network_settings*) malloc(
+								sizeof(docker_container_network_settings));
 				listItem->network_settings->num_network_items = 0;
 				json_object_object_foreach(networksObj, key, val) {
 					listItem->network_settings->num_network_items += 1;
@@ -337,19 +337,19 @@ DockerContainersList* docker_containers_list(int all, int limit, int size,
 				printf("Num networks is %d\n",
 						listItem->network_settings->num_network_items);
 				listItem->network_settings->network_items =
-						(DockerContainerNetworkSettingsNetwork**) malloc(
+						(docker_container_network_settings_network**) malloc(
 								listItem->network_settings->num_network_items
-										* sizeof(DockerContainerNetworkSettingsNetwork*));
+										* sizeof(docker_container_network_settings_network*));
 				int ns_count = 0;
 				json_object_object_foreach(networksObj, k, v) {
 					listItem->network_settings->network_items[ns_count] =
-							(DockerContainerNetworkSettingsNetwork*) malloc(
-									sizeof(DockerContainerNetworkSettingsNetwork));
+							(docker_container_network_settings_network*) malloc(
+									sizeof(docker_container_network_settings_network));
 					listItem->network_settings->network_items[ns_count]->name =
 							make_defensive_copy(k);
 					listItem->network_settings->network_items[ns_count]->item =
-							(DockerContainerNetworkSettingsNetworkItem*) malloc(
-									sizeof(DockerContainerNetworkSettingsNetworkItem));
+							(docker_container_network_settings_network_item*) malloc(
+									sizeof(docker_container_network_settings_network_item));
 					listItem->network_settings->network_items[ns_count]->item->network_id =
 							get_attr_str(v, "NetworkID");
 					listItem->network_settings->network_items[ns_count]->item->endpoint_id =
@@ -379,11 +379,11 @@ DockerContainersList* docker_containers_list(int all, int limit, int size,
 		if (json_object_object_get_ex(containers_arr->array[i], "Mounts",
 				&mountsObj)) {
 			struct array_list* mounts_arr = json_object_get_array(mountsObj);
-			listItem->mounts = (DockerContainerMount**) malloc(
-					mounts_arr->length * sizeof(DockerContainerMount*));
+			listItem->mounts = (docker_container_mount**) malloc(
+					mounts_arr->length * sizeof(docker_container_mount*));
 			for (int ni = 0; ni < mounts_arr->length; ni++) {
-				listItem->mounts[ni] = (DockerContainerMount*) malloc(
-						sizeof(DockerContainerMount));
+				listItem->mounts[ni] = (docker_container_mount*) malloc(
+						sizeof(docker_container_mount));
 				listItem->mounts[ni]->name = get_attr_str(mounts_arr->array[ni],
 						"Name");
 				listItem->mounts[ni]->type = get_attr_str(mounts_arr->array[ni],
@@ -409,3 +409,85 @@ DockerContainersList* docker_containers_list(int all, int limit, int size,
 	free(url);
 	return clist;
 }
+
+
+char* docker_create_container() {
+	char* id;
+	json_object *new_obj;
+	struct MemoryStruct chunk;
+	docker_api_post("http://192.168.1.33:2376/containers/create", NULL, 0,
+			"{\"Image\": \"alpine\", \"Cmd\": [\"echo\", \"hello world\"]}",
+			&chunk);
+
+	new_obj = json_tokener_parse(chunk.memory);
+	printf("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
+	json_object* idObj;
+	if (json_object_object_get_ex(new_obj, "Id", &idObj)) {
+		const char* container_id = json_object_get_string(idObj);
+		id = (char*) malloc((strlen(container_id) + 1) * sizeof(char));
+		strcpy(id, container_id);
+//        printf("Container Id = %s\n", container_id);
+//        printf("Container Id = %s\n", id);
+	} else {
+		printf("Id not found.");
+	}
+	free(chunk.memory);
+	return id;
+}
+
+int docker_start_container(char* id) {
+	char* method = "/start";
+	char* containers = "containers/";
+	char* url = (char*) malloc(
+			(strlen(URL) + strlen(containers) + strlen(id) + strlen(method) + 1)
+					* sizeof(char));
+	sprintf(url, "%s%s%s%s", URL, containers, id, method);
+	printf("Start url is %s\n", url);
+
+	json_object *new_obj;
+	struct MemoryStruct chunk;
+	docker_api_post(url, NULL, 0, "", &chunk);
+
+	new_obj = json_tokener_parse(chunk.memory);
+	printf("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
+
+	return 0;
+}
+
+int docker_wait_container(char* id) {
+	char* method = "/wait";
+	char* containers = "containers/";
+	char* url = (char*) malloc(
+			(strlen(URL) + strlen(containers) + strlen(id) + strlen(method) + 1)
+					* sizeof(char));
+	sprintf(url, "%s%s%s%s", URL, containers, id, method);
+	printf("Wait url is %s\n", url);
+
+	json_object *new_obj;
+	struct MemoryStruct chunk;
+	docker_api_post(url, NULL, 0, "", &chunk);
+
+	new_obj = json_tokener_parse(chunk.memory);
+	printf("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
+
+	return 0;
+}
+
+int docker_stdout_container(char* id) {
+	char* method = "/logs?stdout=1";
+	char* containers = "containers/";
+	char* url = (char*) malloc(
+			(strlen(URL) + strlen(containers) + strlen(id) + strlen(method) + 1)
+					* sizeof(char));
+	sprintf(url, "%s%s%s%s", URL, containers, id, method);
+	printf("Stdout url is %s\n", url);
+
+	struct MemoryStruct chunk;
+	docker_api_get(url, NULL, 0, &chunk);
+
+	//need to skip 8 bytes of binary junk
+	printf("Output is \n%s\n", chunk.memory + 8);
+
+	return 0;
+}
+

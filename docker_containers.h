@@ -12,16 +12,16 @@ typedef struct docker_container_ports_t {
 	int private_port;
 	int public_port;
 	char* type;
-} DockerContainerPorts;
+} docker_container_ports;
 
 typedef struct docker_container_label_t {
 	char* key;
 	char* value;
-} DockerContainerLabel;
+} docker_container_label;
 
 typedef struct docker_container_host_config_t {
 	char* network_mode;
-} DockerContainerHostConfig;
+} docker_container_host_config;
 
 typedef struct docker_container_network_settings_network_item_t {
 	char* network_id;
@@ -33,17 +33,17 @@ typedef struct docker_container_network_settings_network_item_t {
 	char* global_ipv6_address;
 	int global_ipv6_prefix_len;
 	char* mac_address;
-} DockerContainerNetworkSettingsNetworkItem;
+} docker_container_network_settings_network_item;
 
 typedef struct docker_container_network_settings_network_t {
 	char* name;
-	DockerContainerNetworkSettingsNetworkItem* item;
-} DockerContainerNetworkSettingsNetwork;
+	docker_container_network_settings_network_item* item;
+} docker_container_network_settings_network;
 
 typedef struct docker_container_network_settings_t {
-	DockerContainerNetworkSettingsNetwork** network_items;
+	docker_container_network_settings_network** network_items;
 	int num_network_items;
-} DockerContainerNetworkSettings;
+} docker_container_network_settings;
 
 typedef struct docker_container_mount_t {
 	char* name;
@@ -54,7 +54,7 @@ typedef struct docker_container_mount_t {
 	char* mode;
 	int rw;
 	char* propagation;
-} DockerContainerMount;
+} docker_container_mount;
 
 typedef struct docker_containers_list_item_t {
 	char* id;
@@ -66,22 +66,22 @@ typedef struct docker_containers_list_item_t {
 	long long created;
 	char* state;
 	char* status;
-	DockerContainerPorts** ports;
+	docker_container_ports** ports;
 	int num_ports;
-	DockerContainerLabel** labels;
+	docker_container_label** labels;
 	int num_labels;
 	long long size_rw;
 	long long size_root_fs;
-	DockerContainerHostConfig* hostConfig;
-	DockerContainerNetworkSettings* network_settings;
-	DockerContainerMount** mounts;
+	docker_container_host_config* hostConfig;
+	docker_container_network_settings* network_settings;
+	docker_container_mount** mounts;
 	int num_mounts;
-} DockerContainersListItem;
+} docker_containers_list_item;
 
 typedef struct docker_containers_list_t {
-	DockerContainersListItem** containers;
+	docker_containers_list_item** containers;
 	int num_containers;
-} DockerContainersList;
+} docker_containers_list;
 
 typedef struct docker_containers_list_filter_t {
 	char** ancestor;
@@ -114,30 +114,97 @@ typedef struct docker_containers_list_filter_t {
 	int num_status;
 	char** volume;
 	int num_volume;
-} DockerContainersListFilter;
+} docker_containers_list_filter;
 
 /**
  * Create filter object and create filter items.
  */
-DockerContainersListFilter* make_docker_containers_list_filter();
-void containers_filter_add_ancestor(DockerContainersListFilter* filter, char* val);
-void containers_filter_add_before(DockerContainersListFilter* filter, char* val);
-void containers_filter_add_expose(DockerContainersListFilter* filter, char* val);
-void containers_filter_add_exited(DockerContainersListFilter* filter, int val);
-void containers_filter_add_health(DockerContainersListFilter* filter, char* val);
-void containers_filter_add_id(DockerContainersListFilter* filter, char* val);
-void containers_filter_add_isolation(DockerContainersListFilter* filter, char* val);
-void containers_filter_add_is_task(DockerContainersListFilter* filter, int val);
-void containers_filter_add_label(DockerContainersListFilter* filter, char* val);
-void containers_filter_add_name(DockerContainersListFilter* filter, char* val);
-void containers_filter_add_network(DockerContainersListFilter* filter, char* val);
-void containers_filter_add_publish(DockerContainersListFilter* filter, char* val);
-void containers_filter_add_since(DockerContainersListFilter* filter, char* val);
-void containers_filter_add_status(DockerContainersListFilter* filter, char* val);
-void containers_filter_add_volume(DockerContainersListFilter* filter, char* val);
+docker_containers_list_filter* make_docker_containers_list_filter();
+void containers_filter_add_ancestor(docker_containers_list_filter* filter,
+		char* val);
+void containers_filter_add_before(docker_containers_list_filter* filter,
+		char* val);
+void containers_filter_add_expose(docker_containers_list_filter* filter,
+		char* val);
+void containers_filter_add_exited(docker_containers_list_filter* filter,
+		int val);
+void containers_filter_add_health(docker_containers_list_filter* filter,
+		char* val);
+void containers_filter_add_id(docker_containers_list_filter* filter, char* val);
+void containers_filter_add_isolation(docker_containers_list_filter* filter,
+		char* val);
+void containers_filter_add_is_task(docker_containers_list_filter* filter,
+		int val);
+void containers_filter_add_label(docker_containers_list_filter* filter,
+		char* val);
+void containers_filter_add_name(docker_containers_list_filter* filter,
+		char* val);
+void containers_filter_add_network(docker_containers_list_filter* filter,
+		char* val);
+void containers_filter_add_publish(docker_containers_list_filter* filter,
+		char* val);
+void containers_filter_add_since(docker_containers_list_filter* filter,
+		char* val);
+void containers_filter_add_status(docker_containers_list_filter* filter,
+		char* val);
+void containers_filter_add_volume(docker_containers_list_filter* filter,
+		char* val);
 
+docker_containers_list* docker_container_list(int all, int limit, int size,
+		docker_containers_list_filter* filters);
 
-DockerContainersList* docker_containers_list(int all, int limit, int size,
-		DockerContainersListFilter* filters);
+typedef struct health_config_t {
+	char** test;
+	int num_test;
+	int interval;
+	int timeout;
+	int retries;
+	int start_period;
+} health_config;
+
+typedef struct docker_create_container_params_t {
+	char* hostname;
+	char* domainname;
+	char* user;
+	int attach_stdin;
+	int attach_stdout;
+	int attach_stderr;
+	char* exposed_ports;
+	int tty;
+	int open_stdin;
+	int stdin_once;
+	char** env;
+	int num_env;
+	char** cmd;
+	int num_cmd;
+	health_config* health_check;
+	int args_escaped;
+	char* image;
+	//TODO: Add type for volumes;
+	char* volumes;
+	char* working_dir;
+	char* entrypoint;
+	int network_disabled;
+	char* mac_address;
+	char** on_build;
+	int num_on_build;
+	//TODO: Add labels type;
+	char* labels;
+	char* stop_signal;
+	int stop_timeout;
+	char* shell;
+	//TODO: Add type for host_config
+	char* host_config;
+	//TODO: Add type for network_config
+	char* network_config;
+} docker_create_container_params;
+
+char* docker_create_container();
+
+int docker_start_container(char* id);
+
+int docker_wait_container(char* id);
+
+int docker_stdout_container(char* id);
 
 #endif /* DOCKER_CONTAINERS_H_ */

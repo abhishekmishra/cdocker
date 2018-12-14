@@ -17,6 +17,24 @@
 
 #include "docker_connection_util.h"
 
+#define ADD_FILTER_STR_ATTR(name) \
+	void containers_filter_add_ ## name(DockerContainersListFilter* filter, char* val) { \
+		if (filter->num_ ## name == 0) { \
+			filter->name = (char**) malloc(128 * sizeof(char*)); \
+		} \
+		filter->name[filter->num_ ## name] = val; \
+		filter->num_ ## name += 1; \
+	}
+
+#define ADD_FILTER_INT_ATTR(name) \
+	void containers_filter_add_ ## name(DockerContainersListFilter* filter, int val) { \
+		if (filter->num_ ## name == 0) { \
+			filter->name = (int*) malloc(128 * sizeof(int)); \
+		} \
+		filter->name[filter->num_ ## name] = val; \
+		filter->num_ ## name += 1; \
+	}
+
 char* make_defensive_copy(const char* from) {
 	char* to = NULL;
 	if (strlen(from) > 0) {
@@ -71,7 +89,7 @@ DockerContainersListFilter* make_docker_containers_list_filter() {
 	filter->num_isolation = 0;
 	filter->num_is_task = 0;
 	filter->num_label = 0;
-	filter->num_name= 0;
+	filter->num_name = 0;
 	filter->num_network = 0;
 	filter->num_publish = 0;
 	filter->num_since = 0;
@@ -80,8 +98,24 @@ DockerContainersListFilter* make_docker_containers_list_filter() {
 	return filter;
 }
 
-void extract_filter_field_char(json_object* fobj, char* filter_name, int num_items,
-		char** items) {
+ADD_FILTER_STR_ATTR(ancestor)
+ADD_FILTER_STR_ATTR(before)
+ADD_FILTER_STR_ATTR(expose)
+ADD_FILTER_INT_ATTR(exited)
+ADD_FILTER_STR_ATTR(health)
+ADD_FILTER_STR_ATTR(id)
+ADD_FILTER_STR_ATTR(isolation)
+ADD_FILTER_INT_ATTR(is_task)
+ADD_FILTER_STR_ATTR(label)
+ADD_FILTER_STR_ATTR(name)
+ADD_FILTER_STR_ATTR(network)
+ADD_FILTER_STR_ATTR(publish)
+ADD_FILTER_STR_ATTR(since)
+ADD_FILTER_STR_ATTR(status)
+ADD_FILTER_STR_ATTR(volume)
+
+void extract_filter_field_char(json_object* fobj, char* filter_name,
+		int num_items, char** items) {
 	if (num_items > 0) {
 		json_object* arr = json_object_new_array();
 		for (int j = 0; j < num_items; j++) {
@@ -91,8 +125,8 @@ void extract_filter_field_char(json_object* fobj, char* filter_name, int num_ite
 	}
 }
 
-void extract_filter_field_int(json_object* fobj, char* filter_name, int num_items,
-		int* items) {
+void extract_filter_field_int(json_object* fobj, char* filter_name,
+		int num_items, int* items) {
 	if (num_items > 0) {
 		json_object* arr = json_object_new_array();
 		for (int j = 0; j < num_items; j++) {
@@ -143,23 +177,37 @@ DockerContainersList* docker_containers_list(int all, int limit, int size,
 		json_object* fobj = json_object_new_object();
 
 		//set filter attributes
-		extract_filter_field_char(fobj, "ancestor", filters->num_ancestor, filters->ancestor);
-		extract_filter_field_char(fobj, "before", filters->num_before, filters->before);
-		extract_filter_field_char(fobj, "expose", filters->num_expose, filters->expose);
-		extract_filter_field_int(fobj, "exited", filters->num_exited, filters->exited);
-		extract_filter_field_char(fobj, "health", filters->num_health, filters->health);
+		extract_filter_field_char(fobj, "ancestor", filters->num_ancestor,
+				filters->ancestor);
+		extract_filter_field_char(fobj, "before", filters->num_before,
+				filters->before);
+		extract_filter_field_char(fobj, "expose", filters->num_expose,
+				filters->expose);
+		extract_filter_field_int(fobj, "exited", filters->num_exited,
+				filters->exited);
+		extract_filter_field_char(fobj, "health", filters->num_health,
+				filters->health);
 		extract_filter_field_char(fobj, "id", filters->num_id, filters->id);
-		extract_filter_field_char(fobj, "isolation", filters->num_isolation, filters->isolation);
-		extract_filter_field_int(fobj, "is_task", filters->num_is_task, filters->is_task);
-		extract_filter_field_char(fobj, "label", filters->num_label, filters->label);
-		extract_filter_field_char(fobj, "name", filters->num_name, filters->name);
-		extract_filter_field_char(fobj, "network", filters->num_network, filters->network);
-		extract_filter_field_char(fobj, "publish", filters->num_publish, filters->publish);
-		extract_filter_field_char(fobj, "since", filters->num_since, filters->since);
-		extract_filter_field_char(fobj, "status", filters->num_status, filters->status);
-		extract_filter_field_char(fobj, "volume", filters->num_volume, filters->volume);
+		extract_filter_field_char(fobj, "isolation", filters->num_isolation,
+				filters->isolation);
+		extract_filter_field_int(fobj, "is_task", filters->num_is_task,
+				filters->is_task);
+		extract_filter_field_char(fobj, "label", filters->num_label,
+				filters->label);
+		extract_filter_field_char(fobj, "name", filters->num_name,
+				filters->name);
+		extract_filter_field_char(fobj, "network", filters->num_network,
+				filters->network);
+		extract_filter_field_char(fobj, "publish", filters->num_publish,
+				filters->publish);
+		extract_filter_field_char(fobj, "since", filters->num_since,
+				filters->since);
+		extract_filter_field_char(fobj, "status", filters->num_status,
+				filters->status);
+		extract_filter_field_char(fobj, "volume", filters->num_volume,
+				filters->volume);
 
-		params[num_params]->v = (char *)json_object_to_json_string(fobj);
+		params[num_params]->v = (char *) json_object_to_json_string(fobj);
 		num_params++;
 	}
 

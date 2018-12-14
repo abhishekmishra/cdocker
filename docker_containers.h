@@ -116,7 +116,26 @@ typedef struct docker_containers_list_filter_t {
 	int num_volume;
 } DockerContainersListFilter;
 
+/**
+ * Create filter object and create filter items.
+ */
 DockerContainersListFilter* make_docker_containers_list_filter();
+void containers_filter_add_ancestor(DockerContainersListFilter* filter, char* val);
+void containers_filter_add_before(DockerContainersListFilter* filter, char* val);
+void containers_filter_add_expose(DockerContainersListFilter* filter, char* val);
+void containers_filter_add_exited(DockerContainersListFilter* filter, int val);
+void containers_filter_add_health(DockerContainersListFilter* filter, char* val);
+void containers_filter_add_id(DockerContainersListFilter* filter, char* val);
+void containers_filter_add_isolation(DockerContainersListFilter* filter, char* val);
+void containers_filter_add_is_task(DockerContainersListFilter* filter, int val);
+void containers_filter_add_label(DockerContainersListFilter* filter, char* val);
+void containers_filter_add_name(DockerContainersListFilter* filter, char* val);
+void containers_filter_add_network(DockerContainersListFilter* filter, char* val);
+void containers_filter_add_publish(DockerContainersListFilter* filter, char* val);
+void containers_filter_add_since(DockerContainersListFilter* filter, char* val);
+void containers_filter_add_status(DockerContainersListFilter* filter, char* val);
+void containers_filter_add_volume(DockerContainersListFilter* filter, char* val);
+
 
 DockerContainersList* docker_containers_list(int all, int limit, int size,
 		DockerContainersListFilter* filters);

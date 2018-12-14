@@ -59,6 +59,49 @@ long long get_attr_long_long(json_object* obj, char* name) {
 	return attr;
 }
 
+DockerContainersListFilter* make_docker_containers_list_filter() {
+	DockerContainersListFilter* filter = (DockerContainersListFilter*) malloc(
+			sizeof(DockerContainersListFilter));
+	filter->num_ancestor = 0;
+	filter->num_before = 0;
+	filter->num_expose = 0;
+	filter->num_exited = 0;
+	filter->num_health = 0;
+	filter->num_id = 0;
+	filter->num_isolation = 0;
+	filter->num_is_task = 0;
+	filter->num_label = 0;
+	filter->num_name= 0;
+	filter->num_network = 0;
+	filter->num_publish = 0;
+	filter->num_since = 0;
+	filter->num_status = 0;
+	filter->num_volume = 0;
+	return filter;
+}
+
+void extract_filter_field_char(json_object* fobj, char* filter_name, int num_items,
+		char** items) {
+	if (num_items > 0) {
+		json_object* arr = json_object_new_array();
+		for (int j = 0; j < num_items; j++) {
+			json_object_array_add(arr, json_object_new_string(items[j]));
+		}
+		json_object_object_add(fobj, filter_name, arr);
+	}
+}
+
+void extract_filter_field_int(json_object* fobj, char* filter_name, int num_items,
+		int* items) {
+	if (num_items > 0) {
+		json_object* arr = json_object_new_array();
+		for (int j = 0; j < num_items; j++) {
+			json_object_array_add(arr, json_object_new_int64(items[j]));
+		}
+		json_object_object_add(fobj, filter_name, arr);
+	}
+}
+
 DockerContainersList* docker_containers_list(int all, int limit, int size,
 		DockerContainersListFilter* filters) {
 	char* method = "json";
@@ -97,16 +140,26 @@ DockerContainersList* docker_containers_list(int all, int limit, int size,
 	if (filters) {
 		params[num_params] = (url_param*) malloc(sizeof(url_param));
 		params[num_params]->k = "filters";
-		//params[num_params]->v = (char*) malloc(1024 * sizeof(char));
 		json_object* fobj = json_object_new_object();
-		if (filters->num_name > 0) {
-			json_object* arr = json_object_new_array();
-			for(int j = 0; j < filters->num_name;j++) {
-				json_object_array_add(arr, json_object_new_string(filters->name[j]));
-			}
-			json_object_object_add(fobj, "name", arr);
-		}
-		params[num_params]->v = json_object_to_json_string(fobj);
+
+		//set filter attributes
+		extract_filter_field_char(fobj, "ancestor", filters->num_ancestor, filters->ancestor);
+		extract_filter_field_char(fobj, "before", filters->num_before, filters->before);
+		extract_filter_field_char(fobj, "expose", filters->num_expose, filters->expose);
+		extract_filter_field_int(fobj, "exited", filters->num_exited, filters->exited);
+		extract_filter_field_char(fobj, "health", filters->num_health, filters->health);
+		extract_filter_field_char(fobj, "id", filters->num_id, filters->id);
+		extract_filter_field_char(fobj, "isolation", filters->num_isolation, filters->isolation);
+		extract_filter_field_int(fobj, "is_task", filters->num_is_task, filters->is_task);
+		extract_filter_field_char(fobj, "label", filters->num_label, filters->label);
+		extract_filter_field_char(fobj, "name", filters->num_name, filters->name);
+		extract_filter_field_char(fobj, "network", filters->num_network, filters->network);
+		extract_filter_field_char(fobj, "publish", filters->num_publish, filters->publish);
+		extract_filter_field_char(fobj, "since", filters->num_since, filters->since);
+		extract_filter_field_char(fobj, "status", filters->num_status, filters->status);
+		extract_filter_field_char(fobj, "volume", filters->num_volume, filters->volume);
+
+		params[num_params]->v = (char *)json_object_to_json_string(fobj);
 		num_params++;
 	}
 

@@ -102,8 +102,7 @@ int main() {
 
 	printf("\n\n========== Docker containers list.=========\n");
 
-	DockerContainersListFilter* filter = (DockerContainersListFilter*) malloc(
-			sizeof(DockerContainersListFilter));
+	DockerContainersListFilter* filter = make_docker_containers_list_filter();
 	filter->name = (char**)malloc(sizeof(char*));
 	filter->num_name = 1;
 	filter->name[0] = "/registryui";

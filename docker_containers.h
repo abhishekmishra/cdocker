@@ -114,8 +114,11 @@ typedef struct docker_containers_list_filter_t {
 	int num_status;
 	char** volume;
 	int num_volume;
-}DockerContainersListFilter;
+} DockerContainersListFilter;
 
-DockerContainersList* docker_containers_list(int all, int limit, int size, DockerContainersListFilter* filters);
+DockerContainersListFilter* make_docker_containers_list_filter();
+
+DockerContainersList* docker_containers_list(int all, int limit, int size,
+		DockerContainersListFilter* filters);
 
 #endif /* DOCKER_CONTAINERS_H_ */

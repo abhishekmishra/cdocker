@@ -120,6 +120,7 @@ typedef struct docker_containers_list_filter_t {
  * Create filter object and create filter items.
  */
 docker_containers_list_filter* make_docker_containers_list_filter();
+
 void containers_filter_add_ancestor(docker_containers_list_filter* filter,
 		char* val);
 void containers_filter_add_before(docker_containers_list_filter* filter,
@@ -198,6 +199,8 @@ typedef struct docker_create_container_params_t {
 	//TODO: Add type for network_config
 	char* network_config;
 } docker_create_container_params;
+
+//docker_create_container_params* make_docker_create_container_params();
 
 char* docker_create_container();
 

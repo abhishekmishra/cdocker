@@ -412,10 +412,19 @@ docker_containers_list* docker_container_list(int all, int limit, int size,
 
 
 char* docker_create_container() {
-	char* id;
+	char* id = NULL;
 	json_object *new_obj;
 	struct MemoryStruct chunk;
-	docker_api_post("http://192.168.1.33:2376/containers/create", NULL, 0,
+
+	char* method = "create";
+	char* containers = "containers/";
+	char* url = (char*) malloc(
+			(strlen(URL) + strlen(containers) + strlen(method) + 1)
+					* sizeof(char));
+	sprintf(url, "%s%s%s", URL, containers, method);
+	printf("Start url is %s\n", url);
+
+	docker_api_post(url, NULL, 0,
 			"{\"Image\": \"alpine\", \"Cmd\": [\"echo\", \"hello world\"]}",
 			&chunk);
 

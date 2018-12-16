@@ -4,6 +4,7 @@ LIBS=`pkg-config --libs json-c` `pkg-config --libs libcurl`
 LDFLAGS=-fPIC -shared
 OUT_DIR=./bin/release
 OBJ_DIR=./obj
+SRC_DIR=./src
 MKDIR_P=mkdir -p
 debug: CFLAGS += -DDEBUG -g -O0
 debug: OUT_DIR = ./bin/debug
@@ -26,7 +27,7 @@ $(OBJ_DIR):
 clibdocker:	$(OBJ_DIR)/main.o $(OBJ_DIR)/docker_connection_util.o $(OBJ_DIR)/docker_containers.o
 			$(CC) $(CFLAGS) -o $(OUT_DIR)/$@ $^ $(LIBS)
 			
-$(OBJ_DIR)/%.o: %.c
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:

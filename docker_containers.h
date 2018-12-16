@@ -200,9 +200,9 @@ typedef struct docker_create_container_params_t {
 	char* network_config;
 } docker_create_container_params;
 
-//docker_create_container_params* make_docker_create_container_params();
+docker_create_container_params* make_docker_create_container_params();
 
-char* docker_create_container();
+char* docker_create_container(docker_create_container_params* params);
 
 int docker_start_container(char* id);
 

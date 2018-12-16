@@ -11,7 +11,13 @@ int main() {
 	curl_global_init(CURL_GLOBAL_ALL);
 
     char* id;
-    id = docker_create_container();
+    docker_create_container_params* p = make_docker_create_container_params();
+    p->image = "alpine";
+    p->cmd = (char**)malloc(2 * sizeof(char*));
+    p->cmd[0] = "echo";
+    p->cmd[1] = "hello world";
+    p->num_cmd = 2;
+    id = docker_create_container(p);
 
     printf("Docker container id is %s\n", id);
 

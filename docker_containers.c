@@ -78,8 +78,9 @@ long long get_attr_long_long(json_object* obj, char* name) {
 }
 
 docker_containers_list_filter* make_docker_containers_list_filter() {
-	docker_containers_list_filter* filter = (docker_containers_list_filter*) malloc(
-			sizeof(docker_containers_list_filter));
+	docker_containers_list_filter* filter =
+			(docker_containers_list_filter*) malloc(
+					sizeof(docker_containers_list_filter));
 	filter->num_ancestor = 0;
 	filter->num_before = 0;
 	filter->num_expose = 0;
@@ -233,8 +234,9 @@ docker_containers_list* docker_container_list(int all, int limit, int size,
 	for (int i = 0; i < containers_arr->length; i++) {
 		printf("Item #%d is %s\n", i,
 				json_object_to_json_string(containers_arr->array[i]));
-		docker_containers_list_item* listItem = (docker_containers_list_item*) malloc(
-				sizeof(docker_containers_list_item));
+		docker_containers_list_item* listItem =
+				(docker_containers_list_item*) malloc(
+						sizeof(docker_containers_list_item));
 		clist->containers[i] = listItem;
 		listItem->id = get_attr_str(containers_arr->array[i], "Id");
 
@@ -410,8 +412,44 @@ docker_containers_list* docker_container_list(int all, int limit, int size,
 	return clist;
 }
 
+docker_create_container_params* make_docker_create_container_params() {
+	docker_create_container_params* p =
+			(docker_create_container_params*) malloc(
+					sizeof(docker_create_container_params));
+	p->hostname = NULL;
+	p->domainname = NULL;
+	p->user = NULL;
+	p->attach_stdin = -1;
+	p->attach_stdout = -1;
+	p->attach_stderr = -1;
+	p->exposed_ports = NULL;
+	p->tty = -1;
+	p->open_stdin = -1;
+	p->stdin_once = -1;
+	p->env = NULL;
+	p->num_env = -1;
+	p->cmd = NULL;
+	p->num_cmd = -1;
+	p->health_check = NULL;
+	p->args_escaped = -1;
+	p->image = NULL;
+	p->volumes = NULL;
+	p->working_dir = NULL;
+	p->entrypoint = NULL;
+	p->network_disabled = -1;
+	p->mac_address = NULL;
+	p->on_build = NULL;
+	p->num_on_build = -1;
+	p->labels = NULL;
+	p->stop_signal = NULL;
+	p->stop_timeout = -1;
+	p->shell = NULL;
+	p->host_config = NULL;
+	p->network_config = NULL;
+	return p;
+}
 
-char* docker_create_container() {
+char* docker_create_container(docker_create_container_params* params) {
 	char* id = NULL;
 	json_object *new_obj;
 	struct MemoryStruct chunk;
@@ -424,8 +462,26 @@ char* docker_create_container() {
 	sprintf(url, "%s%s%s", URL, containers, method);
 	printf("Start url is %s\n", url);
 
+	json_object* create_obj = json_object_new_object();
+
+	if (params->image != NULL) {
+		json_object_object_add(create_obj, "Image",
+				json_object_new_string(params->image));
+	}
+	if (params->cmd != NULL) {
+		json_object* cmd_arr = json_object_new_array();
+		for (int i = 0; i < params->num_cmd; i++) {
+			json_object_array_add(cmd_arr,
+					json_object_new_string(params->cmd[i]));
+		}
+		json_object_object_add(create_obj, "Cmd", cmd_arr);
+	}
+
+//	docker_api_post(url, NULL, 0,
+//			"{\"Image\": \"alpine\", \"Cmd\": [\"echo\", \"hello world\"]}",
+//			&chunk);
 	docker_api_post(url, NULL, 0,
-			"{\"Image\": \"alpine\", \"Cmd\": [\"echo\", \"hello world\"]}",
+			json_object_to_json_string(create_obj),
 			&chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
@@ -435,8 +491,6 @@ char* docker_create_container() {
 		const char* container_id = json_object_get_string(idObj);
 		id = (char*) malloc((strlen(container_id) + 1) * sizeof(char));
 		strcpy(id, container_id);
-//        printf("Container Id = %s\n", container_id);
-//        printf("Container Id = %s\n", id);
 	} else {
 		printf("Id not found.");
 	}

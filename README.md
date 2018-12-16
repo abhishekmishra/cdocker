@@ -1,5 +1,5 @@
 # clibdocker: C API for Docker
-# :warning: This is currently work in progress.
+### :warning: This is currently work in progress.
 
  ## Goals
  * Simplicity: Easy to understand and use API

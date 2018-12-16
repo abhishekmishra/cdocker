@@ -40,3 +40,22 @@
 |Get archive of fs    |             [ ] |           [ ] |   [ ] |                          |
 |Extract archive      |             [ ] |           [ ] |   [ ] |                          |
 |Delete stopped       |             [ ] |           [ ] |   [ ] |                          |
+### Images API
+
+| Method              | Implementation  | Documentation | Tests | TODOs                    |
+|---------------------|-----------------|---------------|-------|--------------------------|
+|List Images          |             [ ] |           [ ] |   [ ] |                          |
+|Build Image          |             [ ] |           [ ] |   [ ] |                          |
+|Delete builder cache |             [ ] |           [ ] |   [ ] |                          |
+|Create Image         |             [ ] |           [ ] |   [ ] |                          |
+|Inspect Image        |             [ ] |           [ ] |   [ ] |                          |
+|Get history          |             [ ] |           [ ] |   [ ] |                          |
+|Push                 |             [ ] |           [ ] |   [ ] |                          |
+|Tag                  |             [ ] |           [ ] |   [ ] |                          |
+|Remove               |             [ ] |           [ ] |   [ ] |                          |
+|Search               |             [ ] |           [ ] |   [ ] |                          |
+|Delete unused        |             [ ] |           [ ] |   [ ] |                          |
+|Create from container|             [ ] |           [ ] |   [ ] |                          |
+|Export image         |             [ ] |           [ ] |   [ ] |                          |
+|Export several       |             [ ] |           [ ] |   [ ] |                          |
+|Import               |             [ ] |           [ ] |   [ ] |                          |

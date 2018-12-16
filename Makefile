@@ -42,5 +42,6 @@ test_clibdocker: $(TEST_OBJ_DIR)/test_all.o $(OBJ_DIR)/test_docker_containers.o
 			./bin/debug/test_clibdocker
 
 clean:
-			rm -f ./obj/*.o ./bin/release/clibdocker ./bin/release/test_clibdocker
-			rm -f ./obj/*.o ./bin/debug/clibdocker ./bin/debug/test_clibdocker
+			rm -f ./obj/*.o ./bin/release/clibdocker ./bin/release/clibdocker.exe ./bin/release/test_clibdocker ./bin/release/test_clibdocker.exe
+			rm -f ./obj/*.o ./bin/debug/clibdocker ./bin/debug/clibdocker.exe ./bin/debug/test_clibdocker ./bin/debug/test_clibdocker.exe
+			

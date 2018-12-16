@@ -12,6 +12,20 @@
 
 #define URL "http://192.168.1.33:2376/"
 
+/**
+* A docker context for a specific docker server.
+*/
+typedef struct docker_context {
+	const char* url;
+} docker_context;
+
+/**
+* Create a new docker context with the given url.
+* The method makes a copy of the given string for use, so that it can
+* be safely freed by the calling program.
+*/
+docker_context* make_docker_context(const char* url);
+
 typedef struct url_param {
 	char* k;
 	char* v;

@@ -10,6 +10,14 @@
 #include <curl/curl.h>
 #include "docker_connection_util.h"
 
+docker_context* make_docker_context(const char* url) {
+	docker_context* ctx = (docker_context*)malloc(sizeof(docker_context));
+	char* u = (char*)malloc((strlen(url) + 1) * sizeof(char));
+	strcpy(u, url);
+	ctx->url = u;
+	return ctx;
+}
+
 char* build_url(CURL *curl, char* base_url, url_param** params, int num_params) {
 	if (params == NULL || num_params <= 0) {
 		return base_url;

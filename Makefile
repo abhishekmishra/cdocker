@@ -29,15 +29,6 @@ clibdocker:	$(OBJ_DIR)/main.o $(OBJ_DIR)/docker_connection_util.o $(OBJ_DIR)/doc
 $(OBJ_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-#main.o: docker_connection_util.so docker_containers.so main.c
-#			$(CC) $(CFLAGS) -c -o main.o main.c docker_connection_util.so docker_containers.so $(LIBS)
-#			
-#docker_containers.so: docker_connection_util.so docker_containers.h docker_containers.c
-#			$(CC) $(CFLAGS) -c -o docker_containers.so docker_connection_util.so docker_containers.c $(LIBS) $(LDFLAGS)
-#			
-#docker_connection_util.so: docker_connection_util.c docker_connection_util.h
-#			$(CC) $(CFLAGS) -c -o docker_connection_util.so docker_connection_util.c $(LIBS) $(LDFLAGS)
-
 clean:
 			rm -f ./obj/*.o ./bin/release/clibdocker
 			rm -f ./obj/*.o ./bin/debug/clibdocker

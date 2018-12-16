@@ -4,8 +4,8 @@
   "configurations": [
     {
       "type": "cppdbg",
-      "name": "clibdocker.exe",
-      "project": "clibdocker.exe",
+      "name": "./bin/debug/clibdocker.exe",
+      "project": "./bin/debug/clibdocker.exe",
       "cwd": "${workspaceRoot}",
       "program": "${debugInfo.target}",
       "MIMode": "gdb",

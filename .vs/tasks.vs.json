@@ -11,13 +11,22 @@
             ]
         },
         {
+            "taskName": "Test",
+            "appliesTo": "*",
+            "type": "launch",
+            "command": "${env.COMSPEC}",
+            "args": [
+                "PATH=C:\\cygwin64\\bin;%PATH% && c:\\cygwin64\\bin\\bash /cygdrive/c/Users/abhis/code/clibdocker/run_cygwin_clibdocker.sh 1"
+            ]
+        },
+        {
             "taskName": "Build",
             "appliesTo": "*.c",
             "contextType": "build",
             "type": "launch",
             "command": "${env.COMSPEC}",
             "args": [
-                "PATH=C:\\cygwin64\\bin;%PATH% && c:\\cygwin64\\bin\\bash -c \"make -f Makefile.win64 all\""
+                "PATH=C:\\cygwin64\\bin;%PATH% && c:\\cygwin64\\bin\\bash -c \"make debug\""
             ]
         },
         {
@@ -27,7 +36,7 @@
             "type": "default",
             "command": "${env.COMSPEC}",
             "args": [
-                "PATH=C:\\cygwin64\\bin;%PATH% && c:\\cygwin64\\bin\\bash -c \"make clean -f Makefile.win64\""
+                "PATH=C:\\cygwin64\\bin;%PATH% && c:\\cygwin64\\bin\\bash -c \"make clean\""
             ]
         }
     ]

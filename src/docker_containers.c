@@ -487,6 +487,34 @@ char* docker_create_container(docker_context* ctx,
 	return id;
 }
 
+/**
+ * List all processes in a container identified by id.
+ *
+ * \param ctx is a docker context
+ * \param id is the container id
+ * \param ps_args is the command line args to be passed to the ps command (can be NULL).
+ * \return the process details as docker_container_ps list.
+ */
+docker_container_ps* docker_process_list_container(docker_context* ctx,
+		char* id, char* process_args) {
+	char* method = "/top";
+	char* containers = "containers/";
+	char* url = (char*) malloc(
+			(strlen(containers) + strlen(id) + strlen(method)
+					+ 1) * sizeof(char));
+	sprintf(url, "%s%s%s", containers, id, method);
+	log_debug("Top url is %s", url);
+
+	json_object *new_obj;
+	struct MemoryStruct chunk;
+	docker_api_get(ctx, url, NULL, 0, &chunk);
+
+	new_obj = json_tokener_parse(chunk.memory);
+	log_debug("new_obj.to_string()=%s", json_object_to_json_string(new_obj));
+
+	return NULL;
+}
+
 int docker_start_container(docker_context* ctx, char* id) {
 	char* method = "/start";
 	char* containers = "containers/";

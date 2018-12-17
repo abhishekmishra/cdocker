@@ -153,8 +153,8 @@ void containers_filter_add_status(docker_containers_list_filter* filter,
 void containers_filter_add_volume(docker_containers_list_filter* filter,
 		char* val);
 
-docker_containers_list* docker_container_list(docker_context* ctx, int all, int limit, int size,
-		docker_containers_list_filter* filters);
+docker_containers_list* docker_container_list(docker_context* ctx, int all,
+		int limit, int size, docker_containers_list_filter* filters);
 
 typedef struct health_config_t {
 	char** test;
@@ -204,9 +204,39 @@ typedef struct docker_create_container_params_t {
 
 docker_create_container_params* make_docker_create_container_params();
 
-char* docker_create_container(docker_context* ctx, docker_create_container_params* params);
+char* docker_create_container(docker_context* ctx,
+		docker_create_container_params* params);
 
 //docker_container_details* docker_inspect_container(docker_context* ctx, char* id, int size);
+
+/**
+ * Values for a single 'top'/'ps' line. Details about a process.
+ */
+typedef struct docker_container_ps_item_t {
+	char** vals;
+	int num_vals;
+} docker_container_ps_item;
+
+/**
+ * Struct which holds the titles of the process line, and the details of all processes.
+ */
+typedef struct docker_container_ps_t {
+	char** titles;
+	int num_titles;
+	docker_container_ps_item* processes;
+	int num_processes;
+} docker_container_ps;
+
+/**
+ * List all processes in a container identified by id.
+ *
+ * \param ctx is a docker context
+ * \param id is the container id
+ * \param ps_args is the command line args to be passed to the ps command (can be NULL).
+ * \return the process details as docker_container_ps list.
+ */
+docker_container_ps* docker_process_list_container(docker_context* ctx,
+		char* id, char* process_args);
 
 int docker_start_container(docker_context* ctx, char* id);
 

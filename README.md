@@ -14,57 +14,57 @@
 ### Docker Context
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
 |---------------------|-----------------|---------------|-------|--------------------------|
-|Docker Context       |             [x] |           [ ] |   [ ] |                          |
-|HTTP Support         |             [x] |           [ ] |   [ ] |                          |
-|Unix Socket Support  |             [ ] |           [ ] |   [ ] |                          |
-|Authentication       |             [ ] |           [ ] |   [ ] |                          |
+|Docker Context       |           - [x] |         - [ ] | - [ ] |                          |
+|HTTP Support         |           - [x] |         - [ ] | - [ ] |                          |
+|Unix Socket Support  |           - [ ] |         - [ ] | - [ ] |                          |
+|Authentication       |           - [ ] |         - [ ] | - [ ] |                          |
 
 
 ### Containers API
 
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
 |---------------------|-----------------|---------------|-------|--------------------------|
-|List Containers      |             [x] |           [ ] |   [x] |                          |
-|Create Container     |             [x] |           [ ] |   [x] | Only two params done.    |
-|Inspect Containers   |             [ ] |           [ ] |   [ ] |                          |
-|List Processes       |             [ ] |           [ ] |   [ ] |                          |
-|Container Logs       |             [ ] |           [ ] |   [ ] |                          |
-|Container FS Changes |             [ ] |           [ ] |   [ ] |                          |
-|Export Container     |             [ ] |           [ ] |   [ ] |                          |
-|Resource Usage Stats |             [ ] |           [ ] |   [ ] |                          |
-|Resize TTY           |             [ ] |           [ ] |   [ ] |                          |
-|Start                |             [ ] |           [ ] |   [ ] |                          |
-|Stop                 |             [ ] |           [ ] |   [ ] |                          |
-|Restart              |             [ ] |           [ ] |   [ ] |                          |
-|Kill                 |             [ ] |           [ ] |   [ ] |                          |
-|Update               |             [ ] |           [ ] |   [ ] |                          |
-|Rename               |             [ ] |           [ ] |   [ ] |                          |
-|Pause                |             [ ] |           [ ] |   [ ] |                          |
-|Unpause              |             [ ] |           [ ] |   [ ] |                          |
-|Attach               |             [ ] |           [ ] |   [ ] |                          |
-|Attach via Websocket |             [ ] |           [ ] |   [ ] |                          |
-|Wait                 |             [ ] |           [ ] |   [ ] |                          |
-|Remove               |             [ ] |           [ ] |   [ ] |                          |
-|Info about files     |             [ ] |           [ ] |   [ ] |                          |
-|Get archive of fs    |             [ ] |           [ ] |   [ ] |                          |
-|Extract archive      |             [ ] |           [ ] |   [ ] |                          |
-|Delete stopped       |             [ ] |           [ ] |   [ ] |                          |
+|List Containers      |           - [x] |         - [ ] | - [x] |                          |
+|Create Container     |           - [x] |         - [ ] | - [x] | Only two params done.    |
+|Inspect Containers   |           - [ ] |         - [ ] | - [ ] |                          |
+|List Processes       |           - [ ] |         - [ ] | - [ ] |                          |
+|Container Logs       |           - [ ] |         - [ ] | - [ ] |                          |
+|Container FS Changes |           - [ ] |         - [ ] | - [ ] |                          |
+|Export Container     |           - [ ] |         - [ ] | - [ ] |                          |
+|Resource Usage Stats |           - [ ] |         - [ ] | - [ ] |                          |
+|Resize TTY           |           - [ ] |         - [ ] | - [ ] |                          |
+|Start                |           - [ ] |         - [ ] | - [ ] |                          |
+|Stop                 |           - [ ] |         - [ ] | - [ ] |                          |
+|Restart              |           - [ ] |         - [ ] | - [ ] |                          |
+|Kill                 |           - [ ] |         - [ ] | - [ ] |                          |
+|Update               |           - [ ] |         - [ ] | - [ ] |                          |
+|Rename               |           - [ ] |         - [ ] | - [ ] |                          |
+|Pause                |           - [ ] |         - [ ] | - [ ] |                          |
+|Unpause              |           - [ ] |         - [ ] | - [ ] |                          |
+|Attach               |           - [ ] |         - [ ] | - [ ] |                          |
+|Attach via Websocket |           - [ ] |         - [ ] | - [ ] |                          |
+|Wait                 |           - [ ] |         - [ ] | - [ ] |                          |
+|Remove               |           - [ ] |         - [ ] | - [ ] |                          |
+|Info about files     |           - [ ] |         - [ ] | - [ ] |                          |
+|Get archive of fs    |           - [ ] |         - [ ] | - [ ] |                          |
+|Extract archive      |           - [ ] |         - [ ] | - [ ] |                          |
+|Delete stopped       |           - [ ] |         - [ ] | - [ ] |                          |
 ### Images API
 
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
 |---------------------|-----------------|---------------|-------|--------------------------|
-|List Images          |             [ ] |           [ ] |   [ ] |                          |
-|Build Image          |             [ ] |           [ ] |   [ ] |                          |
-|Delete builder cache |             [ ] |           [ ] |   [ ] |                          |
-|Create Image         |             [ ] |           [ ] |   [ ] |                          |
-|Inspect Image        |             [ ] |           [ ] |   [ ] |                          |
-|Get history          |             [ ] |           [ ] |   [ ] |                          |
-|Push                 |             [ ] |           [ ] |   [ ] |                          |
-|Tag                  |             [ ] |           [ ] |   [ ] |                          |
-|Remove               |             [ ] |           [ ] |   [ ] |                          |
-|Search               |             [ ] |           [ ] |   [ ] |                          |
-|Delete unused        |             [ ] |           [ ] |   [ ] |                          |
-|Create from container|             [ ] |           [ ] |   [ ] |                          |
-|Export image         |             [ ] |           [ ] |   [ ] |                          |
-|Export several       |             [ ] |           [ ] |   [ ] |                          |
-|Import               |             [ ] |           [ ] |   [ ] |                          |
+|List Images          |           - [ ] |         - [ ] | - [ ] |                          |
+|Build Image          |           - [ ] |         - [ ] | - [ ] |                          |
+|Delete builder cache |           - [ ] |         - [ ] | - [ ] |                          |
+|Create Image         |           - [ ] |         - [ ] | - [ ] |                          |
+|Inspect Image        |           - [ ] |         - [ ] | - [ ] |                          |
+|Get history          |           - [ ] |         - [ ] | - [ ] |                          |
+|Push                 |           - [ ] |         - [ ] | - [ ] |                          |
+|Tag                  |           - [ ] |         - [ ] | - [ ] |                          |
+|Remove               |           - [ ] |         - [ ] | - [ ] |                          |
+|Search               |           - [ ] |         - [ ] | - [ ] |                          |
+|Delete unused        |           - [ ] |         - [ ] | - [ ] |                          |
+|Create from container|           - [ ] |         - [ ] | - [ ] |                          |
+|Export image         |           - [ ] |         - [ ] | - [ ] |                          |
+|Export several       |           - [ ] |         - [ ] | - [ ] |                          |
+|Import               |           - [ ] |         - [ ] | - [ ] |                          |

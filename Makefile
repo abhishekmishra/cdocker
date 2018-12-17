@@ -32,7 +32,7 @@ $(OBJ_DIR):
 			
 # see https://www.gnu.org/software/make/manual/html_node/Wildcard-Function.html
 # Get list of object files, with paths
-OBJECTS := $(patsubst %.c,%.o,$(wildcard $(SRC_DIR)/*.c))
+OBJECTS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c))
 
 clibdocker:	$(OBJECTS) #$(OBJ_DIR)/main.o $(OBJ_DIR)/docker_connection_util.o $(OBJ_DIR)/docker_containers.o
 			$(CC) $(CFLAGS) -o $(OUT_DIR)/$@ $^ $(LIBS)
@@ -43,7 +43,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 $(TEST_OBJ_DIR)/test_%.o: $(TEST_DIR)/test_%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 	
-TEST_OBJECTS := $(patsubst %.c,%.o,$(wildcard $(TEST_DIR)/*.c))
+TEST_OBJECTS := $(patsubst $(TEST_DIR)/%.c,$(TEST_OBJ_DIR)/%.o,$(wildcard $(TEST_DIR)/*.c))
 
 # Link with everything but main.o (because it contains another definition of main.	
 test_clibdocker: $(TEST_OBJECTS) $(filter-out %main.o, $(OBJECTS))

@@ -6,6 +6,9 @@
  * Safety: Good memory management, Documentation ensures warnings about safe usage, thread safety.
  * Efficiency: Keep calls lightweight to enable heavy usage.
 
+- [x]
+- [x] test
+
 ## API Completeness
 
 (Measuring completeness against current \[v1.39\] Docker API documentation at https://docs.docker.com/engine/api/v1.39/)

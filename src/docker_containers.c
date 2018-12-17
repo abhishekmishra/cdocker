@@ -536,7 +536,7 @@ int docker_wait_container(char* id) {
 	return 0;
 }
 
-int docker_stdout_container(char* id) {
+char* docker_stdout_container(char* id) {
 	char* method = "/logs?stdout=1";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
@@ -551,6 +551,6 @@ int docker_stdout_container(char* id) {
 	//need to skip 8 bytes of binary junk
 	printf("Output is \n%s\n", chunk.memory + 8);
 
-	return 0;
+	return chunk.memory + 8;
 }
 

@@ -208,6 +208,6 @@ int docker_start_container(char* id);
 
 int docker_wait_container(char* id);
 
-int docker_stdout_container(char* id);
+char* docker_stdout_container(char* id);
 
 #endif /* DOCKER_CONTAINERS_H_ */

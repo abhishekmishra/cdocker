@@ -9,13 +9,32 @@
 #include <string.h>
 #include <curl/curl.h>
 #include "docker_connection_util.h"
+#include "log.h"
 
-docker_context* make_docker_context(const char* url) {
-	docker_context* ctx = (docker_context*)malloc(sizeof(docker_context));
-	char* u = (char*)malloc((strlen(url) + 1) * sizeof(char));
+docker_context* make_docker_context_url(const char* url) {
+	docker_context* ctx = (docker_context*) malloc(sizeof(docker_context));
+	char* u = (char*) malloc((strlen(url) + 1) * sizeof(char));
 	strcpy(u, url);
 	ctx->url = u;
+	ctx->socket = NULL;
 	return ctx;
+}
+
+docker_context* make_docker_context_socket(const char* socket) {
+	docker_context* ctx = (docker_context*) malloc(sizeof(docker_context));
+	char* s = (char*) malloc((strlen(socket) + 1) * sizeof(char));
+	strcpy(s, socket);
+	ctx->socket = s;
+	ctx->url = NULL;
+	return ctx;
+}
+
+/**
+ * Free docker context memory.
+ */
+void free_docker_context(docker_context* ctx) {
+	free((char *) ctx->url);
+	free(ctx);
 }
 
 char* build_url(CURL *curl, char* base_url, url_param** params, int num_params) {
@@ -26,7 +45,7 @@ char* build_url(CURL *curl, char* base_url, url_param** params, int num_params) 
 		char** allkeys = (char**) malloc(num_params * sizeof(char*));
 		char** allvals = (char**) malloc(num_params * sizeof(char*));
 		for (int i = 0; i < num_params; i++) {
-			printf("%s=%s\n", params[i]->k, params[i]->v);
+			log_debug("%s=%s\n", params[i]->k, params[i]->v);
 			allkeys[i] = curl_easy_escape(curl, params[i]->k, 0);
 			allvals[i] = curl_easy_escape(curl, params[i]->v, 0);
 		}
@@ -49,7 +68,7 @@ char* build_url(CURL *curl, char* base_url, url_param** params, int num_params) 
 				strcat(url, allvals[i]);
 			}
 		}
-		printf("URL Created:\n%s\n", url);
+		log_debug("URL Created:\n%s", url);
 		return url;
 	}
 }
@@ -62,7 +81,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
 	char *ptr = realloc(mem->memory, mem->size + realsize + 1);
 	if (ptr == NULL) {
 		/* out of memory! */
-		printf("not enough memory (realloc returned NULL)\n");
+		log_debug("not enough memory (realloc returned NULL)");
 		return 0;
 	}
 
@@ -74,8 +93,31 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
 	return realsize;
 }
 
-int docker_api_post(char* base_url, url_param** params, int num_params,
-		char* post_data, struct MemoryStruct *chunk) {
+int set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
+		url_param** params, int num_params) {
+	if (ctx->socket != NULL) {
+		curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, ctx->socket);
+		char* local_url = "http://localhost/";
+		char* base_url = (char*)malloc(sizeof(char) * (strlen(local_url) + strlen(api_url) + 1));
+		strcpy(base_url, local_url);
+		strcat(base_url, api_url);
+		char* url = build_url(curl, base_url, params, num_params);
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+		return 0;
+	} else if (ctx->url != NULL) {
+		char* base_url = (char*)malloc(sizeof(char) * (strlen(ctx->url) + strlen(api_url) + 1));
+		strcpy(base_url, ctx->url);
+		strcat(base_url, api_url);
+		char* url = build_url(curl, base_url, params, num_params);
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+		return 0;
+	} else {
+		return -1;
+	}
+}
+
+int docker_api_post(docker_context* ctx, char* api_url, url_param** params,
+		int num_params, char* post_data, struct MemoryStruct *chunk) {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
@@ -89,9 +131,10 @@ int docker_api_post(char* base_url, url_param** params, int num_params,
 		/* First set the URL that is about to receive our POST. This URL can
 		 just as well be a https:// URL if that is what should receive the
 		 data. */
-		char* url = build_url(curl, base_url, params, num_params);
-		curl_easy_setopt(curl, CURLOPT_URL, url);
-
+		int set_url_err = set_curl_url(curl, ctx, api_url, params, num_params);
+		if (set_url_err) {
+			return -1;
+		}
 		headers = curl_slist_append(headers, "Expect:");
 		headers = curl_slist_append(headers, "Content-Type: application/json");
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
@@ -124,8 +167,8 @@ int docker_api_post(char* base_url, url_param** params, int num_params,
 			 * Do something nice with it!
 			 */
 
-			printf("%lu bytes retrieved\n", (unsigned long) chunk->size);
-			//printf("Data is [%s].\n", chunk->memory);
+			log_debug("%lu bytes retrieved\n", (unsigned long) chunk->size);
+			//log_debug("Data is [%s].\n", chunk->memory);
 		}
 		/* always cleanup */
 		curl_easy_cleanup(curl);
@@ -133,8 +176,8 @@ int docker_api_post(char* base_url, url_param** params, int num_params,
 	return 0;
 }
 
-int docker_api_get(char* base_url, url_param** params, int num_params,
-		struct MemoryStruct *chunk) {
+int docker_api_get(docker_context* ctx, char* api_url, url_param** params,
+		int num_params, struct MemoryStruct *chunk) {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
@@ -148,8 +191,10 @@ int docker_api_get(char* base_url, url_param** params, int num_params,
 		/* First set the URL that is about to receive our POST. This URL can
 		 just as well be a https:// URL if that is what should receive the
 		 data. */
-		char* url = build_url(curl, base_url, params, num_params);
-		curl_easy_setopt(curl, CURLOPT_URL, url);
+		int set_url_err = set_curl_url(curl, ctx, api_url, params, num_params);
+		if (set_url_err) {
+			return -1;
+		}
 
 		/* send all data to this function  */
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
@@ -175,8 +220,8 @@ int docker_api_get(char* base_url, url_param** params, int num_params,
 			 * Do something nice with it!
 			 */
 
-			printf("%lu bytes retrieved\n", (unsigned long) chunk->size);
-			//printf("Data is [%s].\n", chunk->memory);
+			log_debug("%lu bytes retrieved\n", (unsigned long) chunk->size);
+			//log_debug("Data is [%s].\n", chunk->memory);
 		}
 		/* always cleanup */
 		curl_easy_cleanup(curl);

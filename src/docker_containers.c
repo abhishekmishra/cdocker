@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "log.h"
 #include "docker_connection_util.h"
 
 #define ADD_FILTER_STR_ATTR(name) \
@@ -51,7 +51,7 @@ char* get_attr_str(json_object* obj, char* name) {
 		attr = make_defensive_copy(json_object_get_string(extractObj));
 		free(extractObj);
 	}
-	printf("%s is |%s|.\n\n", name, attr);
+	log_debug("%s is |%s|.", name, attr);
 	return attr;
 }
 
@@ -62,7 +62,7 @@ int get_attr_int(json_object* obj, char* name) {
 		sscanf(json_object_get_string(extractObj), "%d", &attr);
 		free(extractObj);
 	}
-	printf("%s is |%d|.\n\n", name, attr);
+	log_debug("%s is |%d|.", name, attr);
 	return attr;
 }
 
@@ -73,7 +73,7 @@ long long get_attr_long_long(json_object* obj, char* name) {
 		sscanf(json_object_get_string(extractObj), "%lld", &attr);
 		free(extractObj);
 	}
-	printf("%s is |%lld|.\n\n", name, attr);
+	log_debug("%s is |%lld|.", name, attr);
 	return attr;
 }
 
@@ -137,15 +137,15 @@ void extract_filter_field_int(json_object* fobj, char* filter_name,
 	}
 }
 
-docker_containers_list* docker_container_list(int all, int limit, int size,
-		docker_containers_list_filter* filters) {
+docker_containers_list* docker_container_list(docker_context* ctx, int all,
+		int limit, int size, docker_containers_list_filter* filters) {
 	char* method = "json";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
-			(strlen(URL) + strlen(containers) + strlen(method) + 1)
+			(strlen(containers) + strlen(method) + 1)
 					* sizeof(char));
-	sprintf(url, "%s%s%s", URL, containers, method);
-	printf("List url is %s\n", url);
+	sprintf(url, "%s%s", containers, method);
+	log_debug("List url is %s\n", url);
 
 	url_param** params = (url_param**) malloc(sizeof(url_param*) * 4);
 	int num_params = 0;
@@ -214,14 +214,14 @@ docker_containers_list* docker_container_list(int all, int limit, int size,
 
 	json_object *new_obj;
 	struct MemoryStruct chunk;
-	docker_api_get(url, params, num_params, &chunk);
+	docker_api_get(ctx, url, params, num_params, &chunk);
 	free(params);
 
 	//need to skip 8 bytes of binary junk
-	//printf("Output is \n%s\n", chunk.memory);
+	//log_debug("Output is \n%s\n", chunk.memory);
 
 	new_obj = json_tokener_parse(chunk.memory);
-	//printf("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
+	//log_debug("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
 	struct array_list* containers_arr = json_object_get_array(new_obj);
 	int len = containers_arr->length;
 
@@ -232,7 +232,7 @@ docker_containers_list* docker_container_list(int all, int limit, int size,
 			len * sizeof(docker_containers_list_item));
 
 	for (int i = 0; i < containers_arr->length; i++) {
-		printf("Item #%d is %s\n", i,
+		log_debug("Item #%d is %s\n", i,
 				json_object_to_json_string(containers_arr->array[i]));
 		docker_containers_list_item* listItem =
 				(docker_containers_list_item*) malloc(
@@ -290,7 +290,7 @@ docker_containers_list* docker_container_list(int all, int limit, int size,
 			json_object_object_foreach(labelsObj, key, val) {
 				listItem->num_labels += 1;
 			}
-			printf("Num labels is %d\n", listItem->num_labels);
+			log_debug("Num labels is %d", listItem->num_labels);
 			listItem->labels = (docker_container_label**) malloc(
 					listItem->num_labels * sizeof(docker_container_label*));
 			int lbl_count = 0;
@@ -301,7 +301,7 @@ docker_containers_list* docker_container_list(int all, int limit, int size,
 				listItem->labels[lbl_count]->key = make_defensive_copy(key1);
 				listItem->labels[lbl_count]->value = make_defensive_copy(
 						json_object_get_string((json_object *) val1));
-				printf("Label [%s] = [%s]\n", listItem->labels[lbl_count]->key,
+				log_debug("Label [%s] = [%s]", listItem->labels[lbl_count]->key,
 						listItem->labels[lbl_count]->value);
 				lbl_count += 1;
 			}
@@ -336,7 +336,7 @@ docker_containers_list* docker_container_list(int all, int limit, int size,
 				json_object_object_foreach(networksObj, key, val) {
 					listItem->network_settings->num_network_items += 1;
 				}
-				printf("Num networks is %d\n",
+				log_debug("Num networks is %d",
 						listItem->network_settings->num_network_items);
 				listItem->network_settings->network_items =
 						(docker_container_network_settings_network**) malloc(
@@ -449,18 +449,11 @@ docker_create_container_params* make_docker_create_container_params() {
 	return p;
 }
 
-char* docker_create_container(docker_create_container_params* params) {
+char* docker_create_container(docker_context* ctx,
+		docker_create_container_params* params) {
 	char* id = NULL;
 	json_object *new_obj;
 	struct MemoryStruct chunk;
-
-	char* method = "create";
-	char* containers = "containers/";
-	char* url = (char*) malloc(
-			(strlen(URL) + strlen(containers) + strlen(method) + 1)
-					* sizeof(char));
-	sprintf(url, "%s%s%s", URL, containers, method);
-	printf("Start url is %s\n", url);
 
 	json_object* create_obj = json_object_new_object();
 
@@ -477,79 +470,75 @@ char* docker_create_container(docker_create_container_params* params) {
 		json_object_object_add(create_obj, "Cmd", cmd_arr);
 	}
 
-//	docker_api_post(url, NULL, 0,
-//			"{\"Image\": \"alpine\", \"Cmd\": [\"echo\", \"hello world\"]}",
-//			&chunk);
-	docker_api_post(url, NULL, 0,
-			json_object_to_json_string(create_obj),
-			&chunk);
+	docker_api_post(ctx, "containers/create", NULL, 0,
+			(char*) json_object_to_json_string(create_obj), &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
-	printf("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
+	log_debug("new_obj.to_string()=%s", json_object_to_json_string(new_obj));
 	json_object* idObj;
 	if (json_object_object_get_ex(new_obj, "Id", &idObj)) {
 		const char* container_id = json_object_get_string(idObj);
 		id = (char*) malloc((strlen(container_id) + 1) * sizeof(char));
 		strcpy(id, container_id);
 	} else {
-		printf("Id not found.");
+		log_debug("Id not found.");
 	}
 	free(chunk.memory);
 	return id;
 }
 
-int docker_start_container(char* id) {
+int docker_start_container(docker_context* ctx, char* id) {
 	char* method = "/start";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
-			(strlen(URL) + strlen(containers) + strlen(id) + strlen(method) + 1)
-					* sizeof(char));
-	sprintf(url, "%s%s%s%s", URL, containers, id, method);
-	printf("Start url is %s\n", url);
+			(strlen(containers) + strlen(id) + strlen(method)
+					+ 1) * sizeof(char));
+	sprintf(url, "%s%s%s", containers, id, method);
+	log_debug("Start url is %s", url);
 
 	json_object *new_obj;
 	struct MemoryStruct chunk;
-	docker_api_post(url, NULL, 0, "", &chunk);
+	docker_api_post(ctx, url, NULL, 0, "", &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
-	printf("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
+	log_debug("new_obj.to_string()=%s", json_object_to_json_string(new_obj));
 
 	return 0;
 }
 
-int docker_wait_container(char* id) {
+int docker_wait_container(docker_context* ctx, char* id) {
 	char* method = "/wait";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
-			(strlen(URL) + strlen(containers) + strlen(id) + strlen(method) + 1)
-					* sizeof(char));
-	sprintf(url, "%s%s%s%s", URL, containers, id, method);
-	printf("Wait url is %s\n", url);
+			(strlen(containers) + strlen(id) + strlen(method)
+					+ 1) * sizeof(char));
+	sprintf(url, "%s%s%s", containers, id, method);
+	log_debug("Wait url is %s", url);
 
 	json_object *new_obj;
 	struct MemoryStruct chunk;
-	docker_api_post(url, NULL, 0, "", &chunk);
+	docker_api_post(ctx, url, NULL, 0, "", &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
-	printf("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
+	log_debug("new_obj.to_string()=%s", json_object_to_json_string(new_obj));
 
 	return 0;
 }
 
-char* docker_stdout_container(char* id) {
+char* docker_stdout_container(docker_context* ctx, char* id) {
 	char* method = "/logs?stdout=1";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
-			(strlen(URL) + strlen(containers) + strlen(id) + strlen(method) + 1)
-					* sizeof(char));
-	sprintf(url, "%s%s%s%s", URL, containers, id, method);
-	printf("Stdout url is %s\n", url);
+			(strlen(containers) + strlen(id) + strlen(method)
+					+ 1) * sizeof(char));
+	sprintf(url, "%s%s%s", containers, id, method);
+	log_debug("Stdout url is %s", url);
 
 	struct MemoryStruct chunk;
-	docker_api_get(url, NULL, 0, &chunk);
+	docker_api_get(ctx, url, NULL, 0, &chunk);
 
 	//need to skip 8 bytes of binary junk
-	printf("Output is \n%s\n", chunk.memory + 8);
+//	log_debug("Output is \n%s\n", chunk.memory + 8);
 
 	return chunk.memory + 8;
 }

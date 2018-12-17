@@ -11,12 +11,21 @@
 (Measuring completeness against current \[v1.39\] Docker API documentation at https://docs.docker.com/engine/api/v1.39/)
 
 ----
+### Docker Context
+| Method              | Implementation  | Documentation | Tests | TODOs                    |
+|---------------------|-----------------|---------------|-------|--------------------------|
+|Docker Context       |             [x] |           [ ] |   [ ] |                          |
+|HTTP Support         |             [x] |           [ ] |   [ ] |                          |
+|Unix Socket Support  |             [ ] |           [ ] |   [ ] |                          |
+|Authentication       |             [ ] |           [ ] |   [ ] |                          |
+
+
 ### Containers API
 
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
 |---------------------|-----------------|---------------|-------|--------------------------|
-|List Containers      |             [ ] |           [ ] |   [ ] |                          |
-|Create Container     |             [ ] |           [ ] |   [ ] |                          |
+|List Containers      |             [x] |           [ ] |   [x] |                          |
+|Create Container     |             [x] |           [ ] |   [x] | Only two params done.    |
 |Inspect Containers   |             [ ] |           [ ] |   [ ] |                          |
 |List Processes       |             [ ] |           [ ] |   [ ] |                          |
 |Container Logs       |             [ ] |           [ ] |   [ ] |                          |

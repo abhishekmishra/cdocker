@@ -8,6 +8,8 @@
 #ifndef DOCKER_CONTAINERS_H_
 #define DOCKER_CONTAINERS_H_
 
+#include "docker_connection_util.h"
+
 typedef struct docker_container_ports_t {
 	int private_port;
 	int public_port;
@@ -151,7 +153,7 @@ void containers_filter_add_status(docker_containers_list_filter* filter,
 void containers_filter_add_volume(docker_containers_list_filter* filter,
 		char* val);
 
-docker_containers_list* docker_container_list(int all, int limit, int size,
+docker_containers_list* docker_container_list(docker_context* ctx, int all, int limit, int size,
 		docker_containers_list_filter* filters);
 
 typedef struct health_config_t {
@@ -202,12 +204,14 @@ typedef struct docker_create_container_params_t {
 
 docker_create_container_params* make_docker_create_container_params();
 
-char* docker_create_container(docker_create_container_params* params);
+char* docker_create_container(docker_context* ctx, docker_create_container_params* params);
 
-int docker_start_container(char* id);
+//docker_container_details* docker_inspect_container(docker_context* ctx, char* id, int size);
 
-int docker_wait_container(char* id);
+int docker_start_container(docker_context* ctx, char* id);
 
-char* docker_stdout_container(char* id);
+int docker_wait_container(docker_context* ctx, char* id);
+
+char* docker_stdout_container(docker_context* ctx, char* id);
 
 #endif /* DOCKER_CONTAINERS_H_ */

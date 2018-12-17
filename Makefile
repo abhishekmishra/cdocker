@@ -11,6 +11,8 @@ MKDIR_P=mkdir -p
 debug: CFLAGS += -DDEBUG -g -O0
 debug: OUT_DIR = ./bin/debug
 test: OUT_DIR = ./bin/debug
+test: CFLAGS += `pkg-config --cflags cmocka`
+test: LIBS+= `pkg-config --libs cmocka`
 
 .PHONY: directories
 
@@ -27,8 +29,12 @@ $(OUT_DIR):
 
 $(OBJ_DIR):
 			$(MKDIR_P) $(OBJ_DIR)
+			
+# see https://www.gnu.org/software/make/manual/html_node/Wildcard-Function.html
+# Get list of object files, with paths
+OBJECTS := $(patsubst %.c,%.o,$(wildcard $(SRC_DIR)/*.c))
 
-clibdocker:	$(OBJ_DIR)/main.o $(OBJ_DIR)/docker_connection_util.o $(OBJ_DIR)/docker_containers.o
+clibdocker:	$(OBJECTS) #$(OBJ_DIR)/main.o $(OBJ_DIR)/docker_connection_util.o $(OBJ_DIR)/docker_containers.o
 			$(CC) $(CFLAGS) -o $(OUT_DIR)/$@ $^ $(LIBS)
 			
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
@@ -37,7 +43,10 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 $(TEST_OBJ_DIR)/test_%.o: $(TEST_DIR)/test_%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 	
-test_clibdocker: $(TEST_OBJ_DIR)/test_all.o $(OBJ_DIR)/test_docker_containers.o
+TEST_OBJECTS := $(patsubst %.c,%.o,$(wildcard $(TEST_DIR)/*.c))
+
+# Link with everything but main.o (because it contains another definition of main.	
+test_clibdocker: $(TEST_OBJECTS) $(filter-out %main.o, $(OBJECTS))
 			$(CC) $(CFLAGS) -o $(OUT_DIR)/$@ $^ $(LIBS)
 			./bin/debug/test_clibdocker
 

@@ -14,8 +14,8 @@
 ### Docker Context
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
 |---------------------|-----------------|---------------|-------|--------------------------|
-|Docker Context       | :heavy_check_mark: |           :x: |   :x: |                          |
-|HTTP Support         | :heavy_check_mark: |           :x: |   :x: |                          |
+|Docker Context       | :ok: |           :x: |   :x: |                          |
+|HTTP Support         | :ok: |           :x: |   :x: |                          |
 |Unix Socket Support  |             :x: |           :x: |   :x: |                          |
 |Authentication       |             :x: |           :x: |   :x: |                          |
 
@@ -24,8 +24,8 @@
 
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
 |---------------------|-----------------|---------------|-------|--------------------------|
-|List Containers      | :heavy_check_mark: |           :x: |:heavy_check_mark: |                          |
-|Create Container     | :heavy_check_mark: |           :x: |:heavy_check_mark: | Only two params done.    |
+|List Containers      | :ok: |           :x: |:ok: |                          |
+|Create Container     | :ok: |           :x: |:ok: | Only two params done.    |
 |Inspect Containers   |             :x: |           :x: |   :x: |                          |
 |List Processes       |             :x: |           :x: |   :x: |                          |
 |Container Logs       |             :x: |           :x: |   :x: |                          |

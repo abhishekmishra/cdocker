@@ -26,9 +26,11 @@
  *
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "docker_result.h"
+#include "log.h"
 
 /**
  * Utility method to create docker result, should be used by all API
@@ -112,4 +114,39 @@ char* get_url(docker_result* result) {
  */
 char* get_message(docker_result* result) {
 	return result->message;
+}
+
+/**
+ * Check if the error_code is E_SUCCESS
+ */
+int is_ok(docker_result* result) {
+	return (get_error(result) == E_SUCCESS);
+}
+
+/**
+ * A simple error handler suitable for programs
+ * which just want to log the error (if any).
+ */
+void docker_simple_error_handler_print(docker_result* res) {
+	printf("DOCKER_RESULT: For URL: %s\n", get_url(res));
+	printf("DOCKER RESULT: Response error_code = %d, http_response = %ld\n",
+			get_error(res), get_http_error(res));
+	if (!is_ok(res)) {
+		printf("DOCKER RESULT: %s\n", get_message(res));
+	}
+	free_docker_result(&res);
+}
+
+/**
+ * A simple error handler suitable for programs
+ * which just want to log the error (if any).
+ */
+void docker_simple_error_handler_log(docker_result* res) {
+	docker_log_info("DOCKER_RESULT: For URL: %s", get_url(res));
+	docker_log_info("DOCKER RESULT: Response error_code = %d, http_response = %ld",
+			get_error(res), get_http_error(res));
+	if (!is_ok(res)) {
+		docker_log_error("DOCKER RESULT: %s", get_message(res));
+	}
+	free_docker_result(&res);
 }

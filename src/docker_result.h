@@ -49,7 +49,6 @@ typedef enum _config_error error_t;
 //} errordesc[] = { { E_SUCCESS, "No error" },
 //		{ E_INVALID_INPUT, "Invalid input" }, { E_FILE_NOT_FOUND,
 //				"File not found" }, };
-
 /**
  * The universal result object for docker API calls in this library.
  * This struct and associated methods provide ways to extract
@@ -112,5 +111,24 @@ char* get_url(docker_result* result);
  * future changes to the struct will not break your code.
  */
 char* get_message(docker_result* result);
+
+/**
+ * Check if the error_code is E_SUCCESS
+ */
+int is_ok(docker_result* result);
+
+
+//TODO these two functions can be made a single generic function.
+/**
+ * A simple error handler suitable for programs
+ * which just want to log the error (if any).
+ */
+void docker_simple_error_handler_print(docker_result* res);
+
+/**
+ * A simple error handler suitable for programs
+ * which just want to log the error (if any).
+ */
+void docker_simple_error_handler_log(docker_result* res);
 
 #endif /* SRC_DOCKER_RESULT_H_ */

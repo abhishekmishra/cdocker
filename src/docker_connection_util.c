@@ -89,7 +89,7 @@ char* build_url(CURL *curl, char* base_url, url_param** params, int num_params) 
 		char** allkeys = (char**) malloc(num_params * sizeof(char*));
 		char** allvals = (char**) malloc(num_params * sizeof(char*));
 		for (int i = 0; i < num_params; i++) {
-			log_debug("%s=%s\n", params[i]->k, params[i]->v);
+			docker_log_debug("%s=%s\n", params[i]->k, params[i]->v);
 			allkeys[i] = curl_easy_escape(curl, params[i]->k, 0);
 			allvals[i] = curl_easy_escape(curl, params[i]->v, 0);
 		}
@@ -112,7 +112,7 @@ char* build_url(CURL *curl, char* base_url, url_param** params, int num_params) 
 				strcat(url, allvals[i]);
 			}
 		}
-		log_debug("URL Created:\n%s", url);
+		docker_log_debug("URL Created:\n%s", url);
 		return url;
 	}
 }
@@ -125,7 +125,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
 	char *ptr = realloc(mem->memory, mem->size + realsize + 1);
 	if (ptr == NULL) {
 		/* out of memory! */
-		log_debug("not enough memory (realloc returned NULL)");
+		docker_log_debug("not enough memory (realloc returned NULL)");
 		return 0;
 	}
 
@@ -225,7 +225,7 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 				make_docker_result(result, E_INVALID_INPUT, response_code,
 						effective_url, "error");
 			}
-			log_debug("%lu bytes retrieved\n", (unsigned long ) chunk->size);
+			docker_log_debug("%lu bytes retrieved\n", (unsigned long ) chunk->size);
 			//log_debug("Data is [%s].\n", chunk->memory);
 		}
 		/* always cleanup */
@@ -289,7 +289,7 @@ error_t docker_api_get(docker_context* ctx, docker_result** result,
 				make_docker_result(result, E_INVALID_INPUT, response_code,
 						effective_url, "error");
 			}
-			log_debug("%lu bytes retrieved\n", (unsigned long ) chunk->size);
+			docker_log_debug("%lu bytes retrieved\n", (unsigned long ) chunk->size);
 			//log_debug("Data is [%s].\n", chunk->memory);
 		}
 		/* always cleanup */

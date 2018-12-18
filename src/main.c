@@ -10,12 +10,8 @@
 #include "docker_containers.h"
 #include "log.h"
 
-//TODO: create a basic error handling function, which can be reused.
 void handle_error(docker_result* res) {
-	log_info("DOCKER_RESULT: For URL: %s", get_url(res));
-	log_info("DOCKER RESULT: Response error_code = %d, http_response = %ld", get_error(res),
-			get_http_error(res));
-	free_docker_result(&res);
+	docker_simple_error_handler_log(res);
 }
 
 int main() {
@@ -25,9 +21,9 @@ int main() {
 	docker_context* ctx;
 	docker_result* res;
 
-//	if (make_docker_context_url(&ctx, "http://192.168.1.33:2376/")
-//			== E_SUCCESS) {
-	if (make_docker_context_socket(&ctx, "/var/run/docker.sock") == E_SUCCESS) {
+	if (make_docker_context_url(&ctx, "http://192.168.1.33:2376/")
+			== E_SUCCESS) {
+//	if (make_docker_context_socket(&ctx, "/var/run/docker.sock") == E_SUCCESS) {
 		docker_create_container_params* p;
 		make_docker_create_container_params(&p);
 		p->image = "alpine";
@@ -54,16 +50,20 @@ int main() {
 		docker_stdout_container(ctx, &res, &log, id);
 		handle_error(res);
 
-		printf("\n\n========== Docker containers list.=========\n");
-
 		docker_containers_list_filter* filter;
 		make_docker_containers_list_filter(&filter);
 //		containers_filter_add_name(filter, "/registryui");
-		containers_filter_add_id(filter, id);
+//		containers_filter_add_id(filter, id);
 		docker_containers_list* containers;
-		docker_container_list(ctx, &res, &containers, 1, 5, 1, filter);
+		docker_container_list(ctx, &res, &containers, 0, 0, 1, filter);
 		handle_error(res);
-		log_info("Read %d containers.\n", containers->num_containers);
+		docker_log_info("Read %d containers.\n", containers->num_containers);
+
+		for (int i = 0; i < containers->num_containers; i++) {
+			docker_process_list_container(ctx, &res, &ps,
+					containers->containers[i]->id, NULL);
+			handle_error(res);
+		}
 
 		free_docker_context(&ctx);
 	}

@@ -235,6 +235,8 @@ typedef struct docker_container_ps_t {
  * List all processes in a container identified by id.
  *
  * \param ctx is a docker context
+ * \param result is the pointer to the result to be returned.
+ * \param ps is the pointer to the process list to be returned.
  * \param id is the container id
  * \param ps_args is the command line args to be passed to the ps command (can be NULL).
  * \return the process details as docker_container_ps list.

@@ -14,6 +14,7 @@
 ### Docker Context
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
 |---------------------|-----------------|---------------|-------|--------------------------|
+|Docker Result        |            :ok: |           :ok:|   :x: |                          |
 |Docker Context       |            :ok: |           :x: |   :x: |                          |
 |HTTP Support         |            :ok: |           :x: |   :x: |                          |
 |Unix Socket Support  |             :x: |           :x: |   :x: |                          |

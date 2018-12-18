@@ -11,22 +11,100 @@
 #include "docker_result.h"
 #include "docker_connection_util.h"
 
+#define DOCKER_CONTAINER_GETTER(object, type, name) \
+		type docker_container_ ## object ## _get_ ## name(docker_container_ ## object* object);
+
+#define DOCKER_CONTAINER_GETTER_ARR_ADD(object, type, name) \
+		int docker_container_ ## object ## _get_ ## name ## _add(docker_container_ ## object* object, type data);
+
+#define DOCKER_CONTAINER_GETTER_ARR_LEN(object, name) \
+		int docker_container_ ## object ## _get_ ## name ##_length(docker_container_ ## object* object);
+
+#define DOCKER_CONTAINER_GETTER_ARR_GET_IDX(object, type, name) \
+		type docker_container_ ## object ## _get_ ## name ## _get_idx(docker_container_ ## object* object, int i);
+
+
+typedef enum docker_container_port_type_t {
+	CONTAINER_PORT_TYPE_TCP = 1
+} docker_container_port_type;
+
+/**
+ * This struct holds the public port, private port and port type.
+ */
 typedef struct docker_container_ports_t {
-	int private_port;
-	int public_port;
-	char* type;
+	long private_port;
+	long public_port;
+	docker_container_port_type type;
 } docker_container_ports;
 
+/**
+ * Create a docker_container_ports instance.
+ *
+ * \param ports the instance to create.
+ * \param priv the private port
+ * \param pub the public port
+ * \param type port type
+ * \return error code
+ */
+error_t make_docker_container_ports(docker_container_ports** ports, long priv,
+		long pub, char* type);
+
+void free_docker_container_ports(docker_container_ports* ports);
+
+DOCKER_CONTAINER_GETTER(ports, long, public_port)
+DOCKER_CONTAINER_GETTER(ports, long, private_port)
+DOCKER_CONTAINER_GETTER(ports, docker_container_port_type, type)
+
+/**
+ * A container label struct: Key value pair.
+ */
 typedef struct docker_container_label_t {
 	char* key;
 	char* value;
 } docker_container_label;
 
+/**
+ * Create a new label.
+ *
+ * \param label ptr to return value.
+ * \param key
+ * \param value
+ * \return error code
+ */
+error_t make_docker_container_label(docker_container_label** label,
+		const char* key, const char* value);
+
+void free_docker_container_label(docker_container_label* label);
+
+DOCKER_CONTAINER_GETTER(label, char*, key)
+DOCKER_CONTAINER_GETTER(label, char*, value)
+
+/**
+ * Struct for the container host config.
+ */
 typedef struct docker_container_host_config_t {
 	char* network_mode;
 } docker_container_host_config;
 
-typedef struct docker_container_network_settings_network_item_t {
+/**
+ * Create a new host config
+ *
+ * \param pointer to return instance
+ * \param network_mode
+ * \return error_code
+ */
+error_t make_docker_container_host_config(
+		docker_container_host_config** host_config, const char* network_mode);
+
+void free_docker_container_host_config(docker_container_host_config* host_config);
+
+DOCKER_CONTAINER_GETTER(host_config, char*, network_mode)
+
+/**
+ * Struct for the network settings item
+ */
+typedef struct docker_container_network_settings_item_t {
+	char* name;
 	char* network_id;
 	char* endpoint_id;
 	char* gateway;
@@ -36,17 +114,30 @@ typedef struct docker_container_network_settings_network_item_t {
 	char* global_ipv6_address;
 	int global_ipv6_prefix_len;
 	char* mac_address;
-} docker_container_network_settings_network_item;
+} docker_container_network_settings_item;
 
-typedef struct docker_container_network_settings_network_t {
-	char* name;
-	docker_container_network_settings_network_item* item;
-} docker_container_network_settings_network;
+/**
+ * Create a new network settings item
+ */
+error_t make_docker_container_network_settings_item(
+		docker_container_network_settings_item** item, const char* name,
+		const char* network_id, const char* endpoint_id, const char* gateway,
+		const char* ip_address, int ip_prefix_len, const char* ipv6_gateway,
+		const char* global_ipv6_address, int global_ipv6_prefix_len,
+		const char* mac_address);
 
-typedef struct docker_container_network_settings_t {
-	docker_container_network_settings_network** network_items;
-	int num_network_items;
-} docker_container_network_settings;
+void free_docker_container_network_settings_item(docker_container_network_settings_item* settings_item);
+
+DOCKER_CONTAINER_GETTER(network_settings_item, char*, name)
+DOCKER_CONTAINER_GETTER(network_settings_item, char*, network_id)
+DOCKER_CONTAINER_GETTER(network_settings_item, char*, endpoint_id)
+DOCKER_CONTAINER_GETTER(network_settings_item, char*, gateway)
+DOCKER_CONTAINER_GETTER(network_settings_item, char*, ip_address)
+DOCKER_CONTAINER_GETTER(network_settings_item, int, ip_prefix_len)
+DOCKER_CONTAINER_GETTER(network_settings_item, char*, ipv6_gateway)
+DOCKER_CONTAINER_GETTER(network_settings_item, char*, global_ipv6_address)
+DOCKER_CONTAINER_GETTER(network_settings_item, int, global_ipv6_prefix_len)
+DOCKER_CONTAINER_GETTER(network_settings_item, char*, mac_address)
 
 typedef struct docker_container_mount_t {
 	char* name;
@@ -59,32 +150,84 @@ typedef struct docker_container_mount_t {
 	char* propagation;
 } docker_container_mount;
 
-typedef struct docker_containers_list_item_t {
+/**
+ * Create a new mount object
+ */
+error_t make_docker_container_mount(docker_container_mount** mount,
+		const char* name, const char* type, const char* source,
+		const char* destination, const char* driver, const char* mode,
+		const int rw, const char* propagation);
+
+void free_docker_container_mount(docker_container_mount* mount);
+
+DOCKER_CONTAINER_GETTER(mount, char*, name)
+DOCKER_CONTAINER_GETTER(mount, char*, type)
+DOCKER_CONTAINER_GETTER(mount, char*, source)
+DOCKER_CONTAINER_GETTER(mount, char*, destination)
+DOCKER_CONTAINER_GETTER(mount, char*, driver)
+DOCKER_CONTAINER_GETTER(mount, char*, mode)
+DOCKER_CONTAINER_GETTER(mount, int, rw)
+DOCKER_CONTAINER_GETTER(mount, char*, propagation)
+
+typedef struct docker_container_list_item_t {
 	char* id;
-	char** names;
-	int num_names;
 	char* image;
 	char* image_id;
 	char* command;
 	long long created;
 	char* state;
 	char* status;
-	docker_container_ports** ports;
-	int num_ports;
-	docker_container_label** labels;
-	int num_labels;
 	long long size_rw;
 	long long size_root_fs;
 	docker_container_host_config* hostConfig;
-	docker_container_network_settings* network_settings;
-	docker_container_mount** mounts;
-	int num_mounts;
-} docker_containers_list_item;
+	struct array_list* names;
+	struct array_list* ports;
+	struct array_list* labels;
+	struct array_list* network_settings;
+	struct array_list* mounts;
+} docker_container_list_item;
 
-typedef struct docker_containers_list_t {
-	docker_containers_list_item** containers;
-	int num_containers;
-} docker_containers_list;
+/**
+ * Create a new containers list item.
+ */
+error_t make_docker_containers_list_item(docker_container_list_item** item,
+		const char* id,
+		const char* image, const char* image_id, const char* command,
+		const long long created, const char* state, const char* status,
+		const long long size_rw, const long long size_root_fs,
+		const docker_container_host_config* hostConfig);
+
+void free_docker_container_list_item(docker_container_list_item* item);
+
+DOCKER_CONTAINER_GETTER(list_item, char*, id)
+DOCKER_CONTAINER_GETTER(list_item, char*, image)
+DOCKER_CONTAINER_GETTER(list_item, char*, image_id)
+DOCKER_CONTAINER_GETTER(list_item, char*, command)
+DOCKER_CONTAINER_GETTER(list_item, long long, created)
+DOCKER_CONTAINER_GETTER(list_item, char*, state)
+DOCKER_CONTAINER_GETTER(list_item, char*, status)
+DOCKER_CONTAINER_GETTER(list_item, long long, size_rw)
+DOCKER_CONTAINER_GETTER(list_item, long long, size_root_fs)
+
+DOCKER_CONTAINER_GETTER_ARR_ADD(list_item, char*, names)
+DOCKER_CONTAINER_GETTER_ARR_LEN(list_item, names)
+DOCKER_CONTAINER_GETTER_ARR_GET_IDX(list_item, char*, names)
+
+DOCKER_CONTAINER_GETTER_ARR_ADD(list_item, docker_container_ports*, ports)
+DOCKER_CONTAINER_GETTER_ARR_LEN(list_item, ports)
+DOCKER_CONTAINER_GETTER_ARR_GET_IDX(list_item, docker_container_ports*, ports)
+
+DOCKER_CONTAINER_GETTER_ARR_ADD(list_item, docker_container_label*, labels)
+DOCKER_CONTAINER_GETTER_ARR_LEN(list_item, labels)
+DOCKER_CONTAINER_GETTER_ARR_GET_IDX(list_item, docker_container_label*, labels)
+
+DOCKER_CONTAINER_GETTER_ARR_ADD(list_item, docker_container_network_settings_item*, network_settings)
+DOCKER_CONTAINER_GETTER_ARR_LEN(list_item, network_settings)
+DOCKER_CONTAINER_GETTER_ARR_GET_IDX(list_item, docker_container_network_settings_item*, network_settings)
+
+DOCKER_CONTAINER_GETTER_ARR_ADD(list_item, docker_container_mount*, mounts)
+DOCKER_CONTAINER_GETTER_ARR_LEN(list_item, mounts)
+DOCKER_CONTAINER_GETTER_ARR_GET_IDX(list_item, docker_container_mount*, mounts)
 
 typedef struct docker_containers_list_filter_t {
 	char** ancestor;
@@ -156,7 +299,7 @@ void containers_filter_add_volume(docker_containers_list_filter* filter,
 		char* val);
 
 error_t docker_container_list(docker_context* ctx, docker_result** result,
-		docker_containers_list** list, int all, int limit, int size,
+		struct array_list** container_list, int all, int limit, int size,
 		docker_containers_list_filter* filters);
 
 typedef struct health_config_t {

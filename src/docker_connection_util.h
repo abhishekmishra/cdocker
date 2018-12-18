@@ -9,8 +9,7 @@
 #define DOCKER_CONNECTION_UTIL_H_
 
 #include <curl/curl.h>
-
-//#define URL "http://192.168.1.33:2376/"
+#include "docker_result.h"
 
 /**
  * A docker context for a specific docker server.
@@ -26,7 +25,7 @@ typedef struct docker_context {
  * The method makes a copy of the given string for use, so that it can
  * be safely freed by the calling program.
  */
-docker_context* make_docker_context_url(const char* url);
+error_t make_docker_context_url(docker_context** ctx, const char* url);
 
 /**
  * Create a new docker context with the given socket.
@@ -34,12 +33,12 @@ docker_context* make_docker_context_url(const char* url);
  * The method makes a copy of the given string for use, so that it can
  * be safely freed by the calling program.
  */
-docker_context* make_docker_context_socket(const char* socket);
+error_t make_docker_context_socket(docker_context** ctx, const char* socket);
 
 /**
  * Free docker context memory.
  */
-void free_docker_context(docker_context* ctx);
+error_t free_docker_context(docker_context** ctx);
 
 /**
  * Url parameter structure which holds a string key (k) and string value (v).
@@ -65,13 +64,13 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
 /**
  * Util method used internally to HTTP POST to the Docker url.
  */
-int docker_api_post(docker_context* ctx, char* api_url, url_param** params,
+error_t docker_api_post(docker_context* ctx, char* api_url, url_param** params,
 		int num_params, char* post_data, struct MemoryStruct *chunk);
 
 /**
  * Util method used internally to HTTP GET to the Docker url.
  */
-int docker_api_get(docker_context* ctx, char* api_url, url_param** params,
+error_t docker_api_get(docker_context* ctx, char* api_url, url_param** params,
 		int num_params, struct MemoryStruct *chunk);
 
 #endif /* DOCKER_CONNECTION_UTIL_H_ */

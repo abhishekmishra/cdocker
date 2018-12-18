@@ -8,6 +8,7 @@
 #ifndef DOCKER_CONTAINERS_H_
 #define DOCKER_CONTAINERS_H_
 
+#include "docker_result.h"
 #include "docker_connection_util.h"
 
 typedef struct docker_container_ports_t {
@@ -121,7 +122,8 @@ typedef struct docker_containers_list_filter_t {
 /**
  * Create filter object and create filter items.
  */
-docker_containers_list_filter* make_docker_containers_list_filter();
+error_t make_docker_containers_list_filter(
+		docker_containers_list_filter** filter);
 
 void containers_filter_add_ancestor(docker_containers_list_filter* filter,
 		char* val);
@@ -153,8 +155,9 @@ void containers_filter_add_status(docker_containers_list_filter* filter,
 void containers_filter_add_volume(docker_containers_list_filter* filter,
 		char* val);
 
-docker_containers_list* docker_container_list(docker_context* ctx, int all,
-		int limit, int size, docker_containers_list_filter* filters);
+error_t docker_container_list(docker_context* ctx,
+		docker_containers_list** list, int all, int limit, int size,
+		docker_containers_list_filter* filters);
 
 typedef struct health_config_t {
 	char** test;
@@ -202,9 +205,10 @@ typedef struct docker_create_container_params_t {
 	char* network_config;
 } docker_create_container_params;
 
-docker_create_container_params* make_docker_create_container_params();
+error_t make_docker_create_container_params(
+		docker_create_container_params** params);
 
-char* docker_create_container(docker_context* ctx,
+error_t docker_create_container(docker_context* ctx, char** id,
 		docker_create_container_params* params);
 
 //docker_container_details* docker_inspect_container(docker_context* ctx, char* id, int size);
@@ -234,14 +238,15 @@ typedef struct docker_container_ps_t {
  * \param id is the container id
  * \param ps_args is the command line args to be passed to the ps command (can be NULL).
  * \return the process details as docker_container_ps list.
+ * \return error code of the result
  */
-docker_container_ps* docker_process_list_container(docker_context* ctx,
-		char* id, char* process_args);
+error_t docker_process_list_container(docker_context* ctx,
+		docker_container_ps** ps, char* id, char* process_args);
 
-int docker_start_container(docker_context* ctx, char* id);
+error_t docker_start_container(docker_context* ctx, char* id);
 
-int docker_wait_container(docker_context* ctx, char* id);
+error_t docker_wait_container(docker_context* ctx, char* id);
 
-char* docker_stdout_container(docker_context* ctx, char* id);
+error_t docker_stdout_container(docker_context* ctx, char** log, char* id);
 
 #endif /* DOCKER_CONTAINERS_H_ */

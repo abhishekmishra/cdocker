@@ -77,26 +77,25 @@ long long get_attr_long_long(json_object* obj, char* name) {
 	return attr;
 }
 
-docker_containers_list_filter* make_docker_containers_list_filter() {
-	docker_containers_list_filter* filter =
-			(docker_containers_list_filter*) malloc(
-					sizeof(docker_containers_list_filter));
-	filter->num_ancestor = 0;
-	filter->num_before = 0;
-	filter->num_expose = 0;
-	filter->num_exited = 0;
-	filter->num_health = 0;
-	filter->num_id = 0;
-	filter->num_isolation = 0;
-	filter->num_is_task = 0;
-	filter->num_label = 0;
-	filter->num_name = 0;
-	filter->num_network = 0;
-	filter->num_publish = 0;
-	filter->num_since = 0;
-	filter->num_status = 0;
-	filter->num_volume = 0;
-	return filter;
+error_t make_docker_containers_list_filter(docker_containers_list_filter** f) {
+	(*f) = (docker_containers_list_filter*) malloc(
+			sizeof(docker_containers_list_filter));
+	(*f)->num_ancestor = 0;
+	(*f)->num_before = 0;
+	(*f)->num_expose = 0;
+	(*f)->num_exited = 0;
+	(*f)->num_health = 0;
+	(*f)->num_id = 0;
+	(*f)->num_isolation = 0;
+	(*f)->num_is_task = 0;
+	(*f)->num_label = 0;
+	(*f)->num_name = 0;
+	(*f)->num_network = 0;
+	(*f)->num_publish = 0;
+	(*f)->num_since = 0;
+	(*f)->num_status = 0;
+	(*f)->num_volume = 0;
+	return E_SUCCESS;
 }
 
 ADD_FILTER_STR_ATTR(ancestor)
@@ -137,13 +136,13 @@ void extract_filter_field_int(json_object* fobj, char* filter_name,
 	}
 }
 
-docker_containers_list* docker_container_list(docker_context* ctx, int all,
-		int limit, int size, docker_containers_list_filter* filters) {
+error_t docker_container_list(docker_context* ctx,
+		docker_containers_list** list, int all, int limit, int size,
+		docker_containers_list_filter* filters) {
 	char* method = "json";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
-			(strlen(containers) + strlen(method) + 1)
-					* sizeof(char));
+			(strlen(containers) + strlen(method) + 1) * sizeof(char));
 	sprintf(url, "%s%s", containers, method);
 	log_debug("List url is %s\n", url);
 
@@ -409,10 +408,12 @@ docker_containers_list* docker_container_list(docker_context* ctx, int all,
 	}
 
 	free(url);
-	return clist;
+	(*list) = clist;
+	return E_SUCCESS;
 }
 
-docker_create_container_params* make_docker_create_container_params() {
+error_t make_docker_create_container_params(
+		docker_create_container_params** params) {
 	docker_create_container_params* p =
 			(docker_create_container_params*) malloc(
 					sizeof(docker_create_container_params));
@@ -446,12 +447,13 @@ docker_create_container_params* make_docker_create_container_params() {
 	p->shell = NULL;
 	p->host_config = NULL;
 	p->network_config = NULL;
-	return p;
+	(*params) = p;
+	return E_SUCCESS;
 }
 
-char* docker_create_container(docker_context* ctx,
+error_t docker_create_container(docker_context* ctx, char** id,
 		docker_create_container_params* params) {
-	char* id = NULL;
+	(*id) = NULL;
 	json_object *new_obj;
 	struct MemoryStruct chunk;
 
@@ -474,17 +476,17 @@ char* docker_create_container(docker_context* ctx,
 			(char*) json_object_to_json_string(create_obj), &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
-	log_debug("new_obj.to_string()=%s", json_object_to_json_string(new_obj));
+	log_debug("Response = %s", json_object_to_json_string(new_obj));
 	json_object* idObj;
 	if (json_object_object_get_ex(new_obj, "Id", &idObj)) {
 		const char* container_id = json_object_get_string(idObj);
-		id = (char*) malloc((strlen(container_id) + 1) * sizeof(char));
-		strcpy(id, container_id);
+		(*id) = (char*) malloc((strlen(container_id) + 1) * sizeof(char));
+		strcpy((*id), container_id);
 	} else {
 		log_debug("Id not found.");
 	}
 	free(chunk.memory);
-	return id;
+	return E_SUCCESS;
 }
 
 /**
@@ -495,13 +497,13 @@ char* docker_create_container(docker_context* ctx,
  * \param ps_args is the command line args to be passed to the ps command (can be NULL).
  * \return the process details as docker_container_ps list.
  */
-docker_container_ps* docker_process_list_container(docker_context* ctx,
-		char* id, char* process_args) {
+error_t docker_process_list_container(docker_context* ctx,
+		docker_container_ps**ps, char* id, char* process_args) {
 	char* method = "/top";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
-			(strlen(containers) + strlen(id) + strlen(method)
-					+ 1) * sizeof(char));
+			(strlen(containers) + strlen(id) + strlen(method) + 1)
+					* sizeof(char));
 	sprintf(url, "%s%s%s", containers, id, method);
 	log_debug("Top url is %s", url);
 
@@ -510,17 +512,17 @@ docker_container_ps* docker_process_list_container(docker_context* ctx,
 	docker_api_get(ctx, url, NULL, 0, &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
-	log_debug("new_obj.to_string()=%s", json_object_to_json_string(new_obj));
+	log_debug("Response = %s", json_object_to_json_string(new_obj));
 
-	return NULL;
+	return E_SUCCESS;
 }
 
-int docker_start_container(docker_context* ctx, char* id) {
+error_t docker_start_container(docker_context* ctx, char* id) {
 	char* method = "/start";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
-			(strlen(containers) + strlen(id) + strlen(method)
-					+ 1) * sizeof(char));
+			(strlen(containers) + strlen(id) + strlen(method) + 1)
+					* sizeof(char));
 	sprintf(url, "%s%s%s", containers, id, method);
 	log_debug("Start url is %s", url);
 
@@ -529,17 +531,17 @@ int docker_start_container(docker_context* ctx, char* id) {
 	docker_api_post(ctx, url, NULL, 0, "", &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
-	log_debug("new_obj.to_string()=%s", json_object_to_json_string(new_obj));
+	log_debug("Response = %s", json_object_to_json_string(new_obj));
 
-	return 0;
+	return E_SUCCESS;
 }
 
-int docker_wait_container(docker_context* ctx, char* id) {
+error_t docker_wait_container(docker_context* ctx, char* id) {
 	char* method = "/wait";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
-			(strlen(containers) + strlen(id) + strlen(method)
-					+ 1) * sizeof(char));
+			(strlen(containers) + strlen(id) + strlen(method) + 1)
+					* sizeof(char));
 	sprintf(url, "%s%s%s", containers, id, method);
 	log_debug("Wait url is %s", url);
 
@@ -548,26 +550,24 @@ int docker_wait_container(docker_context* ctx, char* id) {
 	docker_api_post(ctx, url, NULL, 0, "", &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
-	log_debug("new_obj.to_string()=%s", json_object_to_json_string(new_obj));
+	log_debug("Response = %s", json_object_to_json_string(new_obj));
 
-	return 0;
+	return E_SUCCESS;
 }
 
-char* docker_stdout_container(docker_context* ctx, char* id) {
+error_t docker_stdout_container(docker_context* ctx, char** log, char* id) {
 	char* method = "/logs?stdout=1";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
-			(strlen(containers) + strlen(id) + strlen(method)
-					+ 1) * sizeof(char));
+			(strlen(containers) + strlen(id) + strlen(method) + 1)
+					* sizeof(char));
 	sprintf(url, "%s%s%s", containers, id, method);
 	log_debug("Stdout url is %s", url);
 
 	struct MemoryStruct chunk;
 	docker_api_get(ctx, url, NULL, 0, &chunk);
 
-	//need to skip 8 bytes of binary junk
-//	log_debug("Output is \n%s\n", chunk.memory + 8);
-
-	return chunk.memory + 8;
+	(*log) = chunk.memory + 8;
+	return E_SUCCESS;
 }
 

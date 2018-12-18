@@ -1,26 +1,26 @@
 /*
-* MIT License
-*
-* Copyright (c) 2018 Abhishek Mishra
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in all
-* copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE.
-*/
+ * MIT License
+ *
+ * Copyright (c) 2018 Abhishek Mishra
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 /*
  * docker_connection_util.c
  *
@@ -31,33 +31,54 @@
 #include <stdio.h>
 #include <string.h>
 #include <curl/curl.h>
+#include "docker_result.h"
 #include "docker_connection_util.h"
 #include "log.h"
 
-docker_context* make_docker_context_url(const char* url) {
-	docker_context* ctx = (docker_context*) malloc(sizeof(docker_context));
+error_t make_docker_context_url(docker_context** ctx, const char* url) {
+	(*ctx) = (docker_context*) malloc(sizeof(docker_context));
+	if (!(*ctx)) {
+		return E_ALLOC_FAILED;
+	}
 	char* u = (char*) malloc((strlen(url) + 1) * sizeof(char));
+	if (!u) {
+		return E_ALLOC_FAILED;
+	}
 	strcpy(u, url);
-	ctx->url = u;
-	ctx->socket = NULL;
-	return ctx;
+	(*ctx)->url = u;
+	(*ctx)->socket = NULL;
+	return E_SUCCESS;
 }
 
-docker_context* make_docker_context_socket(const char* socket) {
-	docker_context* ctx = (docker_context*) malloc(sizeof(docker_context));
+error_t make_docker_context_socket(docker_context** ctx, const char* socket) {
+	(*ctx) = (docker_context*) malloc(sizeof(docker_context));
+	if (!(*ctx)) {
+		return E_ALLOC_FAILED;
+	}
 	char* s = (char*) malloc((strlen(socket) + 1) * sizeof(char));
+	if (!s) {
+		return E_ALLOC_FAILED;
+	}
 	strcpy(s, socket);
-	ctx->socket = s;
-	ctx->url = NULL;
-	return ctx;
+	(*ctx)->socket = s;
+	(*ctx)->url = NULL;
+	return E_SUCCESS;
 }
 
 /**
  * Free docker context memory.
  */
-void free_docker_context(docker_context* ctx) {
-	free((char *) ctx->url);
-	free(ctx);
+error_t free_docker_context(docker_context** ctx) {
+	if ((*ctx)) {
+		if ((*ctx)->socket) {
+			free((*ctx)->socket);
+		}
+		if ((*ctx)->url) {
+			free((*ctx)->url);
+		}
+	}
+	free((*ctx));
+	return E_SUCCESS;
 }
 
 char* build_url(CURL *curl, char* base_url, url_param** params, int num_params) {
@@ -116,30 +137,32 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
 	return realsize;
 }
 
-int set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
+error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 		url_param** params, int num_params) {
 	if (ctx->socket != NULL) {
 		curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, ctx->socket);
 		char* local_url = "http://localhost/";
-		char* base_url = (char*)malloc(sizeof(char) * (strlen(local_url) + strlen(api_url) + 1));
+		char* base_url = (char*) malloc(
+				sizeof(char) * (strlen(local_url) + strlen(api_url) + 1));
 		strcpy(base_url, local_url);
 		strcat(base_url, api_url);
 		char* url = build_url(curl, base_url, params, num_params);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		return 0;
 	} else if (ctx->url != NULL) {
-		char* base_url = (char*)malloc(sizeof(char) * (strlen(ctx->url) + strlen(api_url) + 1));
+		char* base_url = (char*) malloc(
+				sizeof(char) * (strlen(ctx->url) + strlen(api_url) + 1));
 		strcpy(base_url, ctx->url);
 		strcat(base_url, api_url);
 		char* url = build_url(curl, base_url, params, num_params);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
-		return 0;
+		return E_SUCCESS;
 	} else {
-		return -1;
+		return E_INVALID_INPUT;
 	}
 }
 
-int docker_api_post(docker_context* ctx, char* api_url, url_param** params,
+error_t docker_api_post(docker_context* ctx, char* api_url, url_param** params,
 		int num_params, char* post_data, struct MemoryStruct *chunk) {
 	CURL *curl;
 	CURLcode res;
@@ -190,16 +213,16 @@ int docker_api_post(docker_context* ctx, char* api_url, url_param** params,
 			 * Do something nice with it!
 			 */
 
-			log_debug("%lu bytes retrieved\n", (unsigned long) chunk->size);
+			log_debug("%lu bytes retrieved\n", (unsigned long ) chunk->size);
 			//log_debug("Data is [%s].\n", chunk->memory);
 		}
 		/* always cleanup */
 		curl_easy_cleanup(curl);
 	}
-	return 0;
+	return E_SUCCESS;
 }
 
-int docker_api_get(docker_context* ctx, char* api_url, url_param** params,
+error_t docker_api_get(docker_context* ctx, char* api_url, url_param** params,
 		int num_params, struct MemoryStruct *chunk) {
 	CURL *curl;
 	CURLcode res;
@@ -243,11 +266,11 @@ int docker_api_get(docker_context* ctx, char* api_url, url_param** params,
 			 * Do something nice with it!
 			 */
 
-			log_debug("%lu bytes retrieved\n", (unsigned long) chunk->size);
+			log_debug("%lu bytes retrieved\n", (unsigned long ) chunk->size);
 			//log_debug("Data is [%s].\n", chunk->memory);
 		}
 		/* always cleanup */
 		curl_easy_cleanup(curl);
 	}
-	return 0;
+	return E_SUCCESS;
 }

@@ -43,12 +43,12 @@ enum _config_error {
 typedef enum _config_error error_t;
 
 /* use this to provide a perror style method to help consumers out */
-struct _errordesc {
-	int code;
-	char *message;
-} errordesc[] = { { E_SUCCESS, "No error" },
-		{ E_INVALID_INPUT, "Invalid input" }, { E_FILE_NOT_FOUND,
-				"File not found" }, };
+//struct _errordesc {
+//	int code;
+//	char *message;
+//} errordesc[] = { { E_SUCCESS, "No error" },
+//		{ E_INVALID_INPUT, "Invalid input" }, { E_FILE_NOT_FOUND,
+//				"File not found" }, };
 
 /**
  * The universal result object for docker API calls in this library.

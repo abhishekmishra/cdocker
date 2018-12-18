@@ -38,7 +38,7 @@
  * freed after creation of the result.
  */
 error_t make_docker_result(docker_result** result, error_t error_code,
-		int http_error_code, const char* message) {
+		long http_error_code, const char* url, const char* message) {
 	(*result) = (docker_result*) malloc(sizeof(docker_result));
 	if ((*result) == NULL) {
 		return E_ALLOC_FAILED;
@@ -52,6 +52,12 @@ error_t make_docker_result(docker_result** result, error_t error_code,
 	} else {
 		(*result)->message = NULL;
 	}
+	if (url) {
+		(*result)->url = (char*) malloc(sizeof(char) * (strlen(url) + 1));
+		strcpy((*result)->url, url);
+	} else {
+		(*result)->url = NULL;
+	}
 	return E_SUCCESS;
 }
 
@@ -63,6 +69,9 @@ error_t free_docker_result(docker_result** result) {
 	if ((*result)) {
 		if ((*result)->message) {
 			free((*result)->message);
+		}
+		if ((*result)->url) {
+			free((*result)->url);
 		}
 		free(*result);
 	}
@@ -83,8 +92,17 @@ error_t get_error(docker_result* result) {
  * Use this method instead of direct attribute access to the struct to ensure
  * future changes to the struct will not break your code.
  */
-int get_http_error(docker_result* result) {
+long get_http_error(docker_result* result) {
 	return result->http_error_code;
+}
+
+/**
+ * This method provides the URL used when calling the API.
+ * Use this method instead of direct attribute access to the struct to ensure
+ * future changes to the struct will not break your code.
+ */
+char* get_url(docker_result* result) {
+	return result->url;
 }
 
 /**

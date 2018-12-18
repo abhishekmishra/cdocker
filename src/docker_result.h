@@ -64,7 +64,8 @@ typedef enum _config_error error_t;
  */
 typedef struct docker_result_t {
 	error_t error_code;
-	int http_error_code;
+	long http_error_code;
+	char* url;
 	char* message;
 } docker_result;
 
@@ -76,7 +77,7 @@ typedef struct docker_result_t {
  * freed after creation of the result.
  */
 error_t make_docker_result(docker_result** result, error_t error_code,
-		int http_error_code, const char* msg);
+		long http_error_code, const char* url, const char* msg);
 
 /**
  * Frees all internal memory used in the docker_result, should be
@@ -96,7 +97,14 @@ error_t get_error(docker_result* result);
  * Use this method instead of direct attribute access to the struct to ensure
  * future changes to the struct will not break your code.
  */
-int get_http_error(docker_result* result);
+long get_http_error(docker_result* result);
+
+/**
+ * This method provides the URL used when calling the API.
+ * Use this method instead of direct attribute access to the struct to ensure
+ * future changes to the struct will not break your code.
+ */
+char* get_url(docker_result* result);
 
 /**
  * This method provides the error message returned by the API.

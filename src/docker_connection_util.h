@@ -64,13 +64,13 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
 /**
  * Util method used internally to HTTP POST to the Docker url.
  */
-error_t docker_api_post(docker_context* ctx, char* api_url, url_param** params,
+error_t docker_api_post(docker_context* ctx, docker_result** res, char* api_url, url_param** params,
 		int num_params, char* post_data, struct MemoryStruct *chunk);
 
 /**
  * Util method used internally to HTTP GET to the Docker url.
  */
-error_t docker_api_get(docker_context* ctx, char* api_url, url_param** params,
+error_t docker_api_get(docker_context* ctx, docker_result** res, char* api_url, url_param** params,
 		int num_params, struct MemoryStruct *chunk);
 
 #endif /* DOCKER_CONNECTION_UTIL_H_ */

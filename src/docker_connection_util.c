@@ -162,8 +162,9 @@ error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 	}
 }
 
-error_t docker_api_post(docker_context* ctx, char* api_url, url_param** params,
-		int num_params, char* post_data, struct MemoryStruct *chunk) {
+error_t docker_api_post(docker_context* ctx, docker_result** result,
+		char* api_url, url_param** params, int num_params, char* post_data,
+		struct MemoryStruct *chunk) {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
@@ -213,6 +214,17 @@ error_t docker_api_post(docker_context* ctx, char* api_url, url_param** params,
 			 * Do something nice with it!
 			 */
 
+			long response_code;
+			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+			char *effective_url = NULL;
+			curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effective_url);
+			if (response_code == 200 || response_code == 201
+					|| response_code == 204) {
+				make_docker_result(result, E_SUCCESS, response_code, effective_url, NULL);
+			} else {
+				make_docker_result(result, E_INVALID_INPUT, response_code,
+						effective_url, "error");
+			}
 			log_debug("%lu bytes retrieved\n", (unsigned long ) chunk->size);
 			//log_debug("Data is [%s].\n", chunk->memory);
 		}
@@ -222,8 +234,9 @@ error_t docker_api_post(docker_context* ctx, char* api_url, url_param** params,
 	return E_SUCCESS;
 }
 
-error_t docker_api_get(docker_context* ctx, char* api_url, url_param** params,
-		int num_params, struct MemoryStruct *chunk) {
+error_t docker_api_get(docker_context* ctx, docker_result** result,
+		char* api_url, url_param** params, int num_params,
+		struct MemoryStruct *chunk) {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
@@ -265,7 +278,17 @@ error_t docker_api_get(docker_context* ctx, char* api_url, url_param** params,
 			 *
 			 * Do something nice with it!
 			 */
-
+			long response_code;
+			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+			char *effective_url = NULL;
+			curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effective_url);
+			if (response_code == 200 || response_code == 201
+					|| response_code == 204) {
+				make_docker_result(result, E_SUCCESS, response_code, effective_url, NULL);
+			} else {
+				make_docker_result(result, E_INVALID_INPUT, response_code,
+						effective_url, "error");
+			}
 			log_debug("%lu bytes retrieved\n", (unsigned long ) chunk->size);
 			//log_debug("Data is [%s].\n", chunk->memory);
 		}

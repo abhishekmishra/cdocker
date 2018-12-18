@@ -136,7 +136,7 @@ void extract_filter_field_int(json_object* fobj, char* filter_name,
 	}
 }
 
-error_t docker_container_list(docker_context* ctx,
+error_t docker_container_list(docker_context* ctx, docker_result** result,
 		docker_containers_list** list, int all, int limit, int size,
 		docker_containers_list_filter* filters) {
 	char* method = "json";
@@ -213,7 +213,7 @@ error_t docker_container_list(docker_context* ctx,
 
 	json_object *new_obj;
 	struct MemoryStruct chunk;
-	docker_api_get(ctx, url, params, num_params, &chunk);
+	docker_api_get(ctx, result, url, params, num_params, &chunk);
 	free(params);
 
 	//need to skip 8 bytes of binary junk
@@ -451,7 +451,7 @@ error_t make_docker_create_container_params(
 	return E_SUCCESS;
 }
 
-error_t docker_create_container(docker_context* ctx, char** id,
+error_t docker_create_container(docker_context* ctx, docker_result** result, char** id,
 		docker_create_container_params* params) {
 	(*id) = NULL;
 	json_object *new_obj;
@@ -472,7 +472,7 @@ error_t docker_create_container(docker_context* ctx, char** id,
 		json_object_object_add(create_obj, "Cmd", cmd_arr);
 	}
 
-	docker_api_post(ctx, "containers/create", NULL, 0,
+	docker_api_post(ctx, result, "containers/create", NULL, 0,
 			(char*) json_object_to_json_string(create_obj), &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
@@ -497,7 +497,7 @@ error_t docker_create_container(docker_context* ctx, char** id,
  * \param ps_args is the command line args to be passed to the ps command (can be NULL).
  * \return the process details as docker_container_ps list.
  */
-error_t docker_process_list_container(docker_context* ctx,
+error_t docker_process_list_container(docker_context* ctx, docker_result** result,
 		docker_container_ps**ps, char* id, char* process_args) {
 	char* method = "/top";
 	char* containers = "containers/";
@@ -509,7 +509,7 @@ error_t docker_process_list_container(docker_context* ctx,
 
 	json_object *new_obj;
 	struct MemoryStruct chunk;
-	docker_api_get(ctx, url, NULL, 0, &chunk);
+	docker_api_get(ctx, result, url, NULL, 0, &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
 	log_debug("Response = %s", json_object_to_json_string(new_obj));
@@ -517,7 +517,7 @@ error_t docker_process_list_container(docker_context* ctx,
 	return E_SUCCESS;
 }
 
-error_t docker_start_container(docker_context* ctx, char* id) {
+error_t docker_start_container(docker_context* ctx, docker_result** result, char* id) {
 	char* method = "/start";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
@@ -528,7 +528,7 @@ error_t docker_start_container(docker_context* ctx, char* id) {
 
 	json_object *new_obj;
 	struct MemoryStruct chunk;
-	docker_api_post(ctx, url, NULL, 0, "", &chunk);
+	docker_api_post(ctx, result, url, NULL, 0, "", &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
 	log_debug("Response = %s", json_object_to_json_string(new_obj));
@@ -536,7 +536,7 @@ error_t docker_start_container(docker_context* ctx, char* id) {
 	return E_SUCCESS;
 }
 
-error_t docker_wait_container(docker_context* ctx, char* id) {
+error_t docker_wait_container(docker_context* ctx, docker_result** result, char* id) {
 	char* method = "/wait";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
@@ -547,7 +547,7 @@ error_t docker_wait_container(docker_context* ctx, char* id) {
 
 	json_object *new_obj;
 	struct MemoryStruct chunk;
-	docker_api_post(ctx, url, NULL, 0, "", &chunk);
+	docker_api_post(ctx, result, url, NULL, 0, "", &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
 	log_debug("Response = %s", json_object_to_json_string(new_obj));
@@ -555,7 +555,7 @@ error_t docker_wait_container(docker_context* ctx, char* id) {
 	return E_SUCCESS;
 }
 
-error_t docker_stdout_container(docker_context* ctx, char** log, char* id) {
+error_t docker_stdout_container(docker_context* ctx, docker_result** result, char** log, char* id) {
 	char* method = "/logs?stdout=1";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
@@ -565,7 +565,7 @@ error_t docker_stdout_container(docker_context* ctx, char** log, char* id) {
 	log_debug("Stdout url is %s", url);
 
 	struct MemoryStruct chunk;
-	docker_api_get(ctx, url, NULL, 0, &chunk);
+	docker_api_get(ctx, result, url, NULL, 0, &chunk);
 
 	(*log) = chunk.memory + 8;
 	return E_SUCCESS;

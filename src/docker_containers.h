@@ -481,6 +481,18 @@ error_t docker_container_changes(docker_context* ctx, docker_result** result,
 error_t docker_start_container(docker_context* ctx, docker_result** result,
 		char* id, char* detachKeys);
 
+/**
+ * Stop a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \param t number of seconds to wait before killing the container
+ * \return error code
+ */
+error_t docker_stop_container(docker_context* ctx, docker_result** result,
+		char* id, int t);
+
 error_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id);
 

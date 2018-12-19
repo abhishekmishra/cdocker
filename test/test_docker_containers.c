@@ -21,11 +21,7 @@ static docker_context* ctx = NULL;
 static docker_result* res;
 
 void handle_error(docker_result* res) {
-	docker_log_info("DOCKER_RESULT: For URL: %s", get_url(res));
-	docker_log_info(
-			"DOCKER RESULT: Response error_code = %d, http_response = %ld",
-			get_error(res), get_http_error(res));
-	free_docker_result(&res);
+	docker_simple_error_handler_log(res);
 }
 
 static int group_setup(void **state) {
@@ -92,11 +88,19 @@ static void test_changes(void **state) {
 	assert_null(changes);
 }
 
+static void test_stopping_stopped_container(void **state) {
+	char* id = *state;
+	docker_stop_container(ctx, &res, id, 0);
+	handle_error(res);
+	assert_int_equal(res->http_error_code, 304);
+}
+
 int docker_container_tests() {
 	const struct CMUnitTest tests[] = {
 	cmocka_unit_test(test_start),
 	cmocka_unit_test(test_list),
-	cmocka_unit_test(test_changes) };
+	cmocka_unit_test(test_changes),
+	cmocka_unit_test(test_stopping_stopped_container) };
 	return cmocka_run_group_tests_name("docker container tests", tests,
 			group_setup, group_teardown);
 }

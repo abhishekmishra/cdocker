@@ -995,6 +995,50 @@ error_t docker_start_container(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
+/**
+ * Stop a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \param t number of seconds to wait before killing the container
+ * \return error code
+ */
+error_t docker_stop_container(docker_context* ctx, docker_result** result,
+		char* id, int t){
+	char* url = create_service_url_id_method(id, "stop");
+
+	struct array_list* params = array_list_new(
+			(void (*)(void *)) &free_url_param);
+	url_param* p;
+
+	if(t > 0) {
+		char* tstr = (char*)malloc(sizeof(char)* 128);
+		sprintf(tstr, "%d", t);
+		make_url_param(&p, "t", tstr);
+		array_list_add(params, p);
+	}
+
+	json_object *new_obj;
+	struct MemoryStruct chunk;
+	docker_api_post(ctx, result, url, params, "", &chunk);
+
+	if((*result)->http_error_code == 304) {
+		(*result)->message = make_defensive_copy("container is already stopped.");
+	}
+
+	if((*result)->http_error_code == 404) {
+		(*result)->message = make_defensive_copy("container not found.");
+	}
+
+	free(params);
+
+	new_obj = json_tokener_parse(chunk.memory);
+	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
+
+	return E_SUCCESS;
+}
+
 error_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id) {
 	char* url = create_service_url_id_method(id, "wait");

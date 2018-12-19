@@ -34,7 +34,7 @@
 |Export Container     |             :x: |           :x: |   :x: |                          |
 |Resource Usage Stats |             :x: |           :x: |   :x: |                          |
 |Resize TTY           |             :x: |           :x: |   :x: |                          |
-|Start                |             :x: |           :x: |   :x: |                          |
+|Start                |            :ok: |          :ok: |  :ok: | test detachKeys                         |
 |Stop                 |             :x: |           :x: |   :x: |                          |
 |Restart              |             :x: |           :x: |   :x: |                          |
 |Kill                 |             :x: |           :x: |   :x: |                          |

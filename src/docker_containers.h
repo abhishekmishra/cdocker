@@ -23,7 +23,6 @@
 #define DOCKER_CONTAINER_GETTER_ARR_GET_IDX(object, type, name) \
 		type docker_container_ ## object ## _ ## name ## _get_idx(docker_container_ ## object* object, int i);
 
-
 typedef enum docker_container_port_type_t {
 	CONTAINER_PORT_TYPE_TCP = 1
 } docker_container_port_type;
@@ -96,7 +95,8 @@ typedef struct docker_container_host_config_t {
 error_t make_docker_container_host_config(
 		docker_container_host_config** host_config, const char* network_mode);
 
-void free_docker_container_host_config(docker_container_host_config* host_config);
+void free_docker_container_host_config(
+		docker_container_host_config* host_config);
 
 DOCKER_CONTAINER_GETTER(host_config, char*, network_mode)
 
@@ -126,7 +126,8 @@ error_t make_docker_container_network_settings_item(
 		const char* global_ipv6_address, int global_ipv6_prefix_len,
 		const char* mac_address);
 
-void free_docker_container_network_settings_item(docker_container_network_settings_item* settings_item);
+void free_docker_container_network_settings_item(
+		docker_container_network_settings_item* settings_item);
 
 DOCKER_CONTAINER_GETTER(network_settings_item, char*, name)
 DOCKER_CONTAINER_GETTER(network_settings_item, char*, network_id)
@@ -191,10 +192,10 @@ typedef struct docker_container_list_item_t {
  * Create a new containers list item.
  */
 error_t make_docker_containers_list_item(docker_container_list_item** item,
-		const char* id,
-		const char* image, const char* image_id, const char* command,
-		const long long created, const char* state, const char* status,
-		const long long size_rw, const long long size_root_fs,
+		const char* id, const char* image, const char* image_id,
+		const char* command, const long long created, const char* state,
+		const char* status, const long long size_rw,
+		const long long size_root_fs,
 		const docker_container_host_config* hostConfig);
 
 void free_docker_container_list_item(docker_container_list_item* item);
@@ -221,9 +222,11 @@ DOCKER_CONTAINER_GETTER_ARR_ADD(list_item, docker_container_label*, labels)
 DOCKER_CONTAINER_GETTER_ARR_LEN(list_item, labels)
 DOCKER_CONTAINER_GETTER_ARR_GET_IDX(list_item, docker_container_label*, labels)
 
-DOCKER_CONTAINER_GETTER_ARR_ADD(list_item, docker_container_network_settings_item*, network_settings)
+DOCKER_CONTAINER_GETTER_ARR_ADD(list_item,
+		docker_container_network_settings_item*, network_settings)
 DOCKER_CONTAINER_GETTER_ARR_LEN(list_item, network_settings)
-DOCKER_CONTAINER_GETTER_ARR_GET_IDX(list_item, docker_container_network_settings_item*, network_settings)
+DOCKER_CONTAINER_GETTER_ARR_GET_IDX(list_item,
+		docker_container_network_settings_item*, network_settings)
 
 DOCKER_CONTAINER_GETTER_ARR_ADD(list_item, docker_container_mount*, mounts)
 DOCKER_CONTAINER_GETTER_ARR_LEN(list_item, mounts)
@@ -305,8 +308,10 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 		docker_containers_list_filter* filters);
 
 error_t make_docker_containers_list(docker_containers_list** container_list);
-int docker_containers_list_add(docker_containers_list* list, docker_container_list_item* item);
-docker_container_list_item* docker_containers_list_get_idx(docker_containers_list* list, int i);
+int docker_containers_list_add(docker_containers_list* list,
+		docker_container_list_item* item);
+docker_container_list_item* docker_containers_list_get_idx(
+		docker_containers_list* list, int i);
 int docker_containers_list_length(docker_containers_list* list);
 
 typedef struct health_config_t {
@@ -402,6 +407,8 @@ error_t docker_start_container(docker_context* ctx, docker_result** result,
 error_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id);
 
+///////////// Get Container Logs
+
 /**
  * Get the logs for the docker container.
  *
@@ -418,6 +425,49 @@ error_t docker_wait_container(docker_context* ctx, docker_result** result,
  * \return error code
  */
 error_t docker_container_logs(docker_context* ctx, docker_result** result,
-		char** log, char* id, int follow, int stdout, int stderr, long since, long until, int timestamps, int tail);
+		char** log, char* id, int follow, int stdout, int stderr, long since,
+		long until, int timestamps, int tail);
 
+///////////// Get Container FS Changes
+
+typedef enum {
+	DOCKER_FS_MODIFIED = 0, DOCKER_FS_ADDED = 1, DOCKER_FS_DELETED = 2
+} change_kind;
+
+typedef struct docker_container_change_t {
+	char* path;
+	change_kind kind;
+} docker_container_change;
+
+/**
+ * Create a new container change item.
+ */
+error_t make_docker_container_change(docker_container_change** item,
+		const char* path, const char* kind);
+
+void free_docker_container_change(docker_container_change* item);
+
+DOCKER_CONTAINER_GETTER(change, char*, path)
+DOCKER_CONTAINER_GETTER(change, change_kind, kind)
+
+typedef struct array_list docker_changes_list;
+
+error_t make_docker_changes_list(docker_changes_list** changes_list);
+int docker_changes_list_add(docker_changes_list* list,
+		docker_container_change* item);
+docker_container_change* docker_changes_list_get_idx(docker_changes_list* list,
+		int i);
+int docker_changes_list_length(docker_changes_list* list);
+
+/**
+ * Get the file system changes for the docker container.
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param changes pointer to struct to be returned.
+ * \param id container id
+ * \return error code
+ */
+error_t docker_container_changes(docker_context* ctx, docker_result** result,
+		docker_changes_list** changes, char* id);
 #endif /* DOCKER_CONTAINERS_H_ */

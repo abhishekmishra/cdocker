@@ -51,6 +51,10 @@ int main() {
 		docker_log_debug("Log -> |%s|", log);
 		handle_error(res);
 
+		docker_changes_list* changes;
+		docker_container_changes(ctx, &res, &changes, id);
+		handle_error(res);
+
 		docker_containers_list_filter* filter;
 		make_docker_containers_list_filter(&filter);
 //		containers_filter_add_name(filter, "/registryui");
@@ -58,11 +62,17 @@ int main() {
 		docker_containers_list* containers;
 		docker_container_list(ctx, &res, &containers, 0, 0, 1, filter);
 		handle_error(res);
-		docker_log_info("Read %d containers.\n", docker_containers_list_length(containers));
+		docker_log_info("Read %d containers.\n",
+				docker_containers_list_length(containers));
 
 		for (int i = 0; i < docker_containers_list_length(containers); i++) {
 			docker_process_list_container(ctx, &res, &ps,
 					docker_containers_list_get_idx(containers, i)->id, NULL);
+			handle_error(res);
+			docker_changes_list* changes;
+			docker_container_changes(ctx, &res, &changes,
+					docker_containers_list_get_idx(containers, i)->id);
+			docker_log_info("Read %d changes for Id %s", docker_changes_list_length(changes), id);
 			handle_error(res);
 		}
 

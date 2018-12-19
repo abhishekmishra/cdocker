@@ -62,8 +62,7 @@ static void test_start(void **state) {
 	handle_error(res);
 	char* output;
 	docker_container_logs(ctx, &res, &output, id, DOCKER_PARAM_FALSE,
-			DOCKER_PARAM_TRUE, DOCKER_PARAM_FALSE, -1, -1, DOCKER_PARAM_FALSE,
-			-1);
+	DOCKER_PARAM_TRUE, DOCKER_PARAM_FALSE, -1, -1, DOCKER_PARAM_FALSE, -1);
 	handle_error(res);
 	assert_non_null(output);
 	assert_string_equal(output, "hello world\n");
@@ -82,10 +81,22 @@ static void test_list(void **state) {
 	assert_int_equal(docker_containers_list_length(containers), 1);
 }
 
+// TODO: need a better test case, when we have a long
+// running instance which can be killed post the test.
+static void test_changes(void **state) {
+	char* id = *state;
+	docker_changes_list* changes;
+	//changes are empty because the instance is stopped by this time.
+	docker_container_changes(ctx, &res, &changes, id);
+	handle_error(res);
+	assert_null(changes);
+}
+
 int docker_container_tests() {
 	const struct CMUnitTest tests[] = {
 	cmocka_unit_test(test_start),
-	cmocka_unit_test(test_list) };
+	cmocka_unit_test(test_list),
+	cmocka_unit_test(test_changes) };
 	return cmocka_run_group_tests_name("docker container tests", tests,
 			group_setup, group_teardown);
 }

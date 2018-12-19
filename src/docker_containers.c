@@ -450,7 +450,8 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 	sprintf(url, "%s%s", containers, method);
 	docker_log_debug("List url is %s\n", url);
 
-	struct array_list* params = array_list_new((void (*)(void *))&free_url_param);
+	struct array_list* params = array_list_new(
+			(void (*)(void *)) &free_url_param);
 	url_param* p;
 
 	if (all > 0) {
@@ -840,7 +841,8 @@ error_t docker_container_logs(docker_context* ctx, docker_result** result,
 	sprintf(url, "%s%s%s", containers, id, method);
 	docker_log_debug("Stdout url is %s", url);
 
-	struct array_list* params = array_list_new((void (*)(void *))&free_url_param);
+	struct array_list* params = array_list_new(
+			(void (*)(void *)) &free_url_param);
 	url_param* p;
 
 	if (stdout > 0) {
@@ -888,3 +890,109 @@ error_t docker_container_logs(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
+///////////// Get Container FS Changes
+
+/**
+ * Create a new container change item.
+ */
+error_t make_docker_container_change(docker_container_change** item,
+		const char* path, const char* kind) {
+	(*item) = (docker_container_change*) malloc(
+			sizeof(docker_container_change));
+	if (!(*item)) {
+		return E_ALLOC_FAILED;
+	}
+	(*item)->path = make_defensive_copy(path);
+	if (kind != NULL) {
+		if (strcmp(kind, "0") == 0) {
+			(*item)->kind = DOCKER_FS_MODIFIED;
+		}
+		if (strcmp(kind, "1") == 0) {
+			(*item)->kind = DOCKER_FS_ADDED;
+		}
+		if (strcmp(kind, "2") == 0) {
+			(*item)->kind = DOCKER_FS_DELETED;
+		}
+	}
+	return E_SUCCESS;
+}
+
+void free_docker_container_change(docker_container_change* item) {
+	if (item) {
+		if (item->path) {
+			free(item->path);
+		}
+		free(item);
+	}
+}
+
+DOCKER_CONTAINER_GETTER_IMPL(change, char*, path)
+DOCKER_CONTAINER_GETTER_IMPL(change, change_kind, kind)
+
+error_t make_docker_changes_list(docker_changes_list** changes_list) {
+	(*changes_list) = array_list_new(
+			(void (*)(void *)) &free_docker_container_change);
+	return E_SUCCESS;
+}
+
+int docker_changes_list_add(docker_changes_list* list,
+		docker_container_change* item) {
+	return array_list_add(list, item);
+}
+
+docker_container_change* docker_changes_list_get_idx(docker_changes_list* list,
+		int i) {
+	return (docker_container_change*) array_list_get_idx(list, i);
+}
+int docker_changes_list_length(docker_changes_list* list) {
+	return array_list_length(list);
+}
+
+/**
+ * Get the file system changes for the docker container.
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param changes pointer to struct to be returned.
+ * \param id container id
+ * \return error code
+ */
+error_t docker_container_changes(docker_context* ctx, docker_result** result,
+		docker_changes_list** changes, char* id) {
+	char* method = "/changes";
+	char* containers = "containers/";
+	char* url = (char*) malloc(
+			(strlen(containers) + strlen(id) + strlen(method) + 1)
+					* sizeof(char));
+	sprintf(url, "%s%s%s", containers, id, method);
+	docker_log_debug("Changes url is %s", url);
+
+	json_object *response_obj;
+	struct MemoryStruct chunk;
+	docker_api_get(ctx, result, url, NULL, &chunk);
+
+	if (chunk.memory != NULL) {
+		response_obj = json_tokener_parse(chunk.memory);
+		if ((json_object_get_type(response_obj) != json_type_null)) {
+			docker_log_debug("Response = %s",
+					json_object_to_json_string(response_obj));
+
+			make_docker_changes_list(changes);
+			for (int i = 0; i < json_object_array_length(response_obj); i++) {
+				json_object* change_obj = json_object_array_get_idx(
+						response_obj, i);
+				docker_container_change* change;
+				make_docker_container_change(&change,
+						get_attr_str(change_obj, "Path"),
+						get_attr_str(change_obj, "Kind"));
+				docker_changes_list_add((*changes), change);
+			}
+		} else {
+			docker_log_warn("Response = %s",
+					json_object_to_json_string(response_obj));
+
+			(*changes) = NULL;
+		}
+	}
+	return E_SUCCESS;
+}

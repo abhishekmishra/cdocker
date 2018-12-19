@@ -551,9 +551,17 @@ error_t docker_pause_container(docker_context* ctx, docker_result** result,
 error_t docker_unpause_container(docker_context* ctx, docker_result** result,
 		char* id);
 
+//TODO: implement wait status code in API.
+/**
+ * Wait for a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \param condition (optional - NULL for default "not-running") condition to wait for
+ * \return error code
+ */
 error_t docker_wait_container(docker_context* ctx, docker_result** result,
-		char* id);
-
-
+		char* id, char* condition);
 
 #endif /* DOCKER_CONTAINERS_H_ */

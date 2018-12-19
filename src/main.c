@@ -43,7 +43,7 @@ int main() {
 		docker_process_list_container(ctx, &res, &ps, id, NULL);
 		handle_error(res);
 
-		docker_wait_container(ctx, &res, id);
+		docker_wait_container(ctx, &res, id, NULL);
 		handle_error(res);
 
 		char* log;
@@ -61,7 +61,7 @@ int main() {
 		docker_restart_container(ctx, &res, id, 0);
 		handle_error(res);
 
-		docker_wait_container(ctx, &res, id);
+		docker_wait_container(ctx, &res, id, NULL);
 		handle_error(res);
 
 		docker_kill_container(ctx, &res, id, NULL);

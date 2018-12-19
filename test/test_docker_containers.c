@@ -54,7 +54,7 @@ static void test_start(void **state) {
 	char* id = *state;
 	docker_start_container(ctx, &res, id, NULL);
 	handle_error(res);
-	docker_wait_container(ctx, &res, id);
+	docker_wait_container(ctx, &res, id, NULL);
 	handle_error(res);
 	char* output;
 	docker_container_logs(ctx, &res, &output, id, DOCKER_PARAM_FALSE,
@@ -130,7 +130,7 @@ static void test_restart_container(void **state) {
 	docker_restart_container(ctx, &res, id, 0);
 	handle_error(res);
 	assert_int_equal(res->http_error_code, 204);
-	docker_wait_container(ctx, &res, id);
+	docker_wait_container(ctx, &res, id, NULL);
 	handle_error(res);
 	assert_int_equal(res->http_error_code, 200);
 }

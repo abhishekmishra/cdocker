@@ -1231,9 +1231,27 @@ error_t docker_unpause_container(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
+/**
+ * Wait for a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \param condition (optional - NULL for default "not-running") condition to wait for
+ * \return error code
+ */
 error_t docker_wait_container(docker_context* ctx, docker_result** result,
-		char* id) {
+		char* id, char* condition) {
 	char* url = create_service_url_id_method(id, "wait");
+
+	struct array_list* params = array_list_new(
+			(void (*)(void *)) &free_url_param);
+	url_param* p;
+
+	if (condition != NULL) {
+		make_url_param(&p, "condition", make_defensive_copy(condition));
+		array_list_add(params, p);
+	}
 
 	json_object *new_obj;
 	struct MemoryStruct chunk;
@@ -1241,6 +1259,14 @@ error_t docker_wait_container(docker_context* ctx, docker_result** result,
 
 	new_obj = json_tokener_parse(chunk.memory);
 	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
+
+	//TODO move message extraction to post call
+	if ((*result)->http_error_code >= 400) {
+		char* msg = get_attr_str(new_obj, "message");
+		if (msg) {
+			(*result)->message = msg;
+		}
+	}
 
 	return E_SUCCESS;
 }

@@ -44,7 +44,7 @@
 |Unpause              |            :ok: |          :ok: |  :ok: |                          |
 |Attach               |             :x: |           :x: |   :x: |                          |
 |Attach via Websocket |             :x: |           :x: |   :x: |                          |
-|Wait                 |             :x: |           :x: |   :x: |                          |
+|Wait                 |            :ok: |          :ok: |  :ok: | wait status code      |
 |Remove               |             :x: |           :x: |   :x: |                          |
 |Info about files     |             :x: |           :x: |   :x: |                          |
 |Get archive of fs    |             :x: |           :x: |   :x: |                          |

@@ -74,8 +74,8 @@ static void test_list(void **state) {
 	docker_containers_list* containers;
 	docker_container_list(ctx, &res, &containers, 1, 5, 1, filter);
 	handle_error(res);
-	docker_log_info("Read %d containers.\n", containers->num_containers);
-	assert_int_equal(containers->num_containers, 1);
+	docker_log_info("Read %d containers.\n", docker_containers_list_length(containers));
+	assert_int_equal(docker_containers_list_length(containers), 1);
 }
 
 int docker_container_tests() {

@@ -50,6 +50,7 @@
 |Get archive of fs    |             :x: |           :x: |   :x: |                          |
 |Extract archive      |             :x: |           :x: |   :x: |                          |
 |Delete stopped       |             :x: |           :x: |   :x: |                          |
+
 ### Images API
 
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
@@ -69,3 +70,15 @@
 |Export image         |             :x: |           :x: |   :x: |                          |
 |Export several       |             :x: |           :x: |   :x: |                          |
 |Import               |             :x: |           :x: |   :x: |                          |
+
+### Network API
+
+| Method              | Implementation  | Documentation | Tests | TODOs                    |
+|---------------------|-----------------|---------------|-------|--------------------------|
+|List networks        |             :x: |           :x: |   :x: |                          |
+|Inspect a network    |             :x: |           :x: |   :x: |                          |
+|Remove				  |             :x: |           :x: |   :x: |                          |
+|Create 		      |             :x: |           :x: |   :x: |                          |
+|Connect container to network   |             :x: |           :x: |   :x: |                          |
+|Disconnect container from network   |             :x: |           :x: |   :x: |                          |
+|Delete unused        |             :x: |           :x: |   :x: |                          |

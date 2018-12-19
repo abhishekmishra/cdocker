@@ -8,6 +8,7 @@
 #ifndef DOCKER_CONNECTION_UTIL_H_
 #define DOCKER_CONNECTION_UTIL_H_
 
+#include <json-c/arraylist.h>
 #include <curl/curl.h>
 #include "docker_result.h"
 
@@ -48,10 +49,18 @@ typedef struct url_param {
 	char* v;
 } url_param;
 
+error_t make_url_param(url_param** p, char* key, char* value);
+char* url_param_key(url_param* p);
+char* url_param_value(url_param* p);
+void free_url_param(url_param* p);
+
 /**
  * Build a url given a CURL object, a base url and url parameters object (and it's length).
  */
-char* build_url(CURL *curl, char* base_url, url_param** params, int num_params);
+char* build_url(CURL *curl, char* base_url, struct array_list* url_params);
+
+error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
+		struct array_list* url_params);
 
 struct MemoryStruct {
 	char *memory;
@@ -64,13 +73,14 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
 /**
  * Util method used internally to HTTP POST to the Docker url.
  */
-error_t docker_api_post(docker_context* ctx, docker_result** res, char* api_url, url_param** params,
-		int num_params, char* post_data, struct MemoryStruct *chunk);
+error_t docker_api_post(docker_context* ctx, docker_result** res, char* api_url,
+		struct array_list* url_params, char* post_data,
+		struct MemoryStruct *chunk);
 
 /**
  * Util method used internally to HTTP GET to the Docker url.
  */
-error_t docker_api_get(docker_context* ctx, docker_result** res, char* api_url, url_param** params,
-		int num_params, struct MemoryStruct *chunk);
+error_t docker_api_get(docker_context* ctx, docker_result** res, char* api_url,
+		struct array_list* url_params, struct MemoryStruct *chunk);
 
 #endif /* DOCKER_CONNECTION_UTIL_H_ */

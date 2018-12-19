@@ -34,6 +34,31 @@
 #include "docker_result.h"
 #include "docker_connection_util.h"
 #include "log.h"
+#include <json-c/arraylist.h>
+
+error_t make_url_param(url_param** p, char* key, char* value) {
+	(*p) = (url_param*) malloc(sizeof(url_param));
+	if (!(*p)) {
+		return E_ALLOC_FAILED;
+	}
+	(*p)->k = key;
+	(*p)->v = value;
+	return E_SUCCESS;
+}
+
+char* url_param_key(url_param* p) {
+	return p->k;
+}
+
+char* url_param_value(url_param* p) {
+	return p->v;
+}
+
+void free_url_param(url_param* p) {
+	free(p->k);
+	free(p->v);
+	free(p);
+}
 
 error_t make_docker_context_url(docker_context** ctx, const char* url) {
 	(*ctx) = (docker_context*) malloc(sizeof(docker_context));
@@ -81,39 +106,46 @@ error_t free_docker_context(docker_context** ctx) {
 	return E_SUCCESS;
 }
 
-char* build_url(CURL *curl, char* base_url, url_param** params, int num_params) {
-	if (params == NULL || num_params <= 0) {
+char* build_url(CURL *curl, char* base_url, struct array_list* url_params) {
+	if (url_params == NULL) {
 		return base_url;
 	} else {
-		int size_toalloc = strlen(base_url) + 1;
-		char** allkeys = (char**) malloc(num_params * sizeof(char*));
-		char** allvals = (char**) malloc(num_params * sizeof(char*));
-		for (int i = 0; i < num_params; i++) {
-			docker_log_debug("%s=%s\n", params[i]->k, params[i]->v);
-			allkeys[i] = curl_easy_escape(curl, params[i]->k, 0);
-			allvals[i] = curl_easy_escape(curl, params[i]->v, 0);
-		}
-		for (int i = 0; i < num_params; i++) {
-			size_toalloc += strlen(allkeys[i]);
-			size_toalloc += strlen(allvals[i]);
-			size_toalloc += 2; //for ampersand and equals
-		}
-		char* url = (char*) malloc(sizeof(char) * size_toalloc);
-		url[0] = '\0';
-		strcat(url, base_url);
-		if (num_params > 0) {
-			strcat(url, "?");
+		int num_params = array_list_length(url_params);
+		if (num_params <= 0) {
+			return base_url;
+		} else {
+			int size_toalloc = strlen(base_url) + 1;
+			char** allkeys = (char**) malloc(num_params * sizeof(char*));
+			char** allvals = (char**) malloc(num_params * sizeof(char*));
 			for (int i = 0; i < num_params; i++) {
-				if (i > 0) {
-					strcat(url, "&");
-				}
-				strcat(url, allkeys[i]);
-				strcat(url, "=");
-				strcat(url, allvals[i]);
+				url_param* param = (url_param*) array_list_get_idx(url_params,
+						i);
+				docker_log_debug("%s=%s\n", param->k, param->v);
+				allkeys[i] = curl_easy_escape(curl, param->k, 0);
+				allvals[i] = curl_easy_escape(curl, param->v, 0);
 			}
+			for (int i = 0; i < num_params; i++) {
+				size_toalloc += strlen(allkeys[i]);
+				size_toalloc += strlen(allvals[i]);
+				size_toalloc += 2; //for ampersand and equals
+			}
+			char* url = (char*) malloc(sizeof(char) * size_toalloc);
+			url[0] = '\0';
+			strcat(url, base_url);
+			if (num_params > 0) {
+				strcat(url, "?");
+				for (int i = 0; i < num_params; i++) {
+					if (i > 0) {
+						strcat(url, "&");
+					}
+					strcat(url, allkeys[i]);
+					strcat(url, "=");
+					strcat(url, allvals[i]);
+				}
+			}
+			docker_log_debug("URL Created:\n%s", url);
+			return url;
 		}
-		docker_log_debug("URL Created:\n%s", url);
-		return url;
 	}
 }
 
@@ -138,7 +170,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
 }
 
 error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
-		url_param** params, int num_params) {
+		struct array_list* url_params) {
 	if (ctx->socket != NULL) {
 		curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, ctx->socket);
 		char* local_url = "http://localhost/";
@@ -146,7 +178,7 @@ error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 				sizeof(char) * (strlen(local_url) + strlen(api_url) + 1));
 		strcpy(base_url, local_url);
 		strcat(base_url, api_url);
-		char* url = build_url(curl, base_url, params, num_params);
+		char* url = build_url(curl, base_url, url_params);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		return 0;
 	} else if (ctx->url != NULL) {
@@ -154,7 +186,7 @@ error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 				sizeof(char) * (strlen(ctx->url) + strlen(api_url) + 1));
 		strcpy(base_url, ctx->url);
 		strcat(base_url, api_url);
-		char* url = build_url(curl, base_url, params, num_params);
+		char* url = build_url(curl, base_url, url_params);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		return E_SUCCESS;
 	} else {
@@ -163,7 +195,7 @@ error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 }
 
 error_t docker_api_post(docker_context* ctx, docker_result** result,
-		char* api_url, url_param** params, int num_params, char* post_data,
+		char* api_url, struct array_list* url_params, char* post_data,
 		struct MemoryStruct *chunk) {
 	CURL *curl;
 	CURLcode res;
@@ -178,7 +210,7 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 		/* First set the URL that is about to receive our POST. This URL can
 		 just as well be a https:// URL if that is what should receive the
 		 data. */
-		int set_url_err = set_curl_url(curl, ctx, api_url, params, num_params);
+		int set_url_err = set_curl_url(curl, ctx, api_url, url_params);
 		if (set_url_err) {
 			return -1;
 		}
@@ -220,12 +252,14 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 			curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effective_url);
 			if (response_code == 200 || response_code == 201
 					|| response_code == 204) {
-				make_docker_result(result, E_SUCCESS, response_code, effective_url, NULL);
+				make_docker_result(result, E_SUCCESS, response_code,
+						effective_url, NULL);
 			} else {
 				make_docker_result(result, E_INVALID_INPUT, response_code,
 						effective_url, "error");
 			}
-			docker_log_debug("%lu bytes retrieved\n", (unsigned long ) chunk->size);
+			docker_log_debug("%lu bytes retrieved\n",
+					(unsigned long ) chunk->size);
 			//log_debug("Data is [%s].\n", chunk->memory);
 		}
 		/* always cleanup */
@@ -235,7 +269,7 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 }
 
 error_t docker_api_get(docker_context* ctx, docker_result** result,
-		char* api_url, url_param** params, int num_params,
+		char* api_url, struct array_list* url_params,
 		struct MemoryStruct *chunk) {
 	CURL *curl;
 	CURLcode res;
@@ -250,7 +284,7 @@ error_t docker_api_get(docker_context* ctx, docker_result** result,
 		/* First set the URL that is about to receive our POST. This URL can
 		 just as well be a https:// URL if that is what should receive the
 		 data. */
-		int set_url_err = set_curl_url(curl, ctx, api_url, params, num_params);
+		int set_url_err = set_curl_url(curl, ctx, api_url, url_params);
 		if (set_url_err) {
 			return -1;
 		}
@@ -284,12 +318,14 @@ error_t docker_api_get(docker_context* ctx, docker_result** result,
 			curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effective_url);
 			if (response_code == 200 || response_code == 201
 					|| response_code == 204) {
-				make_docker_result(result, E_SUCCESS, response_code, effective_url, NULL);
+				make_docker_result(result, E_SUCCESS, response_code,
+						effective_url, NULL);
 			} else {
 				make_docker_result(result, E_INVALID_INPUT, response_code,
 						effective_url, "error");
 			}
-			docker_log_debug("%lu bytes retrieved\n", (unsigned long ) chunk->size);
+			docker_log_debug("%lu bytes retrieved\n",
+					(unsigned long ) chunk->size);
 			//log_debug("Data is [%s].\n", chunk->memory);
 		}
 		/* always cleanup */

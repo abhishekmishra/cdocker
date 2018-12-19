@@ -402,7 +402,22 @@ error_t docker_start_container(docker_context* ctx, docker_result** result,
 error_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id);
 
-error_t docker_stdout_container(docker_context* ctx, docker_result** result,
-		char** log, char* id);
+/**
+ * Get the logs for the docker container.
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param log pointer to string to be returned.
+ * \param follow - this param has no effect for now, as socket support is not implemented.
+ * \param stdout whether to get stdout (>0 means yes)
+ * \param stderr whether to get stdin (>0 means yes)
+ * \param since time since which the logs are to be fetched (unix timestamp)
+ * \param until time till which the logs are to be fetched (unix timestamp)
+ * \param timestamps add timestamps to log lines (>0 means yes)
+ * \param tail 0 means all, any positive number indicates the number of lines to fetch.
+ * \return error code
+ */
+error_t docker_container_logs(docker_context* ctx, docker_result** result,
+		char** log, char* id, int follow, int stdout, int stderr, long since, long until, int timestamps, int tail);
 
 #endif /* DOCKER_CONTAINERS_H_ */

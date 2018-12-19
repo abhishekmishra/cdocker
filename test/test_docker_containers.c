@@ -60,7 +60,7 @@ static void test_start(void **state) {
 	docker_wait_container(ctx, &res, id);
 	handle_error(res);
 	char* output;
-	docker_stdout_container(ctx, &res, &output, id);
+	docker_container_logs(ctx, &res, &output, id, 0, 1, 1, -1, -1, 1, -1);
 	handle_error(res);
 	assert_non_null(output);
 	assert_string_equal(output, "hello world\n");
@@ -72,7 +72,7 @@ static void test_list(void **state) {
 	make_docker_containers_list_filter(&filter);
 	containers_filter_add_id(filter, id);
 	docker_containers_list* containers;
-	docker_container_list(ctx, &res, &containers, 1, 5, 1, filter);
+	docker_container_list(ctx, &res, &containers, 0, 5, 1, filter);
 	handle_error(res);
 	docker_log_info("Read %d containers.\n", docker_containers_list_length(containers));
 	assert_int_equal(docker_containers_list_length(containers), 1);

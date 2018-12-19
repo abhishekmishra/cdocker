@@ -47,7 +47,7 @@ int main() {
 		handle_error(res);
 
 		char* log;
-		docker_stdout_container(ctx, &res, &log, id);
+		docker_container_logs(ctx, &res, &log, id, 0, 1, 1, -1, -1, 1, -1);
 		handle_error(res);
 
 		docker_containers_list_filter* filter;

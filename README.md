@@ -17,7 +17,7 @@
 |Docker Result        |            :ok: |           :ok:|   :x: |                          |
 |Docker Context       |            :ok: |           :x: |   :x: |                          |
 |HTTP Support         |            :ok: |           :x: |   :x: |                          |
-|Unix Socket Support  |             :x: |           :x: |   :x: |                          |
+|Unix Socket Support  |            :ok: |           :x: |   :x: |                          |
 |Authentication       |             :x: |           :x: |   :x: |                          |
 
 
@@ -28,7 +28,7 @@
 |List Containers      |            :ok: |           :x: |  :ok: |                          |
 |Create Container     |            :ok: |           :x: |  :ok: | Only two params done.    |
 |Inspect Containers   |             :x: |           :x: |   :x: |                          |
-|List Processes       |             :x: |           :x: |   :x: |                          |
+|List Processes       |            :ok: |           :x: |   :x: |                          |
 |Container Logs       |             :x: |           :x: |   :x: |                          |
 |Container FS Changes |             :x: |           :x: |   :x: |                          |
 |Export Container     |             :x: |           :x: |   :x: |                          |

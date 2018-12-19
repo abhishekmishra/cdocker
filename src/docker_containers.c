@@ -421,22 +421,24 @@ void extract_filter_field_int(json_object* fobj, char* filter_name,
 }
 
 error_t make_docker_containers_list(docker_containers_list** container_list) {
-	(*container_list) = array_list_new((void (*)(void *)) &free_docker_container_list_item);
+	(*container_list) = array_list_new(
+			(void (*)(void *)) &free_docker_container_list_item);
 	return E_SUCCESS;
 }
 
-int docker_containers_list_add(docker_containers_list* list, docker_container_list_item* item) {
+int docker_containers_list_add(docker_containers_list* list,
+		docker_container_list_item* item) {
 	return array_list_add(list, item);
 }
 
-docker_container_list_item* docker_containers_list_get_idx(docker_containers_list* list, int i) {
-	return (docker_container_list_item*)array_list_get_idx(list, i);
+docker_container_list_item* docker_containers_list_get_idx(
+		docker_containers_list* list, int i) {
+	return (docker_container_list_item*) array_list_get_idx(list, i);
 }
 
 int docker_containers_list_length(docker_containers_list* list) {
 	return array_list_length(list);
 }
-
 
 error_t docker_container_list(docker_context* ctx, docker_result** result,
 		docker_containers_list** container_list, int all, int limit, int size,
@@ -448,34 +450,32 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 	sprintf(url, "%s%s", containers, method);
 	docker_log_debug("List url is %s\n", url);
 
-	url_param** params = (url_param**) malloc(sizeof(url_param*) * 4);
+	struct array_list* params = array_list_new((void (*)(void *))&free_url_param);
 	int num_params = 0;
 
+	url_param* p;
+
 	if (all > 0) {
-		params[num_params] = (url_param*) malloc(sizeof(url_param));
-		params[num_params]->k = "all";
-		params[num_params]->v = "true";
+		make_url_param(&p, "all", "true");
+		array_list_add(params, p);
 		num_params++;
 	}
 
 	if (limit > 0) {
-		params[num_params] = (url_param*) malloc(sizeof(url_param));
-		params[num_params]->k = "limit";
-		params[num_params]->v = (char*) malloc(128 * sizeof(char));
-		sprintf(params[num_params]->v, "%d", limit);
+		char* lim_val = (char*) malloc(128 * sizeof(char));
+		sprintf(lim_val, "%d", limit);
+		make_url_param(&p, "limit", lim_val);
+		array_list_add(params, p);
 		num_params++;
 	}
 
 	if (size > 0) {
-		params[num_params] = (url_param*) malloc(sizeof(url_param));
-		params[num_params]->k = "size";
-		params[num_params]->v = "true";
+		make_url_param(&p, "size", "true");
+		array_list_add(params, p);
 		num_params++;
 	}
 
 	if (filters) {
-		params[num_params] = (url_param*) malloc(sizeof(url_param));
-		params[num_params]->k = "filters";
 		json_object* fobj = json_object_new_object();
 
 		//set filter attributes
@@ -509,13 +509,17 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 		extract_filter_field_char(fobj, "volume", filters->num_volume,
 				filters->volume);
 
-		params[num_params]->v = (char *) json_object_to_json_string(fobj);
+		char* filter_val = (char *) json_object_to_json_string(fobj);
+		docker_log_debug("Filter Value -> %s", filter_val);
+		make_url_param(&p, "filters", filter_val);
+		array_list_add(params, p);
+
 		num_params++;
 	}
 
 	json_object *response_obj;
 	struct MemoryStruct chunk;
-	docker_api_get(ctx, result, url, params, num_params, &chunk);
+	docker_api_get(ctx, result, url, params, &chunk);
 	free(params);
 
 	//need to skip 8 bytes of binary junk
@@ -617,8 +621,8 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 							get_attr_str(v, "GlobalIPv6Address"),
 							get_attr_int(v, "GlobalIPv6PrefixLen"),
 							get_attr_str(v, "MacAddress"));
-					docker_container_list_item_network_settings_add(
-							listItem, settings);
+					docker_container_list_item_network_settings_add(listItem,
+							settings);
 				}
 				free(networksObj);
 			}
@@ -712,7 +716,7 @@ error_t docker_create_container(docker_context* ctx, docker_result** result,
 		json_object_object_add(create_obj, "Cmd", cmd_arr);
 	}
 
-	docker_api_post(ctx, result, "containers/create", NULL, 0,
+	docker_api_post(ctx, result, "containers/create", NULL,
 			(char*) json_object_to_json_string(create_obj), &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
@@ -750,7 +754,7 @@ error_t docker_process_list_container(docker_context* ctx,
 
 	json_object *new_obj;
 	struct MemoryStruct chunk;
-	docker_api_get(ctx, result, url, NULL, 0, &chunk);
+	docker_api_get(ctx, result, url, NULL, &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
 	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
@@ -789,7 +793,7 @@ error_t docker_start_container(docker_context* ctx, docker_result** result,
 
 	json_object *new_obj;
 	struct MemoryStruct chunk;
-	docker_api_post(ctx, result, url, NULL, 0, "", &chunk);
+	docker_api_post(ctx, result, url, NULL, "", &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
 	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
@@ -809,7 +813,7 @@ error_t docker_wait_container(docker_context* ctx, docker_result** result,
 
 	json_object *new_obj;
 	struct MemoryStruct chunk;
-	docker_api_post(ctx, result, url, NULL, 0, "", &chunk);
+	docker_api_post(ctx, result, url, NULL, "", &chunk);
 
 	new_obj = json_tokener_parse(chunk.memory);
 	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
@@ -817,8 +821,24 @@ error_t docker_wait_container(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
-error_t docker_stdout_container(docker_context* ctx, docker_result** result,
-		char** log, char* id) {
+/**
+ * Get the logs for the docker container.
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param log pointer to string to be returned.
+ * \param follow - this param has no effect for now, as socket support is not implemented.
+ * \param stdout whether to get stdout (>0 means yes)
+ * \param stderr whether to get stdin (>0 means yes)
+ * \param since time since which the logs are to be fetched (unix timestamp)
+ * \param until time till which the logs are to be fetched (unix timestamp)
+ * \param timestamps add timestamps to log lines (>0 means yes)
+ * \param tail 0 means all, any positive number indicates the number of lines to fetch.
+ * \return error code
+ */
+error_t docker_container_logs(docker_context* ctx, docker_result** result,
+		char** log, char* id, int follow, int stdout, int stderr, long since,
+		long until, int timestamps, int tail) {
 	char* method = "/logs?stdout=1";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
@@ -828,7 +848,7 @@ error_t docker_stdout_container(docker_context* ctx, docker_result** result,
 	docker_log_debug("Stdout url is %s", url);
 
 	struct MemoryStruct chunk;
-	docker_api_get(ctx, result, url, NULL, 0, &chunk);
+	docker_api_get(ctx, result, url, NULL, &chunk);
 
 	(*log) = chunk.memory + 8;
 	return E_SUCCESS;

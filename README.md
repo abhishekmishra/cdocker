@@ -35,7 +35,7 @@
 |Resource Usage Stats |             :x: |           :x: |   :x: |                          |
 |Resize TTY           |             :x: |           :x: |   :x: |                          |
 |Start                |            :ok: |          :ok: |  :ok: | test detachKeys                         |
-|Stop                 |             :x: |           :x: |   :x: |                          |
+|Stop                 |            :ok: |          :ok: |  :ok: |                          |
 |Restart              |             :x: |           :x: |   :x: |                          |
 |Kill                 |             :x: |           :x: |   :x: |                          |
 |Update               |             :x: |           :x: |   :x: |                          |

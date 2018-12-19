@@ -493,6 +493,30 @@ error_t docker_start_container(docker_context* ctx, docker_result** result,
 error_t docker_stop_container(docker_context* ctx, docker_result** result,
 		char* id, int t);
 
+/**
+ * Restart a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \param t number of seconds to wait before killing the container
+ * \return error code
+ */
+error_t docker_restart_container(docker_context* ctx, docker_result** result,
+		char* id, int t);
+
+/**
+ * Kill a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \param signal (optional - NULL for default i.e. SIGKILL) signal name to send
+ * \return error code
+ */
+error_t docker_kill_container(docker_context* ctx, docker_result** result,
+		char* id, char* signal);
+
 error_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id);
 

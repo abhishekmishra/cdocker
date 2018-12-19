@@ -36,7 +36,7 @@
 |Resize TTY           |             :x: |           :x: |   :x: |                          |
 |Start                |            :ok: |          :ok: |  :ok: | test detachKeys                         |
 |Stop                 |            :ok: |          :ok: |  :ok: |                          |
-|Restart              |             :x: |           :x: |   :x: |                          |
+|Restart              |            :ok: |          :ok: |  :ok: |                          |
 |Kill                 |             :x: |           :x: |   :x: |                          |
 |Update               |             :x: |           :x: |   :x: |                          |
 |Rename               |             :x: |           :x: |   :x: |                          |

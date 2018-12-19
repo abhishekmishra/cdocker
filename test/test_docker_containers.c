@@ -95,12 +95,31 @@ static void test_stopping_stopped_container(void **state) {
 	assert_int_equal(res->http_error_code, 304);
 }
 
+static void test_killing_stopped_container(void **state) {
+	char* id = *state;
+	docker_kill_container(ctx, &res, id, NULL);
+	handle_error(res);
+	assert_int_equal(res->http_error_code, 409);
+}
+
+static void test_restart_container(void **state) {
+	char* id = *state;
+	docker_restart_container(ctx, &res, id, 0);
+	handle_error(res);
+	assert_int_equal(res->http_error_code, 204);
+	docker_wait_container(ctx, &res, id);
+	handle_error(res);
+	assert_int_equal(res->http_error_code, 200);
+}
+
 int docker_container_tests() {
 	const struct CMUnitTest tests[] = {
 	cmocka_unit_test(test_start),
 	cmocka_unit_test(test_list),
 	cmocka_unit_test(test_changes),
-	cmocka_unit_test(test_stopping_stopped_container) };
+	cmocka_unit_test(test_stopping_stopped_container),
+	cmocka_unit_test(test_killing_stopped_container),
+	cmocka_unit_test(test_restart_container) };
 	return cmocka_run_group_tests_name("docker container tests", tests,
 			group_setup, group_teardown);
 }

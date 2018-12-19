@@ -58,6 +58,15 @@ int main() {
 		docker_stop_container(ctx, &res, id, 0);
 		handle_error(res);
 
+		docker_restart_container(ctx, &res, id, 0);
+		handle_error(res);
+
+		docker_wait_container(ctx, &res, id);
+		handle_error(res);
+
+		docker_kill_container(ctx, &res, id, NULL);
+		handle_error(res);
+
 		docker_containers_list_filter* filter;
 		make_docker_containers_list_filter(&filter);
 //		containers_filter_add_name(filter, "/registryui");

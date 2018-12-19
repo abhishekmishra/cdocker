@@ -37,7 +37,7 @@
 |Start                |            :ok: |          :ok: |  :ok: | test detachKeys                         |
 |Stop                 |            :ok: |          :ok: |  :ok: |                          |
 |Restart              |            :ok: |          :ok: |  :ok: |                          |
-|Kill                 |             :x: |           :x: |   :x: |                          |
+|Kill                 |            :ok: |          :ok: |  :ok: |                          |
 |Update               |             :x: |           :x: |   :x: |                          |
 |Rename               |             :x: |           :x: |   :x: |                          |
 |Pause                |             :x: |           :x: |   :x: |                          |

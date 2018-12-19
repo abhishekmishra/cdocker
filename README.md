@@ -82,3 +82,13 @@
 |Connect container to network   |             :x: |           :x: |   :x: |                          |
 |Disconnect container from network   |             :x: |           :x: |   :x: |                          |
 |Delete unused        |             :x: |           :x: |   :x: |                          |
+
+### Volumes API
+
+| Method              | Implementation  | Documentation | Tests | TODOs                    |
+|---------------------|-----------------|---------------|-------|--------------------------|
+|List		          |             :x: |           :x: |   :x: |                          |
+|Create               |             :x: |           :x: |   :x: |                          |
+|Inspect			  |             :x: |           :x: |   :x: |                          |
+|Remove 		      |             :x: |           :x: |   :x: |                          |
+|Delete unused        |             :x: |           :x: |   :x: |                          |

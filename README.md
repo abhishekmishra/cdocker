@@ -92,3 +92,12 @@
 |Inspect			  |             :x: |           :x: |   :x: |                          |
 |Remove 		      |             :x: |           :x: |   :x: |                          |
 |Delete unused        |             :x: |           :x: |   :x: |                          |
+
+### Exec API
+
+| Method              | Implementation  | Documentation | Tests | TODOs                    |
+|---------------------|-----------------|---------------|-------|--------------------------|
+|Create exec instance |             :x: |           :x: |   :x: |                          |
+|Start                |             :x: |           :x: |   :x: |                          |
+|Resize	    		  |             :x: |           :x: |   :x: |                          |
+|Inspect 		      |             :x: |           :x: |   :x: |                          |

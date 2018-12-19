@@ -39,7 +39,7 @@
 |Restart              |            :ok: |          :ok: |  :ok: |                          |
 |Kill                 |            :ok: |          :ok: |  :ok: |                          |
 |Update               |             :x: |           :x: |   :x: |                          |
-|Rename               |             :x: |           :x: |   :x: |                          |
+|Rename               |            :ok: |          :ok: |   :x: |                          |
 |Pause                |             :x: |           :x: |   :x: |                          |
 |Unpause              |             :x: |           :x: |   :x: |                          |
 |Attach               |             :x: |           :x: |   :x: |                          |

@@ -21,9 +21,9 @@ int main() {
 	docker_context* ctx;
 	docker_result* res;
 
-	if (make_docker_context_url(&ctx, "http://192.168.1.33:2376/")
-			== E_SUCCESS) {
-//	if (make_docker_context_socket(&ctx, "/var/run/docker.sock") == E_SUCCESS) {
+//	if (make_docker_context_url(&ctx, "http://192.168.1.33:2376/")
+//			== E_SUCCESS) {
+	if (make_docker_context_socket(&ctx, "/var/run/docker.sock") == E_SUCCESS) {
 		docker_create_container_params* p;
 		make_docker_create_container_params(&p);
 		p->image = "alpine";
@@ -67,12 +67,15 @@ int main() {
 		docker_kill_container(ctx, &res, id, NULL);
 		handle_error(res);
 
+//		docker_rename_container(ctx, &res, id, "dude101");
+//		handle_error(res);
+
 		docker_containers_list_filter* filter;
 		make_docker_containers_list_filter(&filter);
 //		containers_filter_add_name(filter, "/registryui");
-//		containers_filter_add_id(filter, id);
+		containers_filter_add_id(filter, id);
 		docker_containers_list* containers;
-		docker_container_list(ctx, &res, &containers, 0, 0, 1, filter);
+		docker_container_list(ctx, &res, &containers, 1, 0, 1, filter);
 		handle_error(res);
 		docker_log_info("Read %d containers.\n",
 				docker_containers_list_length(containers));
@@ -84,8 +87,10 @@ int main() {
 			docker_changes_list* changes;
 			docker_container_changes(ctx, &res, &changes,
 					docker_containers_list_get_idx(containers, i)->id);
-			docker_log_info("Read %d changes for Id %s",
-					docker_changes_list_length(changes), id);
+			if (changes) {
+				docker_log_info("Read %d changes for Id %s",
+						docker_changes_list_length(changes), id);
+			}
 			handle_error(res);
 		}
 

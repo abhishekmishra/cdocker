@@ -1122,6 +1122,48 @@ error_t docker_kill_container(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
+/**
+ * Rename a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \param name new name for the container
+ * \return error code
+ */
+error_t docker_rename_container(docker_context* ctx, docker_result** result,
+		char* id, char* name) {
+	char* url = create_service_url_id_method(id, "rename");
+
+	struct array_list* params = array_list_new(
+			(void (*)(void *)) &free_url_param);
+	url_param* p;
+
+	if (name != NULL) {
+		make_url_param(&p, "name", make_defensive_copy(name));
+		array_list_add(params, p);
+	}
+
+	json_object *new_obj;
+	struct MemoryStruct chunk;
+	docker_api_post(ctx, result, url, params, "", &chunk);
+
+	if ((*result)->http_error_code == 404) {
+		(*result)->message = make_defensive_copy("container not found.");
+	}
+
+	if ((*result)->http_error_code == 409) {
+		(*result)->message = make_defensive_copy("name is already in use");
+	}
+
+	free(params);
+
+	new_obj = json_tokener_parse(chunk.memory);
+	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
+
+	return E_SUCCESS;
+}
+
 error_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id) {
 	char* url = create_service_url_id_method(id, "wait");

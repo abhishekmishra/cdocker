@@ -467,7 +467,7 @@ int docker_changes_list_length(docker_changes_list* list);
 error_t docker_container_changes(docker_context* ctx, docker_result** result,
 		docker_changes_list** changes, char* id);
 
-///////////// Get Container Start, Stop, Restart, Kill, Pause, Unpause, Wait
+///////////// Get Container Start, Stop, Restart, Kill, Rename, Pause, Unpause, Wait
 
 /**
  * Start a container
@@ -516,6 +516,18 @@ error_t docker_restart_container(docker_context* ctx, docker_result** result,
  */
 error_t docker_kill_container(docker_context* ctx, docker_result** result,
 		char* id, char* signal);
+
+/**
+ * Rename a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \param name new name for the container
+ * \return error code
+ */
+error_t docker_rename_container(docker_context* ctx, docker_result** result,
+		char* id, char* name);
 
 error_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id);

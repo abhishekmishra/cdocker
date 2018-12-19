@@ -30,7 +30,7 @@
 |Inspect Containers   |             :x: |           :x: |   :x: |                          |
 |List Processes       |            :ok: |           :x: |   :x: |                          |
 |Container Logs       |            :ok: |          :ok: |  :ok: | Socket based follow not implemented |
-|Container FS Changes |             :x: |           :x: |   :x: |                          |
+|Container FS Changes |            :ok: |          :ok: |  :ok: |                          |
 |Export Container     |             :x: |           :x: |   :x: |                          |
 |Resource Usage Stats |             :x: |           :x: |   :x: |                          |
 |Resize TTY           |             :x: |           :x: |   :x: |                          |

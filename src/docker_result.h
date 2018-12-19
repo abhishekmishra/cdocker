@@ -29,6 +29,9 @@
 #ifndef SRC_DOCKER_RESULT_H_
 #define SRC_DOCKER_RESULT_H_
 
+#define DOCKER_PARAM_TRUE 1
+#define DOCKER_PARAM_FALSE 0
+
 // The error code usage below based on suggestions at
 // https://stackoverflow.com/questions/6286874/c-naming-suggestion-for-error-code-enums
 

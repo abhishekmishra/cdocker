@@ -22,8 +22,9 @@ static docker_result* res;
 
 void handle_error(docker_result* res) {
 	docker_log_info("DOCKER_RESULT: For URL: %s", get_url(res));
-	docker_log_info("DOCKER RESULT: Response error_code = %d, http_response = %ld", get_error(res),
-			get_http_error(res));
+	docker_log_info(
+			"DOCKER RESULT: Response error_code = %d, http_response = %ld",
+			get_error(res), get_http_error(res));
 	free_docker_result(&res);
 }
 
@@ -60,7 +61,9 @@ static void test_start(void **state) {
 	docker_wait_container(ctx, &res, id);
 	handle_error(res);
 	char* output;
-	docker_container_logs(ctx, &res, &output, id, 0, 1, 1, -1, -1, 1, -1);
+	docker_container_logs(ctx, &res, &output, id, DOCKER_PARAM_FALSE,
+			DOCKER_PARAM_TRUE, DOCKER_PARAM_FALSE, -1, -1, DOCKER_PARAM_FALSE,
+			-1);
 	handle_error(res);
 	assert_non_null(output);
 	assert_string_equal(output, "hello world\n");
@@ -74,7 +77,8 @@ static void test_list(void **state) {
 	docker_containers_list* containers;
 	docker_container_list(ctx, &res, &containers, 0, 5, 1, filter);
 	handle_error(res);
-	docker_log_info("Read %d containers.\n", docker_containers_list_length(containers));
+	docker_log_info("Read %d containers.\n",
+			docker_containers_list_length(containers));
 	assert_int_equal(docker_containers_list_length(containers), 1);
 }
 

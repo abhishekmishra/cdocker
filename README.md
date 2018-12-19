@@ -29,7 +29,7 @@
 |Create Container     |            :ok: |           :x: |  :ok: | Only two params done.    |
 |Inspect Containers   |             :x: |           :x: |   :x: |                          |
 |List Processes       |            :ok: |           :x: |   :x: |                          |
-|Container Logs       |             :x: |           :x: |   :x: |                          |
+|Container Logs       |            :ok: |          :ol: |  :ok: | Socket based follow not implemented |
 |Container FS Changes |             :x: |           :x: |   :x: |                          |
 |Export Container     |             :x: |           :x: |   :x: |                          |
 |Resource Usage Stats |             :x: |           :x: |   :x: |                          |

@@ -451,14 +451,11 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 	docker_log_debug("List url is %s\n", url);
 
 	struct array_list* params = array_list_new((void (*)(void *))&free_url_param);
-	int num_params = 0;
-
 	url_param* p;
 
 	if (all > 0) {
 		make_url_param(&p, "all", "true");
 		array_list_add(params, p);
-		num_params++;
 	}
 
 	if (limit > 0) {
@@ -466,13 +463,11 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 		sprintf(lim_val, "%d", limit);
 		make_url_param(&p, "limit", lim_val);
 		array_list_add(params, p);
-		num_params++;
 	}
 
 	if (size > 0) {
 		make_url_param(&p, "size", "true");
 		array_list_add(params, p);
-		num_params++;
 	}
 
 	if (filters) {
@@ -513,8 +508,6 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 		docker_log_debug("Filter Value -> %s", filter_val);
 		make_url_param(&p, "filters", filter_val);
 		array_list_add(params, p);
-
-		num_params++;
 	}
 
 	json_object *response_obj;
@@ -839,7 +832,7 @@ error_t docker_wait_container(docker_context* ctx, docker_result** result,
 error_t docker_container_logs(docker_context* ctx, docker_result** result,
 		char** log, char* id, int follow, int stdout, int stderr, long since,
 		long until, int timestamps, int tail) {
-	char* method = "/logs?stdout=1";
+	char* method = "/logs";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
 			(strlen(containers) + strlen(id) + strlen(method) + 1)
@@ -847,8 +840,49 @@ error_t docker_container_logs(docker_context* ctx, docker_result** result,
 	sprintf(url, "%s%s%s", containers, id, method);
 	docker_log_debug("Stdout url is %s", url);
 
+	struct array_list* params = array_list_new((void (*)(void *))&free_url_param);
+	url_param* p;
+
+	if (stdout > 0) {
+		make_url_param(&p, "stdout", "true");
+		array_list_add(params, p);
+	}
+
+	if (stderr > 0) {
+		make_url_param(&p, "stderr", "true");
+		array_list_add(params, p);
+	}
+
+	if (since >= 0) {
+		char* since_val = (char*) malloc(128 * sizeof(char));
+		sprintf(since_val, "%ld", since);
+		make_url_param(&p, "since", since_val);
+		array_list_add(params, p);
+	}
+
+	if (until > 0) {
+		char* until_val = (char*) malloc(128 * sizeof(char));
+		sprintf(until_val, "%ld", until);
+		make_url_param(&p, "until", until_val);
+		array_list_add(params, p);
+	}
+
+	if (timestamps > 0) {
+		make_url_param(&p, "timestamps", "true");
+		array_list_add(params, p);
+	}
+
+	if (tail > 0) {
+		char* tail_val = (char*) malloc(128 * sizeof(char));
+		sprintf(tail_val, "%d", tail);
+		make_url_param(&p, "tail", tail_val);
+		array_list_add(params, p);
+	}
+
 	struct MemoryStruct chunk;
-	docker_api_get(ctx, result, url, NULL, &chunk);
+	docker_api_get(ctx, result, url, params, &chunk);
+
+	free(params);
 
 	(*log) = chunk.memory + 8;
 	return E_SUCCESS;

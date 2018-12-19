@@ -15,13 +15,13 @@
 		type docker_container_ ## object ## _get_ ## name(docker_container_ ## object* object);
 
 #define DOCKER_CONTAINER_GETTER_ARR_ADD(object, type, name) \
-		int docker_container_ ## object ## _get_ ## name ## _add(docker_container_ ## object* object, type data);
+		int docker_container_ ## object ## _ ## name ## _add(docker_container_ ## object* object, type data);
 
 #define DOCKER_CONTAINER_GETTER_ARR_LEN(object, name) \
-		int docker_container_ ## object ## _get_ ## name ##_length(docker_container_ ## object* object);
+		int docker_container_ ## object ## _ ## name ## _length(docker_container_ ## object* object);
 
 #define DOCKER_CONTAINER_GETTER_ARR_GET_IDX(object, type, name) \
-		type docker_container_ ## object ## _get_ ## name ## _get_idx(docker_container_ ## object* object, int i);
+		type docker_container_ ## object ## _ ## name ## _get_idx(docker_container_ ## object* object, int i);
 
 
 typedef enum docker_container_port_type_t {
@@ -298,9 +298,16 @@ void containers_filter_add_status(docker_containers_list_filter* filter,
 void containers_filter_add_volume(docker_containers_list_filter* filter,
 		char* val);
 
+typedef struct array_list docker_containers_list;
+
 error_t docker_container_list(docker_context* ctx, docker_result** result,
-		struct array_list** container_list, int all, int limit, int size,
+		docker_containers_list** container_list, int all, int limit, int size,
 		docker_containers_list_filter* filters);
+
+error_t make_docker_containers_list(docker_containers_list** container_list);
+int docker_containers_list_add(docker_containers_list* list, docker_container_list_item* item);
+docker_container_list_item* docker_containers_list_get_idx(docker_containers_list* list, int i);
+int docker_containers_list_length(docker_containers_list* list);
 
 typedef struct health_config_t {
 	char** test;

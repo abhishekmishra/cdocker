@@ -43,23 +43,23 @@
 
 
 #define DOCKER_CONTAINER_GETTER_ARR_ADD_IMPL(object, type, name) \
-	int docker_container_ ## object ## _get_ ## name ## _add(docker_container_ ## object* object, type data) { \
+	int docker_container_ ## object ## _ ## name ## _add(docker_container_ ## object* object, type data) { \
 		return array_list_add(object->name, (void*) data); \
 	} \
 
 #define DOCKER_CONTAINER_GETTER_ARR_LEN_IMPL(object, name) \
-	int docker_container_ ## object ## _get_ ## name ##_length(docker_container_ ## object* object) { \
+	int docker_container_ ## object ## _ ## name ##_length(docker_container_ ## object* object) { \
 		return array_list_length(object->name); \
 	} \
 
 #define DOCKER_CONTAINER_GETTER_ARR_GET_IDX_IMPL(object, type, name) \
-	type docker_container_ ## object ## _get_ ## name ## _get_idx(docker_container_ ## object* object, int i) { \
+	type docker_container_ ## object ## _ ## name ## _get_idx(docker_container_ ## object* object, int i) { \
 		return (type) array_list_get_idx(object->name, i); \
 	} \
 
 char* make_defensive_copy(const char* from) {
 	char* to = NULL;
-	if (strlen(from) > 0) {
+	if ((from != NULL) && (strlen(from) > 0)) {
 		to = (char*) malloc((strlen(from) + 1) * sizeof(char));
 		strcpy(to, from);
 	}
@@ -420,8 +420,26 @@ void extract_filter_field_int(json_object* fobj, char* filter_name,
 	}
 }
 
+error_t make_docker_containers_list(docker_containers_list** container_list) {
+	(*container_list) = array_list_new((void (*)(void *)) &free_docker_container_list_item);
+	return E_SUCCESS;
+}
+
+int docker_containers_list_add(docker_containers_list* list, docker_container_list_item* item) {
+	return array_list_add(list, item);
+}
+
+docker_container_list_item* docker_containers_list_get_idx(docker_containers_list* list, int i) {
+	return (docker_container_list_item*)array_list_get_idx(list, i);
+}
+
+int docker_containers_list_length(docker_containers_list* list) {
+	return array_list_length(list);
+}
+
+
 error_t docker_container_list(docker_context* ctx, docker_result** result,
-		struct array_list** container_list, int all, int limit, int size,
+		docker_containers_list** container_list, int all, int limit, int size,
 		docker_containers_list_filter* filters) {
 	char* method = "json";
 	char* containers = "containers/";
@@ -495,7 +513,7 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 		num_params++;
 	}
 
-	json_object *new_obj;
+	json_object *response_obj;
 	struct MemoryStruct chunk;
 	docker_api_get(ctx, result, url, params, num_params, &chunk);
 	free(params);
@@ -503,9 +521,9 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 	//need to skip 8 bytes of binary junk
 	//log_debug("Output is \n%s\n", chunk.memory);
 
-	new_obj = json_tokener_parse(chunk.memory);
+	response_obj = json_tokener_parse(chunk.memory);
 	//log_debug("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
-	struct array_list* containers_arr = json_object_get_array(new_obj);
+	struct array_list* containers_arr = json_object_get_array(response_obj);
 	int len = containers_arr->length;
 
 	(*container_list) = array_list_new(
@@ -538,14 +556,12 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 				get_attr_long_long(containers_arr->array[i], "SizeRootFs"),
 				host_config);
 
-		array_list_add(clist, listItem);
-
 		json_object* namesObj;
 		if (json_object_object_get_ex(containers_arr->array[i], "Names",
 				&namesObj)) {
 			struct array_list* names_arr = json_object_get_array(namesObj);
 			for (int ni = 0; ni < names_arr->length; ni++) {
-				docker_container_list_item_get_names_add(listItem,
+				docker_container_list_item_names_add(listItem,
 						(char*) json_object_get_string(names_arr->array[ni]));
 			}
 		}
@@ -561,7 +577,7 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 						get_attr_int(ports_arr->array[ni], "PrivatePort"),
 						get_attr_int(ports_arr->array[ni], "PublicPort"),
 						get_attr_str(ports_arr->array[ni], "Type"));
-				docker_container_list_item_get_ports_add(listItem, ports);
+				docker_container_list_item_ports_add(listItem, ports);
 			}
 		}
 		free(portsObj);
@@ -572,10 +588,12 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 			json_object_object_foreach(labelsObj, key1, val1)
 			{
 				docker_container_label* label;
-				make_docker_container_label(&label, key1, json_object_get_string((json_object *) val1));
+				make_docker_container_label(&label, key1,
+						json_object_get_string((json_object *) val1));
 				docker_log_debug("Label [%s] = [%s]",
 						docker_container_label_get_key(label),
 						docker_container_label_get_value(label));
+				docker_container_list_item_labels_add(listItem, label);
 			}
 		}
 		free(labelsObj);
@@ -586,83 +604,48 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 			json_object* networksObj;
 			if (json_object_object_get_ex(networkSettingsObj, "Networks",
 					&networksObj)) {
-//				listItem->network_settings =
-//						(docker_container_network_settings*) malloc(
-//								sizeof(docker_container_network_settings));
-//				listItem->network_settings->num_network_items = 0;
-//				json_object_object_foreach(networksObj, key, val) {
-//					listItem->network_settings->num_network_items += 1;
-//				}
-//				docker_log_debug("Num networks is %d",
-//						listItem->network_settings->num_network_items);
-//				listItem->network_settings->network_items =
-//						(docker_container_network_settings_item**) malloc(
-//								listItem->network_settings->num_network_items
-//										* sizeof(docker_container_network_settings_item*));
-//				int ns_count = 0;
-//				json_object_object_foreach(networksObj, k, v) {
-//					listItem->network_settings->network_items[ns_count] =
-//							(docker_container_network_settings_item*) malloc(
-//									sizeof(docker_container_network_settings_item));
-//					listItem->network_settings->network_items[ns_count]->name =
-//							make_defensive_copy(k);
-//					listItem->network_settings->network_items[ns_count]->item =
-//							(docker_container_network_settings_network_item*) malloc(
-//									sizeof(docker_container_network_settings_network_item));
-//					listItem->network_settings->network_items[ns_count]->item->network_id =
-//							get_attr_str(v, "NetworkID");
-//					listItem->network_settings->network_items[ns_count]->item->endpoint_id =
-//							get_attr_str(v, "EndpointID");
-//					listItem->network_settings->network_items[ns_count]->item->gateway =
-//							get_attr_str(v, "Gateway");
-//					listItem->network_settings->network_items[ns_count]->item->ip_address =
-//							get_attr_str(v, "IPAddress");
-//					listItem->network_settings->network_items[ns_count]->item->ip_prefix_len =
-//							get_attr_int(v, "IPPrefixLen");
-//					listItem->network_settings->network_items[ns_count]->item->ipv6_gateway =
-//							get_attr_str(v, "IPv6Gateway");
-//					listItem->network_settings->network_items[ns_count]->item->global_ipv6_address =
-//							get_attr_str(v, "GlobalIPv6Address");
-//					listItem->network_settings->network_items[ns_count]->item->global_ipv6_prefix_len =
-//							get_attr_int(v, "GlobalIPv6PrefixLen");
-//					listItem->network_settings->network_items[ns_count]->item->mac_address =
-//							get_attr_str(v, "MacAddress");
-//					ns_count++;
-//				}
-//				free(networksObj);
+
+				json_object_object_foreach(networksObj, k, v) {
+					docker_container_network_settings_item* settings;
+					make_docker_container_network_settings_item(&settings, k,
+							get_attr_str(v, "NetworkID"),
+							get_attr_str(v, "EndpointID"),
+							get_attr_str(v, "Gateway"),
+							get_attr_str(v, "IPAddress"),
+							get_attr_int(v, "IPPrefixLen"),
+							get_attr_str(v, "IPv6Gateway"),
+							get_attr_str(v, "GlobalIPv6Address"),
+							get_attr_int(v, "GlobalIPv6PrefixLen"),
+							get_attr_str(v, "MacAddress"));
+					docker_container_list_item_network_settings_add(
+							listItem, settings);
+				}
+				free(networksObj);
 			}
 			free(networkSettingsObj);
 		}
 
 		json_object* mountsObj;
-//		if (json_object_object_get_ex(containers_arr->array[i], "Mounts",
-//				&mountsObj)) {
-//			struct array_list* mounts_arr = json_object_get_array(mountsObj);
-//			listItem->mounts = (docker_container_mount**) malloc(
-//					mounts_arr->length * sizeof(docker_container_mount*));
-//			for (int ni = 0; ni < mounts_arr->length; ni++) {
-//				listItem->mounts[ni] = (docker_container_mount*) malloc(
-//						sizeof(docker_container_mount));
-//				listItem->mounts[ni]->name = get_attr_str(mounts_arr->array[ni],
-//						"Name");
-//				listItem->mounts[ni]->type = get_attr_str(mounts_arr->array[ni],
-//						"Type");
-//				listItem->mounts[ni]->source = get_attr_str(
-//						mounts_arr->array[ni], "Source");
-//				listItem->mounts[ni]->destination = get_attr_str(
-//						mounts_arr->array[ni], "Destination");
-//				listItem->mounts[ni]->driver = get_attr_str(
-//						mounts_arr->array[ni], "Driver");
-//				listItem->mounts[ni]->mode = get_attr_str(mounts_arr->array[ni],
-//						"Mode");
-//				listItem->mounts[ni]->rw = get_attr_int(mounts_arr->array[ni],
-//						"Read");
-//				listItem->mounts[ni]->propagation = get_attr_str(
-//						mounts_arr->array[ni], "Propagation");
-//			}
-//			listItem->num_names = mounts_arr->length;
-//			free(mountsObj);
-//		}
+		if (json_object_object_get_ex(containers_arr->array[i], "Mounts",
+				&mountsObj)) {
+			struct array_list* mounts_arr = json_object_get_array(mountsObj);
+			for (int ni = 0; ni < mounts_arr->length; ni++) {
+				docker_container_mount* mount;
+				make_docker_container_mount(&mount,
+						get_attr_str(mounts_arr->array[ni], "Name"),
+						get_attr_str(mounts_arr->array[ni], "Type"),
+						get_attr_str(mounts_arr->array[ni], "Source"),
+						get_attr_str(mounts_arr->array[ni], "Destination"),
+						get_attr_str(mounts_arr->array[ni], "Driver"),
+						get_attr_str(mounts_arr->array[ni], "Mode"),
+						get_attr_int(mounts_arr->array[ni], "Read"),
+						get_attr_str(mounts_arr->array[ni], "Propagation"));
+
+				docker_container_list_item_mounts_add(listItem, mount);
+			}
+			free(mountsObj);
+		}
+		docker_containers_list_add(clist, listItem);
 	}
 
 	free(url);

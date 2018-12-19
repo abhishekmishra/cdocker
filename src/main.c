@@ -57,11 +57,11 @@ int main() {
 		docker_containers_list* containers;
 		docker_container_list(ctx, &res, &containers, 0, 0, 1, filter);
 		handle_error(res);
-		docker_log_info("Read %d containers.\n", containers->num_containers);
+		docker_log_info("Read %d containers.\n", docker_containers_list_length(containers));
 
-		for (int i = 0; i < containers->num_containers; i++) {
+		for (int i = 0; i < docker_containers_list_length(containers); i++) {
 			docker_process_list_container(ctx, &res, &ps,
-					containers->containers[i]->id, NULL);
+					docker_containers_list_get_idx(containers, i)->id, NULL);
 			handle_error(res);
 		}
 

@@ -57,6 +57,16 @@
 		return (type) array_list_get_idx(object->name, i); \
 	} \
 
+char* create_service_url_id_method(char* id, char* method) {
+	char* containers = "containers";
+	char* url = (char*) malloc(
+			(strlen(containers) + strlen(id) + strlen(method) + 1)
+					* sizeof(char));
+	sprintf(url, "%s/%s/%s", containers, id, method);
+	docker_log_debug("%s url is %s", method, url);
+	return url;
+}
+
 char* make_defensive_copy(const char* from) {
 	char* to = NULL;
 	if ((from != NULL) && (strlen(from) > 0)) {
@@ -775,46 +785,6 @@ error_t docker_process_list_container(docker_context* ctx,
 	return E_SUCCESS;
 }
 
-error_t docker_start_container(docker_context* ctx, docker_result** result,
-		char* id) {
-	char* method = "/start";
-	char* containers = "containers/";
-	char* url = (char*) malloc(
-			(strlen(containers) + strlen(id) + strlen(method) + 1)
-					* sizeof(char));
-	sprintf(url, "%s%s%s", containers, id, method);
-	docker_log_debug("Start url is %s", url);
-
-	json_object *new_obj;
-	struct MemoryStruct chunk;
-	docker_api_post(ctx, result, url, NULL, "", &chunk);
-
-	new_obj = json_tokener_parse(chunk.memory);
-	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
-
-	return E_SUCCESS;
-}
-
-error_t docker_wait_container(docker_context* ctx, docker_result** result,
-		char* id) {
-	char* method = "/wait";
-	char* containers = "containers/";
-	char* url = (char*) malloc(
-			(strlen(containers) + strlen(id) + strlen(method) + 1)
-					* sizeof(char));
-	sprintf(url, "%s%s%s", containers, id, method);
-	docker_log_debug("Wait url is %s", url);
-
-	json_object *new_obj;
-	struct MemoryStruct chunk;
-	docker_api_post(ctx, result, url, NULL, "", &chunk);
-
-	new_obj = json_tokener_parse(chunk.memory);
-	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
-
-	return E_SUCCESS;
-}
-
 /**
  * Get the logs for the docker container.
  *
@@ -959,13 +929,7 @@ int docker_changes_list_length(docker_changes_list* list) {
  */
 error_t docker_container_changes(docker_context* ctx, docker_result** result,
 		docker_changes_list** changes, char* id) {
-	char* method = "/changes";
-	char* containers = "containers/";
-	char* url = (char*) malloc(
-			(strlen(containers) + strlen(id) + strlen(method) + 1)
-					* sizeof(char));
-	sprintf(url, "%s%s%s", containers, id, method);
-	docker_log_debug("Changes url is %s", url);
+	char* url = create_service_url_id_method(id, "changes");
 
 	json_object *response_obj;
 	struct MemoryStruct chunk;
@@ -994,5 +958,53 @@ error_t docker_container_changes(docker_context* ctx, docker_result** result,
 			(*changes) = NULL;
 		}
 	}
+	return E_SUCCESS;
+}
+
+/**
+ * Start a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \param detachKeys (optional, pass NULL if not needed) key combination for detaching a container.
+ * \return error code
+ */
+error_t docker_start_container(docker_context* ctx, docker_result** result,
+		char* id, char* detachKeys) {
+	char* url = create_service_url_id_method(id, "start");
+
+	struct array_list* params = array_list_new(
+			(void (*)(void *)) &free_url_param);
+	url_param* p;
+
+	if (detachKeys != NULL) {
+		make_url_param(&p, "detachKeys", detachKeys);
+		array_list_add(params, p);
+	}
+
+	json_object *new_obj;
+	struct MemoryStruct chunk;
+	docker_api_post(ctx, result, url, params, "", &chunk);
+
+	free(params);
+
+	new_obj = json_tokener_parse(chunk.memory);
+	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
+
+	return E_SUCCESS;
+}
+
+error_t docker_wait_container(docker_context* ctx, docker_result** result,
+		char* id) {
+	char* url = create_service_url_id_method(id, "wait");
+
+	json_object *new_obj;
+	struct MemoryStruct chunk;
+	docker_api_post(ctx, result, url, NULL, "", &chunk);
+
+	new_obj = json_tokener_parse(chunk.memory);
+	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
+
 	return E_SUCCESS;
 }

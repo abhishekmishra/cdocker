@@ -36,7 +36,7 @@ int main() {
 
 		printf("Docker container id is %s\n", id);
 
-		docker_start_container(ctx, &res, id);
+		docker_start_container(ctx, &res, id, NULL);
 		handle_error(res);
 
 		docker_container_ps* ps;

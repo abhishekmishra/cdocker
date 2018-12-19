@@ -23,6 +23,8 @@
 #define DOCKER_CONTAINER_GETTER_ARR_GET_IDX(object, type, name) \
 		type docker_container_ ## object ## _ ## name ## _get_idx(docker_container_ ## object* object, int i);
 
+char* create_service_url_id_method(char* id, char* method);
+
 typedef enum docker_container_port_type_t {
 	CONTAINER_PORT_TYPE_TCP = 1
 } docker_container_port_type;
@@ -401,12 +403,6 @@ error_t docker_process_list_container(docker_context* ctx,
 		docker_result** result, docker_container_ps** ps, char* id,
 		char* process_args);
 
-error_t docker_start_container(docker_context* ctx, docker_result** result,
-		char* id);
-
-error_t docker_wait_container(docker_context* ctx, docker_result** result,
-		char* id);
-
 ///////////// Get Container Logs
 
 /**
@@ -470,4 +466,24 @@ int docker_changes_list_length(docker_changes_list* list);
  */
 error_t docker_container_changes(docker_context* ctx, docker_result** result,
 		docker_changes_list** changes, char* id);
+
+///////////// Get Container Start, Stop, Restart, Kill, Pause, Unpause, Wait
+
+/**
+ * Start a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \param detachKeys (optional) key combination for detaching a container.
+ * \return error code
+ */
+error_t docker_start_container(docker_context* ctx, docker_result** result,
+		char* id, char* detachKeys);
+
+error_t docker_wait_container(docker_context* ctx, docker_result** result,
+		char* id);
+
+
+
 #endif /* DOCKER_CONTAINERS_H_ */

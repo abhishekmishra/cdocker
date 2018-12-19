@@ -56,7 +56,7 @@ static int group_teardown(void **state) {
 
 static void test_start(void **state) {
 	char* id = *state;
-	docker_start_container(ctx, &res, id);
+	docker_start_container(ctx, &res, id, NULL);
 	handle_error(res);
 	docker_wait_container(ctx, &res, id);
 	handle_error(res);

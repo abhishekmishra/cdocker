@@ -111,6 +111,20 @@ static void test_killing_stopped_container(void **state) {
 //	assert_int_equal(res->http_error_code, 204);
 //}
 
+static void test_pause_stopped_container(void **state) {
+	char* id = *state;
+	docker_pause_container(ctx, &res, id);
+	handle_error(res);
+	assert_int_equal(res->http_error_code, 409);
+}
+
+static void test_unpause_stopped_container(void **state) {
+	char* id = *state;
+	docker_unpause_container(ctx, &res, id);
+	handle_error(res);
+	assert_int_equal(res->http_error_code, 500);
+}
+
 static void test_restart_container(void **state) {
 	char* id = *state;
 	docker_restart_container(ctx, &res, id, 0);
@@ -129,6 +143,8 @@ int docker_container_tests() {
 	cmocka_unit_test(test_stopping_stopped_container),
 	cmocka_unit_test(test_killing_stopped_container),
 //	cmocka_unit_test(test_rename_stopped_container),
+	cmocka_unit_test(test_pause_stopped_container),
+	cmocka_unit_test(test_unpause_stopped_container),
 	cmocka_unit_test(test_restart_container) };
 	return cmocka_run_group_tests_name("docker container tests", tests,
 			group_setup, group_teardown);

@@ -40,8 +40,8 @@
 |Kill                 |            :ok: |          :ok: |  :ok: |                          |
 |Update               |             :x: |           :x: |   :x: |                          |
 |Rename               |            :ok: |          :ok: |   :x: |                          |
-|Pause                |             :x: |           :x: |   :x: |                          |
-|Unpause              |             :x: |           :x: |   :x: |                          |
+|Pause                |            :ok: |          :ok: |  :ok: |                          |
+|Unpause              |            :ok: |          :ok: |  :ok: |                          |
 |Attach               |             :x: |           :x: |   :x: |                          |
 |Attach via Websocket |             :x: |           :x: |   :x: |                          |
 |Wait                 |             :x: |           :x: |   :x: |                          |

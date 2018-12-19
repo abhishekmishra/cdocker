@@ -67,6 +67,12 @@ int main() {
 		docker_kill_container(ctx, &res, id, NULL);
 		handle_error(res);
 
+		docker_pause_container(ctx, &res, id);
+		handle_error(res);
+
+		docker_unpause_container(ctx, &res, id);
+		handle_error(res);
+
 //		docker_rename_container(ctx, &res, id, "dude101");
 //		handle_error(res);
 

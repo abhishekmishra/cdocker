@@ -1164,6 +1164,73 @@ error_t docker_rename_container(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
+/**
+ * Pause a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \return error code
+ */
+error_t docker_pause_container(docker_context* ctx, docker_result** result,
+		char* id) {
+	char* url = create_service_url_id_method(id, "pause");
+
+	json_object *new_obj;
+	struct MemoryStruct chunk;
+	docker_api_post(ctx, result, url, NULL, "", &chunk);
+
+	if ((*result)->http_error_code == 404) {
+		(*result)->message = make_defensive_copy("container not found.");
+	}
+
+	new_obj = json_tokener_parse(chunk.memory);
+	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
+
+	//TODO move message extraction to post call
+	if ((*result)->http_error_code >= 400) {
+		char* msg = get_attr_str(new_obj, "message");
+		if (msg) {
+			(*result)->message = msg;
+		}
+	}
+	return E_SUCCESS;
+}
+
+/**
+ * Unpause a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \return error code
+ */
+error_t docker_unpause_container(docker_context* ctx, docker_result** result,
+		char* id) {
+	char* url = create_service_url_id_method(id, "unpause");
+
+	json_object *new_obj;
+	struct MemoryStruct chunk;
+	docker_api_post(ctx, result, url, NULL, "", &chunk);
+
+	if ((*result)->http_error_code == 404) {
+		(*result)->message = make_defensive_copy("container not found.");
+	}
+
+	new_obj = json_tokener_parse(chunk.memory);
+	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
+
+	//TODO move message extraction to post call
+	if ((*result)->http_error_code >= 400) {
+		char* msg = get_attr_str(new_obj, "message");
+		if (msg) {
+			(*result)->message = msg;
+		}
+	}
+
+	return E_SUCCESS;
+}
+
 error_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id) {
 	char* url = create_service_url_id_method(id, "wait");

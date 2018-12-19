@@ -529,6 +529,28 @@ error_t docker_kill_container(docker_context* ctx, docker_result** result,
 error_t docker_rename_container(docker_context* ctx, docker_result** result,
 		char* id, char* name);
 
+/**
+ * Pause a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \return error code
+ */
+error_t docker_pause_container(docker_context* ctx, docker_result** result,
+		char* id);
+
+/**
+ * Unpause a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \return error code
+ */
+error_t docker_unpause_container(docker_context* ctx, docker_result** result,
+		char* id);
+
 error_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id);
 

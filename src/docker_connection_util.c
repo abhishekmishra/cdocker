@@ -72,6 +72,7 @@ error_t make_docker_context_url(docker_context** ctx, const char* url) {
 	strcpy(u, url);
 	(*ctx)->url = u;
 	(*ctx)->socket = NULL;
+	(*ctx)->api_version = DOCKER_API_VERSION_1_39;
 	return E_SUCCESS;
 }
 
@@ -87,6 +88,7 @@ error_t make_docker_context_socket(docker_context** ctx, const char* socket) {
 	strcpy(s, socket);
 	(*ctx)->socket = s;
 	(*ctx)->url = NULL;
+	(*ctx)->api_version = DOCKER_API_VERSION_1_39;
 	return E_SUCCESS;
 }
 

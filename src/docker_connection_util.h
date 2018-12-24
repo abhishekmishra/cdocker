@@ -12,12 +12,15 @@
 #include <curl/curl.h>
 #include "docker_result.h"
 
+#define DOCKER_API_VERSION_1_39 "1.39"
+
 /**
  * A docker context for a specific docker server.
  */
 typedef struct docker_context {
 	char* socket;
 	char* url;
+	char* api_version;
 } docker_context;
 
 /**

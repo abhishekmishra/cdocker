@@ -21,9 +21,9 @@ int main() {
 	docker_context* ctx;
 	docker_result* res;
 
-//	if (make_docker_context_url(&ctx, "http://192.168.1.33:2376/")
-//			== E_SUCCESS) {
-	if (make_docker_context_socket(&ctx, "/var/run/docker.sock") == E_SUCCESS) {
+	if (make_docker_context_url(&ctx, "http://192.168.1.33:2376/")
+			== E_SUCCESS) {
+//	if (make_docker_context_socket(&ctx, "/var/run/docker.sock") == E_SUCCESS) {
 		docker_create_container_params* p;
 		make_docker_create_container_params(&p);
 		p->image = "alpine";

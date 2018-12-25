@@ -1,10 +1,14 @@
 # clibdocker: C API for Docker
 ### :warning: This is currently work in progress.
 
- ## Goals
+## Goals
  * Simplicity: Easy to understand and use API
  * Safety: Good memory management, Documentation ensures warnings about safe usage, thread safety.
  * Efficiency: Keep calls lightweight to enable heavy usage.
+ 
+## Limitations
+This method calls in the API are synchronous, which means the calling thread will block for response.
+At some point I will write corresponding asynchronous API endpoints (but not planned for now).
 
 ## API Completeness
 

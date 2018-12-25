@@ -371,21 +371,14 @@ error_t docker_create_container(docker_context* ctx, docker_result** result,
 //docker_container_details* docker_inspect_container(docker_context* ctx, char* id, int size);
 
 /**
- * Values for a single 'top'/'ps' line. Details about a process.
- */
-typedef struct docker_container_ps_item_t {
-	char** vals;
-	int num_vals;
-} docker_container_ps_item;
-
-/**
  * Struct which holds the titles of the process line, and the details of all processes.
  */
 typedef struct docker_container_ps_t {
-	char** titles;
-	int num_titles;
-	docker_container_ps_item* processes;
-	int num_processes;
+	struct array_list* titles;
+
+	//each item in this list is another list with values for
+	//each process
+	struct array_list* processes;
 } docker_container_ps;
 
 /**

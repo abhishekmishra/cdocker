@@ -371,7 +371,6 @@ long get_attr_long(json_object* obj, char* name) {
 	return attr;
 }
 
-
 long long get_attr_long_long(json_object* obj, char* name) {
 	json_object* extractObj;
 	long long attr = -1;
@@ -760,12 +759,7 @@ error_t docker_create_container(docker_context* ctx, docker_result** result,
 error_t docker_process_list_container(docker_context* ctx,
 		docker_result** result, docker_container_ps**ps, char* id,
 		char* process_args) {
-	char* method = "/top";
-	char* containers = "containers/";
-	char* url = (char*) malloc(
-			(strlen(containers) + strlen(id) + strlen(method) + 1)
-					* sizeof(char));
-	sprintf(url, "%s%s%s", containers, id, method);
+	char* url = create_service_url_id_method(id, "top");
 	docker_log_debug("Top url is %s", url);
 
 	json_object *new_obj;
@@ -775,25 +769,42 @@ error_t docker_process_list_container(docker_context* ctx,
 	new_obj = json_tokener_parse(chunk.memory);
 	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
 	if (is_ok((*result))) {
-		docker_container_ps* p = (*ps);
+		docker_container_ps* p;
 		p = (docker_container_ps*) malloc(sizeof(docker_container_ps));
 		if (!p) {
 			return E_ALLOC_FAILED;
 		}
 		json_object* titles_obj;
 		json_object_object_get_ex(new_obj, "Titles", &titles_obj);
-		p->num_titles = json_object_array_length(new_obj);
-		p->titles = (char**) malloc(p->num_titles * sizeof(char*));
-		for (int i = 0; i < p->num_titles; i++) {
-			p->titles[i] = (char *) json_object_to_json_string(
-					json_object_array_get_idx(titles_obj, i));
+		int num_titles = json_object_array_length(titles_obj);
+		p->titles = array_list_new(&free);
+		for (int i = 0; i < num_titles; i++) {
+			array_list_add(p->titles,
+					(char *) json_object_get_string(
+							json_object_array_get_idx(titles_obj, i)));
 		}
+
+		json_object* processes_obj;
+		json_object_object_get_ex(new_obj, "Processes", &processes_obj);
+		int num_processes = json_object_array_length(processes_obj);
+		p->processes = array_list_new((void (*)(void *)) &array_list_free);
+		for (int i = 0; i < num_processes; i++) {
+			json_object* process_obj = json_object_array_get_idx(processes_obj, i);
+			struct array_list* process_arr = array_list_new(&free);
+			int num_vals = json_object_array_length(process_obj);
+			for(int j = 0; j < num_vals; j++) {
+				array_list_add(process_arr, (char*)json_object_get_string(
+						json_object_array_get_idx(process_obj, j)));
+			}
+			array_list_add(p->processes, process_arr);
+		}
+		(*ps) = p;
 	} else {
 		json_object* msg_obj;
 		json_object_object_get_ex(new_obj, "message", &msg_obj);
 		(*result)->message = (char *) json_object_to_json_string(msg_obj);
 	}
-
+	free(chunk.memory);
 	return E_SUCCESS;
 }
 

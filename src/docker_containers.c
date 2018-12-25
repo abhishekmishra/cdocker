@@ -360,6 +360,18 @@ int get_attr_int(json_object* obj, char* name) {
 	return attr;
 }
 
+long get_attr_long(json_object* obj, char* name) {
+	json_object* extractObj;
+	long attr = -1;
+	if (json_object_object_get_ex(obj, name, &extractObj)) {
+		sscanf(json_object_get_string(extractObj), "%ld", &attr);
+		free(extractObj);
+	}
+	docker_log_debug("%s is |%ld|.", name, attr);
+	return attr;
+}
+
+
 long long get_attr_long_long(json_object* obj, char* name) {
 	json_object* extractObj;
 	long long attr = -1;
@@ -582,8 +594,8 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 			for (int ni = 0; ni < ports_arr->length; ni++) {
 				docker_container_ports* ports;
 				make_docker_container_ports(&ports,
-						get_attr_int(ports_arr->array[ni], "PrivatePort"),
-						get_attr_int(ports_arr->array[ni], "PublicPort"),
+						get_attr_long(ports_arr->array[ni], "PrivatePort"),
+						get_attr_long(ports_arr->array[ni], "PublicPort"),
 						get_attr_str(ports_arr->array[ni], "Type"));
 				docker_container_list_item_ports_add(listItem, ports);
 			}

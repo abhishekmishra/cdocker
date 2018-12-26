@@ -42,14 +42,9 @@ static docker_context* ctx = NULL;
 static docker_result* res;
 
 static int group_setup(void **state) {
+	curl_global_init(CURL_GLOBAL_ALL);
+	make_docker_context_socket(&ctx, "/var/run/docker.sock");
 	return E_SUCCESS;
-}
-
-static void test_ping(void **state) {
-	char* id = *state;
-	docker_ping(ctx, &res);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 200);
 }
 
 static int group_teardown(void **state) {
@@ -59,11 +54,27 @@ static int group_teardown(void **state) {
 	return E_SUCCESS;
 }
 
+static void test_ping(void **state) {
+	docker_ping(ctx, &res);
+	handle_error(res);
+	assert_int_equal(res->http_error_code, 200);
+}
+
+static void test_version(void **state) {
+	docker_version* version;
+	docker_system_version(ctx, &res, &version);
+	handle_error(res);
+	assert_int_equal(res->http_error_code, 200);
+	assert_non_null(version);
+	assert_non_null(version->version);
+}
+
 
 int docker_system_tests() {
 	const struct CMUnitTest tests[] = {
-	cmocka_unit_test(test_ping)
+	cmocka_unit_test(test_ping),
+	cmocka_unit_test(test_version)
  };
-	return cmocka_run_group_tests_name("docker container tests", tests,
+	return cmocka_run_group_tests_name("docker system tests", tests,
 			group_setup, group_teardown);
 }

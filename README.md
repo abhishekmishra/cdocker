@@ -112,7 +112,7 @@ At some point I will write corresponding asynchronous API endpoints (but not pla
 |---------------------|-----------------|---------------|-------|--------------------------|
 |Check Auth Config    |             :x: |           :x: |   :x: |                          |
 |Get System Info      |             :x: |           :x: |   :x: |                          |
-|Get Version          |             :x: |           :x: |   :x: |                          |
-|Ping   	      |            :ok: |          :ok: |  :ok: |                          |
+|Get Version          |            :ok: |          :ok: |  :ok: |                          |
+|Ping   	          |            :ok: |          :ok: |  :ok: |                          |
 |Monitor events       |             :x: |           :x: |   :x: |                          |
 |Get Data Usage Info  |             :x: |           :x: |   :x: |                          |

@@ -30,4 +30,15 @@
 
 char* make_defensive_copy(const char* from);
 
+char* get_attr_str(json_object* obj, char* name);
+
+int get_attr_int(json_object* obj, char* name);
+
+int get_attr_boolean(json_object* obj, char* name);
+
+long get_attr_long(json_object* obj, char* name);
+
+long long get_attr_long_long(json_object* obj, char* name);
+
+
 #endif /* SRC_DOCKER_UTIL_H_ */

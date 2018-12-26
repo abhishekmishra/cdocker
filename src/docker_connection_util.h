@@ -9,6 +9,9 @@
 #define DOCKER_CONNECTION_UTIL_H_
 
 #include <json-c/arraylist.h>
+#include <json-c/json_object.h>
+#include <json-c/json_tokener.h>
+#include <json-c/linkhash.h>
 #include <curl/curl.h>
 #include "docker_result.h"
 
@@ -82,13 +85,13 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
  */
 error_t docker_api_post(docker_context* ctx, docker_result** res, char* api_url,
 		struct array_list* url_params, char* post_data,
-		struct MemoryStruct *chunk);
+		struct MemoryStruct *chunk, json_object** response);
 
 /**
  * Util method used internally to HTTP GET to the Docker url.
  */
 error_t docker_api_get(docker_context* ctx, docker_result** res, char* api_url,
-		struct array_list* url_params, struct MemoryStruct *chunk);
+		struct array_list* url_params, struct MemoryStruct *chunk, json_object** response);
 
 /**
  * Create service call part of the url using components.

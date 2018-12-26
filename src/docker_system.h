@@ -68,9 +68,10 @@ typedef struct docker_version_t {
 /**
  * Construct a new docker_version object.
  */
-error_t make_docker_version(docker_version** dv, char* version, char* os, char* kernel_version,
-		char* go_version, char* git_commit, char* arch, char* api_version,
-		char* min_api_version, char* build_time, int experimental);
+error_t make_docker_version(docker_version** dv, char* version, char* os,
+		char* kernel_version, char* go_version, char* git_commit, char* arch,
+		char* api_version, char* min_api_version, char* build_time,
+		int experimental);
 
 void free_docker_version(docker_version*dv);
 
@@ -84,5 +85,16 @@ DOCKER_SYSTEM_GETTER(version, char*, api_version)
 DOCKER_SYSTEM_GETTER(version, char*, min_api_version)
 DOCKER_SYSTEM_GETTER(version, char*, build_time)
 DOCKER_SYSTEM_GETTER(version, int, experimental)
+
+/**
+ * Gets the docker version information
+ *
+ * \param ctx docker context
+ * \param result object
+ * \param version object to return
+ * \return error code.
+ */
+error_t docker_system_version(docker_context* ctx, docker_result** result,
+		docker_version** version);
 
 #endif /* SRC_DOCKER_SYSTEM_H_ */

@@ -33,8 +33,12 @@
 #include <curl/curl.h>
 #include "docker_result.h"
 #include "docker_connection_util.h"
+#include "docker_util.h"
 #include "log.h"
 #include <json-c/arraylist.h>
+#include <json-c/json_object.h>
+#include <json-c/json_tokener.h>
+#include <json-c/linkhash.h>
 
 error_t make_url_param(url_param** p, char* key, char* value) {
 	(*p) = (url_param*) malloc(sizeof(url_param));
@@ -196,9 +200,44 @@ error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 	}
 }
 
+void handle_response(CURLcode res, CURL* curl, docker_result** result,
+		struct MemoryStruct* chunk, json_object** response) {
+	docker_log_debug("%lu bytes retrieved\n", (unsigned long ) chunk->size);
+	json_object* response_obj = NULL;
+	response_obj = json_tokener_parse(chunk->memory);
+	(*response) = response_obj;
+	docker_log_debug("Response = %s", json_object_to_json_string(response_obj));
+
+	/* Check for errors */
+	if (res != CURLE_OK) {
+		fprintf(stderr, "curl_easy_perform() failed: %s\n",
+				curl_easy_strerror(res));
+	} else {
+		long response_code;
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+		char* effective_url = NULL;
+		curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effective_url);
+		if (response_code == 200 || response_code == 201
+				|| response_code == 204) {
+			make_docker_result(result, E_SUCCESS, response_code, effective_url,
+			NULL);
+		} else {
+			make_docker_result(result, E_INVALID_INPUT, response_code,
+					effective_url, "error");
+		}
+		//TODO move message extraction to post call
+		if ((*result)->http_error_code >= 400) {
+			char* msg = get_attr_str(response_obj, "message");
+			if (msg) {
+				(*result)->message = msg;
+			}
+		}
+	}
+}
+
 error_t docker_api_post(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params, char* post_data,
-		struct MemoryStruct *chunk) {
+		struct MemoryStruct *chunk, json_object** response) {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
@@ -236,34 +275,9 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 
 		/* Perform the request, res will get the return code */
 		res = curl_easy_perform(curl);
-		/* Check for errors */
-		if (res != CURLE_OK) {
-			fprintf(stderr, "curl_easy_perform() failed: %s\n",
-					curl_easy_strerror(res));
-		} else {
-			/*
-			 * Now, our chunk.memory points to a memory block that is chunk.size
-			 * bytes big and contains the remote file.
-			 *
-			 * Do something nice with it!
-			 */
 
-			long response_code;
-			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-			char *effective_url = NULL;
-			curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effective_url);
-			if (response_code == 200 || response_code == 201
-					|| response_code == 204) {
-				make_docker_result(result, E_SUCCESS, response_code,
-						effective_url, NULL);
-			} else {
-				make_docker_result(result, E_INVALID_INPUT, response_code,
-						effective_url, "error");
-			}
-			docker_log_debug("%lu bytes retrieved\n",
-					(unsigned long ) chunk->size);
-			//log_debug("Data is [%s].\n", chunk->memory);
-		}
+		/* Check for errors */
+		handle_response(res, curl, result, chunk, response);
 		/* always cleanup */
 		curl_easy_cleanup(curl);
 	}
@@ -272,7 +286,7 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 
 error_t docker_api_get(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params,
-		struct MemoryStruct *chunk) {
+		struct MemoryStruct *chunk, json_object** response) {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
@@ -303,33 +317,9 @@ error_t docker_api_get(docker_context* ctx, docker_result** result,
 
 		/* Perform the request, res will get the return code */
 		res = curl_easy_perform(curl);
-		/* Check for errors */
-		if (res != CURLE_OK) {
-			fprintf(stderr, "curl_easy_perform() failed: %s\n",
-					curl_easy_strerror(res));
-		} else {
-			/*
-			 * Now, our chunk.memory points to a memory block that is chunk.size
-			 * bytes big and contains the remote file.
-			 *
-			 * Do something nice with it!
-			 */
-			long response_code;
-			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-			char *effective_url = NULL;
-			curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effective_url);
-			if (response_code == 200 || response_code == 201
-					|| response_code == 204) {
-				make_docker_result(result, E_SUCCESS, response_code,
-						effective_url, NULL);
-			} else {
-				make_docker_result(result, E_INVALID_INPUT, response_code,
-						effective_url, "error");
-			}
-			docker_log_debug("%lu bytes retrieved\n",
-					(unsigned long ) chunk->size);
-			//log_debug("Data is [%s].\n", chunk->memory);
-		}
+
+		handle_response(res, curl, result, chunk, response);
+
 		/* always cleanup */
 		curl_easy_cleanup(curl);
 	}

@@ -28,6 +28,11 @@ int main() {
 
 		docker_ping(ctx, &res);
 		handle_error(res);
+
+		docker_version* version;
+		docker_system_version(ctx, &res, &version);
+		handle_error(res);
+
 //		docker_create_container_params* p;
 //		make_docker_create_container_params(&p);
 //		p->image = "alpine";

@@ -320,50 +320,6 @@ DOCKER_CONTAINER_GETTER_ARR_LEN_IMPL(list_item, mounts)
 DOCKER_CONTAINER_GETTER_ARR_GET_IDX_IMPL(list_item, docker_container_mount*,
 		mounts)
 
-char* get_attr_str(json_object* obj, char* name) {
-	json_object* extractObj;
-	char* attr = NULL;
-	if (json_object_object_get_ex(obj, name, &extractObj)) {
-		attr = (char*) json_object_get_string(extractObj);
-		free(extractObj);
-	}
-	docker_log_debug("%s is |%s|.", name, attr);
-	return attr;
-}
-
-int get_attr_int(json_object* obj, char* name) {
-	json_object* extractObj;
-	int attr = -1;
-	if (json_object_object_get_ex(obj, name, &extractObj)) {
-		sscanf(json_object_get_string(extractObj), "%d", &attr);
-		free(extractObj);
-	}
-	docker_log_debug("%s is |%d|.", name, attr);
-	return attr;
-}
-
-long get_attr_long(json_object* obj, char* name) {
-	json_object* extractObj;
-	long attr = -1;
-	if (json_object_object_get_ex(obj, name, &extractObj)) {
-		sscanf(json_object_get_string(extractObj), "%ld", &attr);
-		free(extractObj);
-	}
-	docker_log_debug("%s is |%ld|.", name, attr);
-	return attr;
-}
-
-long long get_attr_long_long(json_object* obj, char* name) {
-	json_object* extractObj;
-	long long attr = -1;
-	if (json_object_object_get_ex(obj, name, &extractObj)) {
-		sscanf(json_object_get_string(extractObj), "%lld", &attr);
-		free(extractObj);
-	}
-	docker_log_debug("%s is |%lld|.", name, attr);
-	return attr;
-}
-
 error_t make_docker_containers_list_filter(docker_containers_list_filter** f) {
 	(*f) = (docker_containers_list_filter*) malloc(
 			sizeof(docker_containers_list_filter));
@@ -514,16 +470,11 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 		array_list_add(params, p);
 	}
 
-	json_object *response_obj;
+	json_object *response_obj = NULL;
 	struct MemoryStruct chunk;
-	docker_api_get(ctx, result, url, params, &chunk);
+	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
 	free(params);
 
-	//need to skip 8 bytes of binary junk
-	//log_debug("Output is \n%s\n", chunk.memory);
-
-	response_obj = json_tokener_parse(chunk.memory);
-	//log_debug("new_obj.to_string()=%s\n", json_object_to_json_string(new_obj));
 	struct array_list* containers_arr = json_object_get_array(response_obj);
 	int len = containers_arr->length;
 
@@ -695,7 +646,7 @@ error_t make_docker_create_container_params(
 error_t docker_create_container(docker_context* ctx, docker_result** result,
 		char** id, docker_create_container_params* params) {
 	(*id) = NULL;
-	json_object *new_obj;
+	json_object *response_obj = NULL;
 	struct MemoryStruct chunk;
 
 	json_object* create_obj = json_object_new_object();
@@ -714,12 +665,11 @@ error_t docker_create_container(docker_context* ctx, docker_result** result,
 	}
 
 	docker_api_post(ctx, result, "containers/create", NULL,
-			(char*) json_object_to_json_string(create_obj), &chunk);
+			(char*) json_object_to_json_string(create_obj), &chunk,
+			&response_obj);
 
-	new_obj = json_tokener_parse(chunk.memory);
-	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
 	json_object* idObj;
-	if (json_object_object_get_ex(new_obj, "Id", &idObj)) {
+	if (json_object_object_get_ex(response_obj, "Id", &idObj)) {
 		const char* container_id = json_object_get_string(idObj);
 		(*id) = (char*) malloc((strlen(container_id) + 1) * sizeof(char));
 		strcpy((*id), container_id);
@@ -744,12 +694,10 @@ error_t docker_process_list_container(docker_context* ctx,
 	char* url = create_service_url_id_method(CONTAINER, id, "top");
 	docker_log_debug("Top url is %s", url);
 
-	json_object *new_obj;
+	json_object *response_obj = NULL;
 	struct MemoryStruct chunk;
-	docker_api_get(ctx, result, url, NULL, &chunk);
+	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
 
-	new_obj = json_tokener_parse(chunk.memory);
-	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
 	if (is_ok((*result))) {
 		docker_container_ps* p;
 		p = (docker_container_ps*) malloc(sizeof(docker_container_ps));
@@ -757,7 +705,7 @@ error_t docker_process_list_container(docker_context* ctx,
 			return E_ALLOC_FAILED;
 		}
 		json_object* titles_obj;
-		json_object_object_get_ex(new_obj, "Titles", &titles_obj);
+		json_object_object_get_ex(response_obj, "Titles", &titles_obj);
 		int num_titles = json_object_array_length(titles_obj);
 		p->titles = array_list_new(&free);
 		for (int i = 0; i < num_titles; i++) {
@@ -767,23 +715,25 @@ error_t docker_process_list_container(docker_context* ctx,
 		}
 
 		json_object* processes_obj;
-		json_object_object_get_ex(new_obj, "Processes", &processes_obj);
+		json_object_object_get_ex(response_obj, "Processes", &processes_obj);
 		int num_processes = json_object_array_length(processes_obj);
 		p->processes = array_list_new((void (*)(void *)) &array_list_free);
 		for (int i = 0; i < num_processes; i++) {
-			json_object* process_obj = json_object_array_get_idx(processes_obj, i);
+			json_object* process_obj = json_object_array_get_idx(processes_obj,
+					i);
 			struct array_list* process_arr = array_list_new(&free);
 			int num_vals = json_object_array_length(process_obj);
-			for(int j = 0; j < num_vals; j++) {
-				array_list_add(process_arr, (char*)json_object_get_string(
-						json_object_array_get_idx(process_obj, j)));
+			for (int j = 0; j < num_vals; j++) {
+				array_list_add(process_arr,
+						(char*) json_object_get_string(
+								json_object_array_get_idx(process_obj, j)));
 			}
 			array_list_add(p->processes, process_arr);
 		}
 		(*ps) = p;
 	} else {
 		json_object* msg_obj;
-		json_object_object_get_ex(new_obj, "message", &msg_obj);
+		json_object_object_get_ex(response_obj, "message", &msg_obj);
 		(*result)->message = (char *) json_object_to_json_string(msg_obj);
 	}
 	free(chunk.memory);
@@ -856,8 +806,9 @@ error_t docker_container_logs(docker_context* ctx, docker_result** result,
 		array_list_add(params, p);
 	}
 
+	json_object *response_obj = NULL;
 	struct MemoryStruct chunk;
-	docker_api_get(ctx, result, url, params, &chunk);
+	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
 
 	free(params);
 
@@ -936,32 +887,29 @@ error_t docker_container_changes(docker_context* ctx, docker_result** result,
 		docker_changes_list** changes, char* id) {
 	char* url = create_service_url_id_method(CONTAINER, id, "changes");
 
-	json_object *response_obj;
+	json_object *response_obj = NULL;
 	struct MemoryStruct chunk;
-	docker_api_get(ctx, result, url, NULL, &chunk);
+	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
 
-	if (chunk.memory != NULL) {
-		response_obj = json_tokener_parse(chunk.memory);
-		if ((json_object_get_type(response_obj) != json_type_null)) {
-			docker_log_debug("Response = %s",
-					json_object_to_json_string(response_obj));
+	if ((json_object_get_type(response_obj) != json_type_null)) {
+		docker_log_debug("Response = %s",
+				json_object_to_json_string(response_obj));
 
-			make_docker_changes_list(changes);
-			for (int i = 0; i < json_object_array_length(response_obj); i++) {
-				json_object* change_obj = json_object_array_get_idx(
-						response_obj, i);
-				docker_container_change* change;
-				make_docker_container_change(&change,
-						get_attr_str(change_obj, "Path"),
-						get_attr_str(change_obj, "Kind"));
-				docker_changes_list_add((*changes), change);
-			}
-		} else {
-			docker_log_warn("Response = %s",
-					json_object_to_json_string(response_obj));
-
-			(*changes) = NULL;
+		make_docker_changes_list(changes);
+		for (int i = 0; i < json_object_array_length(response_obj); i++) {
+			json_object* change_obj = json_object_array_get_idx(response_obj,
+					i);
+			docker_container_change* change;
+			make_docker_container_change(&change,
+					get_attr_str(change_obj, "Path"),
+					get_attr_str(change_obj, "Kind"));
+			docker_changes_list_add((*changes), change);
 		}
+	} else {
+		docker_log_warn("Response = %s",
+				json_object_to_json_string(response_obj));
+
+		(*changes) = NULL;
 	}
 	return E_SUCCESS;
 }
@@ -988,15 +936,11 @@ error_t docker_start_container(docker_context* ctx, docker_result** result,
 		array_list_add(params, p);
 	}
 
-	json_object *new_obj;
+	json_object *response_obj = NULL;
 	struct MemoryStruct chunk;
-	docker_api_post(ctx, result, url, params, "", &chunk);
+	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	free(params);
-
-	new_obj = json_tokener_parse(chunk.memory);
-	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
-
 	return E_SUCCESS;
 }
 
@@ -1024,9 +968,9 @@ error_t docker_stop_container(docker_context* ctx, docker_result** result,
 		array_list_add(params, p);
 	}
 
-	json_object *new_obj;
+	json_object *response_obj = NULL;
 	struct MemoryStruct chunk;
-	docker_api_post(ctx, result, url, params, "", &chunk);
+	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 304) {
 		(*result)->message = make_defensive_copy(
@@ -1038,10 +982,6 @@ error_t docker_stop_container(docker_context* ctx, docker_result** result,
 	}
 
 	free(params);
-
-	new_obj = json_tokener_parse(chunk.memory);
-	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
-
 	return E_SUCCESS;
 }
 
@@ -1069,19 +1009,15 @@ error_t docker_restart_container(docker_context* ctx, docker_result** result,
 		array_list_add(params, p);
 	}
 
-	json_object *new_obj;
+	json_object *response_obj = NULL;
 	struct MemoryStruct chunk;
-	docker_api_post(ctx, result, url, params, "", &chunk);
+	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
 		(*result)->message = make_defensive_copy("container not found.");
 	}
 
 	free(params);
-
-	new_obj = json_tokener_parse(chunk.memory);
-	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
-
 	return E_SUCCESS;
 }
 
@@ -1107,9 +1043,9 @@ error_t docker_kill_container(docker_context* ctx, docker_result** result,
 		array_list_add(params, p);
 	}
 
-	json_object *new_obj;
+	json_object *response_obj = NULL;
 	struct MemoryStruct chunk;
-	docker_api_post(ctx, result, url, params, "", &chunk);
+	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
 		(*result)->message = make_defensive_copy("container not found.");
@@ -1120,10 +1056,6 @@ error_t docker_kill_container(docker_context* ctx, docker_result** result,
 	}
 
 	free(params);
-
-	new_obj = json_tokener_parse(chunk.memory);
-	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
-
 	return E_SUCCESS;
 }
 
@@ -1149,9 +1081,9 @@ error_t docker_rename_container(docker_context* ctx, docker_result** result,
 		array_list_add(params, p);
 	}
 
-	json_object *new_obj;
+	json_object *response_obj = NULL;
 	struct MemoryStruct chunk;
-	docker_api_post(ctx, result, url, params, "", &chunk);
+	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
 		(*result)->message = make_defensive_copy("container not found.");
@@ -1162,10 +1094,6 @@ error_t docker_rename_container(docker_context* ctx, docker_result** result,
 	}
 
 	free(params);
-
-	new_obj = json_tokener_parse(chunk.memory);
-	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
-
 	return E_SUCCESS;
 }
 
@@ -1181,23 +1109,12 @@ error_t docker_pause_container(docker_context* ctx, docker_result** result,
 		char* id) {
 	char* url = create_service_url_id_method(CONTAINER, id, "pause");
 
-	json_object *new_obj;
+	json_object *response_obj = NULL;
 	struct MemoryStruct chunk;
-	docker_api_post(ctx, result, url, NULL, "", &chunk);
+	docker_api_post(ctx, result, url, NULL, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
 		(*result)->message = make_defensive_copy("container not found.");
-	}
-
-	new_obj = json_tokener_parse(chunk.memory);
-	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
-
-	//TODO move message extraction to post call
-	if ((*result)->http_error_code >= 400) {
-		char* msg = get_attr_str(new_obj, "message");
-		if (msg) {
-			(*result)->message = msg;
-		}
 	}
 	return E_SUCCESS;
 }
@@ -1214,25 +1131,13 @@ error_t docker_unpause_container(docker_context* ctx, docker_result** result,
 		char* id) {
 	char* url = create_service_url_id_method(CONTAINER, id, "unpause");
 
-	json_object *new_obj;
+	json_object *response_obj = NULL;
 	struct MemoryStruct chunk;
-	docker_api_post(ctx, result, url, NULL, "", &chunk);
+	docker_api_post(ctx, result, url, NULL, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
 		(*result)->message = make_defensive_copy("container not found.");
 	}
-
-	new_obj = json_tokener_parse(chunk.memory);
-	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
-
-	//TODO move message extraction to post call
-	if ((*result)->http_error_code >= 400) {
-		char* msg = get_attr_str(new_obj, "message");
-		if (msg) {
-			(*result)->message = msg;
-		}
-	}
-
 	return E_SUCCESS;
 }
 
@@ -1258,20 +1163,10 @@ error_t docker_wait_container(docker_context* ctx, docker_result** result,
 		array_list_add(params, p);
 	}
 
-	json_object *new_obj;
+	json_object *response_obj = NULL;
 	struct MemoryStruct chunk;
-	docker_api_post(ctx, result, url, NULL, "", &chunk);
+	docker_api_post(ctx, result, url, NULL, "", &chunk, &response_obj);
 
-	new_obj = json_tokener_parse(chunk.memory);
-	docker_log_debug("Response = %s", json_object_to_json_string(new_obj));
-
-	//TODO move message extraction to post call
-	if ((*result)->http_error_code >= 400) {
-		char* msg = get_attr_str(new_obj, "message");
-		if (msg) {
-			(*result)->message = msg;
-		}
-	}
-
+	//TODO free response_obj
 	return E_SUCCESS;
 }

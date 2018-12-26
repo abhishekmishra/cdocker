@@ -14,6 +14,10 @@
 
 #define DOCKER_API_VERSION_1_39 "1.39"
 
+typedef enum {
+	CONTAINER = 1, IMAGE = 2, SYSTEM = 3
+} docker_object_type;
+
 /**
  * A docker context for a specific docker server.
  */
@@ -85,5 +89,16 @@ error_t docker_api_post(docker_context* ctx, docker_result** res, char* api_url,
  */
 error_t docker_api_get(docker_context* ctx, docker_result** res, char* api_url,
 		struct array_list* url_params, struct MemoryStruct *chunk);
+
+/**
+ * Create service call part of the url using components.
+ *
+ * \param object which api to call (container, image etc. can also be null)
+ * \param id if any to add to the url
+ * \param method to call
+ * \return string url
+ */
+char* create_service_url_id_method(docker_object_type object, char* id,
+		char* method);
 
 #endif /* DOCKER_CONNECTION_UTIL_H_ */

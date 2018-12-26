@@ -182,7 +182,7 @@ error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 		strcat(base_url, api_url);
 		char* url = build_url(curl, base_url, url_params);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
-		return 0;
+		return E_SUCCESS;
 	} else if (ctx->url != NULL) {
 		char* base_url = (char*) malloc(
 				sizeof(char) * (strlen(ctx->url) + strlen(api_url) + 1));
@@ -334,4 +334,34 @@ error_t docker_api_get(docker_context* ctx, docker_result** result,
 		curl_easy_cleanup(curl);
 	}
 	return E_SUCCESS;
+}
+
+char* create_service_url_id_method(docker_object_type object, char* id,
+		char* method) {
+	char* object_url = NULL;
+	switch (object) {
+	case CONTAINER:
+		object_url = "containers";
+		break;
+	case IMAGE:
+		object_url = "image";
+		break;
+	case SYSTEM:
+		object_url = NULL;
+		break;
+	}
+	char* url = NULL;
+	if (object_url) {
+		url = (char*) malloc(
+				(strlen(object_url) + strlen(id) + strlen(method) + 3)
+						* sizeof(char));
+		sprintf(url, "%s/%s/%s", object_url, id, method);
+		docker_log_debug("%s url is %s", method, url);
+	} else {
+		//when there is no object ignore both object and id
+		url = (char*) malloc((strlen(method) + 1) * sizeof(char));
+		sprintf(url, "%s", method);
+		docker_log_debug("%s url is %s", method, url);
+	}
+	return url;
 }

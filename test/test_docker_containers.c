@@ -15,14 +15,11 @@
 #include "test_docker_containers.h"
 #include "docker_containers.h"
 #include "docker_connection_util.h"
+#include "test_util.h"
 #include "log.h"
 
 static docker_context* ctx = NULL;
 static docker_result* res;
-
-void handle_error(docker_result* res) {
-	docker_simple_error_handler_log(res);
-}
 
 static int group_setup(void **state) {
 	char* id = NULL;

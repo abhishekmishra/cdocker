@@ -23,8 +23,6 @@
 #define DOCKER_CONTAINER_GETTER_ARR_GET_IDX(object, type, name) \
 		type docker_container_ ## object ## _ ## name ## _get_idx(docker_container_ ## object* object, int i);
 
-char* create_service_url_id_method(char* id, char* method);
-
 typedef enum docker_container_port_type_t {
 	CONTAINER_PORT_TYPE_TCP = 1
 } docker_container_port_type;

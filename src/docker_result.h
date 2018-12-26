@@ -39,7 +39,8 @@ enum _config_error {
 	E_SUCCESS = 0,
 	E_INVALID_INPUT = -1,
 	E_FILE_NOT_FOUND = -2,
-	E_ALLOC_FAILED = -3
+	E_ALLOC_FAILED = -3,
+	E_PING_FAILED = -4
 };
 
 /* type to provide in your API */

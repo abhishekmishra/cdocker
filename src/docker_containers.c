@@ -17,6 +17,7 @@
 #include <strings.h>
 #include "log.h"
 #include "docker_connection_util.h"
+#include "docker_util.h"
 
 #define ADD_FILTER_STR_ATTR(name) \
 	void containers_filter_add_ ## name(docker_containers_list_filter* filter, char* val) { \
@@ -56,25 +57,6 @@
 	type docker_container_ ## object ## _ ## name ## _get_idx(docker_container_ ## object* object, int i) { \
 		return (type) array_list_get_idx(object->name, i); \
 	} \
-
-char* create_service_url_id_method(char* id, char* method) {
-	char* containers = "containers";
-	char* url = (char*) malloc(
-			(strlen(containers) + strlen(id) + strlen(method) + 1)
-					* sizeof(char));
-	sprintf(url, "%s/%s/%s", containers, id, method);
-	docker_log_debug("%s url is %s", method, url);
-	return url;
-}
-
-char* make_defensive_copy(const char* from) {
-	char* to = NULL;
-	if ((from != NULL) && (strlen(from) > 0)) {
-		to = (char*) malloc((strlen(from) + 1) * sizeof(char));
-		strcpy(to, from);
-	}
-	return to;
-}
 
 /**
  * Create a docker_container_ports instance.
@@ -759,7 +741,7 @@ error_t docker_create_container(docker_context* ctx, docker_result** result,
 error_t docker_process_list_container(docker_context* ctx,
 		docker_result** result, docker_container_ps**ps, char* id,
 		char* process_args) {
-	char* url = create_service_url_id_method(id, "top");
+	char* url = create_service_url_id_method(CONTAINER, id, "top");
 	docker_log_debug("Top url is %s", url);
 
 	json_object *new_obj;
@@ -952,7 +934,7 @@ int docker_changes_list_length(docker_changes_list* list) {
  */
 error_t docker_container_changes(docker_context* ctx, docker_result** result,
 		docker_changes_list** changes, char* id) {
-	char* url = create_service_url_id_method(id, "changes");
+	char* url = create_service_url_id_method(CONTAINER, id, "changes");
 
 	json_object *response_obj;
 	struct MemoryStruct chunk;
@@ -995,7 +977,7 @@ error_t docker_container_changes(docker_context* ctx, docker_result** result,
  */
 error_t docker_start_container(docker_context* ctx, docker_result** result,
 		char* id, char* detachKeys) {
-	char* url = create_service_url_id_method(id, "start");
+	char* url = create_service_url_id_method(CONTAINER, id, "start");
 
 	struct array_list* params = array_list_new(
 			(void (*)(void *)) &free_url_param);
@@ -1029,7 +1011,7 @@ error_t docker_start_container(docker_context* ctx, docker_result** result,
  */
 error_t docker_stop_container(docker_context* ctx, docker_result** result,
 		char* id, int t) {
-	char* url = create_service_url_id_method(id, "stop");
+	char* url = create_service_url_id_method(CONTAINER, id, "stop");
 
 	struct array_list* params = array_list_new(
 			(void (*)(void *)) &free_url_param);
@@ -1074,7 +1056,7 @@ error_t docker_stop_container(docker_context* ctx, docker_result** result,
  */
 error_t docker_restart_container(docker_context* ctx, docker_result** result,
 		char* id, int t) {
-	char* url = create_service_url_id_method(id, "restart");
+	char* url = create_service_url_id_method(CONTAINER, id, "restart");
 
 	struct array_list* params = array_list_new(
 			(void (*)(void *)) &free_url_param);
@@ -1114,7 +1096,7 @@ error_t docker_restart_container(docker_context* ctx, docker_result** result,
  */
 error_t docker_kill_container(docker_context* ctx, docker_result** result,
 		char* id, char* signal) {
-	char* url = create_service_url_id_method(id, "kill");
+	char* url = create_service_url_id_method(CONTAINER, id, "kill");
 
 	struct array_list* params = array_list_new(
 			(void (*)(void *)) &free_url_param);
@@ -1156,7 +1138,7 @@ error_t docker_kill_container(docker_context* ctx, docker_result** result,
  */
 error_t docker_rename_container(docker_context* ctx, docker_result** result,
 		char* id, char* name) {
-	char* url = create_service_url_id_method(id, "rename");
+	char* url = create_service_url_id_method(CONTAINER, id, "rename");
 
 	struct array_list* params = array_list_new(
 			(void (*)(void *)) &free_url_param);
@@ -1197,7 +1179,7 @@ error_t docker_rename_container(docker_context* ctx, docker_result** result,
  */
 error_t docker_pause_container(docker_context* ctx, docker_result** result,
 		char* id) {
-	char* url = create_service_url_id_method(id, "pause");
+	char* url = create_service_url_id_method(CONTAINER, id, "pause");
 
 	json_object *new_obj;
 	struct MemoryStruct chunk;
@@ -1230,7 +1212,7 @@ error_t docker_pause_container(docker_context* ctx, docker_result** result,
  */
 error_t docker_unpause_container(docker_context* ctx, docker_result** result,
 		char* id) {
-	char* url = create_service_url_id_method(id, "unpause");
+	char* url = create_service_url_id_method(CONTAINER, id, "unpause");
 
 	json_object *new_obj;
 	struct MemoryStruct chunk;
@@ -1265,7 +1247,7 @@ error_t docker_unpause_container(docker_context* ctx, docker_result** result,
  */
 error_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id, char* condition) {
-	char* url = create_service_url_id_method(id, "wait");
+	char* url = create_service_url_id_method(CONTAINER, id, "wait");
 
 	struct array_list* params = array_list_new(
 			(void (*)(void *)) &free_url_param);

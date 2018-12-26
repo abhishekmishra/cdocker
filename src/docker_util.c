@@ -45,7 +45,6 @@ char* get_attr_str(json_object* obj, char* name) {
 	char* attr = NULL;
 	if (json_object_object_get_ex(obj, name, &extractObj)) {
 		attr = (char*) json_object_get_string(extractObj);
-		free(extractObj);
 	}
 	docker_log_debug("%s is |%s|.", name, attr);
 	return attr;
@@ -57,10 +56,10 @@ int get_attr_boolean(json_object* obj, char* name) {
 	int flag = 0;
 	if (json_object_object_get_ex(obj, name, &extractObj)) {
 		attr = (char*) json_object_get_string(extractObj);
-		free(extractObj);
 		if(strcmp(attr, "true")) {
 			flag = 1;
 		}
+		free(extractObj);
 	}
 	docker_log_debug("%s is |%s|, parsed as |%d|.", name, attr, flag);
 	return flag;

@@ -116,6 +116,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>E:\json-c-0_13_1\json-c\build\json-c.dir\Debug\*.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -139,10 +140,6 @@
     <ClInclude Include="src\docker_system.h" />
     <ClInclude Include="src\docker_util.h" />
     <ClInclude Include="src\log.h" />
-    <ClInclude Include="test\minunit.h" />
-    <ClInclude Include="test\test_docker_containers.h" />
-    <ClInclude Include="test\test_docker_system.h" />
-    <ClInclude Include="test\test_util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

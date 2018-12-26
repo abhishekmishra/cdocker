@@ -204,9 +204,14 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 		struct MemoryStruct* chunk, json_object** response) {
 	docker_log_debug("%lu bytes retrieved\n", (unsigned long ) chunk->size);
 	json_object* response_obj = NULL;
-	response_obj = json_tokener_parse(chunk->memory);
-	(*response) = response_obj;
-	docker_log_debug("Response = %s", json_object_to_json_string(response_obj));
+	if (chunk->size > 0) {
+		response_obj = json_tokener_parse(chunk->memory);
+		(*response) = response_obj;
+		docker_log_debug("Response = %s", json_object_to_json_string(response_obj));
+	}
+	else {
+		docker_log_debug("Response = Empty");
+	}
 
 	/* Check for errors */
 	if (res != CURLE_OK) {

@@ -105,3 +105,14 @@ At some point I will write corresponding asynchronous API endpoints (but not pla
 |Start                |             :x: |           :x: |   :x: |                          |
 |Resize	    		  |             :x: |           :x: |   :x: |                          |
 |Inspect 		      |             :x: |           :x: |   :x: |                          |
+
+### System API
+
+| Method              | Implementation  | Documentation | Tests | TODOs                    |
+|---------------------|-----------------|---------------|-------|--------------------------|
+|Check Auth Config    |             :x: |           :x: |   :x: |                          |
+|Get System Info      |             :x: |           :x: |   :x: |                          |
+|Get Version		  |             :x: |           :x: |   :x: |                          |
+|Ping   		      |             :x: |           :x: |   :x: |                          |
+|Monitor events       |             :x: |           :x: |   :x: |                          |
+|Get Data Usage Info  |             :x: |           :x: |   :x: |                          |

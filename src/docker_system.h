@@ -31,6 +31,18 @@
 #include "docker_result.h"
 #include "docker_connection_util.h"
 
+#define DOCKER_SYSTEM_GETTER(object, type, name) \
+		type docker_ ## object ## _get_ ## name(docker_ ## object* object);
+
+#define DOCKER_SYSTEM_GETTER_ARR_ADD(object, type, name) \
+		int docker_ ## object ## _ ## name ## _add(docker_ ## object* object, type data);
+
+#define DOCKER_SYSTEM_GETTER_ARR_LEN(object, name) \
+		int docker_ ## object ## _ ## name ## _length(docker_ ## object* object);
+
+#define DOCKER_SYSTEM_GETTER_ARR_GET_IDX(object, type, name) \
+		type docker_ ## object ## _ ## name ## _get_idx(docker_ ## object* object, int i);
+
 /**
  * Ping the docker server
  *
@@ -39,5 +51,38 @@
  * \return error code
  */
 error_t docker_ping(docker_context* ctx, docker_result** result);
+
+typedef struct docker_version_t {
+	char* version;
+	char* os;
+	char* kernel_version;
+	char* go_version;
+	char* git_commit;
+	char* arch;
+	char* api_version;
+	char* min_api_version;
+	char* build_time;
+	int experimental;
+} docker_version;
+
+/**
+ * Construct a new docker_version object.
+ */
+error_t make_docker_version(docker_version** dv, char* version, char* os, char* kernel_version,
+		char* go_version, char* git_commit, char* arch, char* api_version,
+		char* min_api_version, char* build_time, int experimental);
+
+void free_docker_version(docker_version*dv);
+
+DOCKER_SYSTEM_GETTER(version, char*, version)
+DOCKER_SYSTEM_GETTER(version, char*, os)
+DOCKER_SYSTEM_GETTER(version, char*, kernel_version)
+DOCKER_SYSTEM_GETTER(version, char*, go_version)
+DOCKER_SYSTEM_GETTER(version, char*, git_commit)
+DOCKER_SYSTEM_GETTER(version, char*, arch)
+DOCKER_SYSTEM_GETTER(version, char*, api_version)
+DOCKER_SYSTEM_GETTER(version, char*, min_api_version)
+DOCKER_SYSTEM_GETTER(version, char*, build_time)
+DOCKER_SYSTEM_GETTER(version, int, experimental)
 
 #endif /* SRC_DOCKER_SYSTEM_H_ */

@@ -412,7 +412,7 @@ error_t docker_process_list_container(docker_context* ctx,
  * \return error code
  */
 error_t docker_container_logs(docker_context* ctx, docker_result** result,
-		char** log, char* id, int follow, int stdout, int stderr, long since,
+		char** log, char* id, int follow, int std_out, int std_err, long since,
 		long until, int timestamps, int tail);
 
 ///////////// Get Container FS Changes

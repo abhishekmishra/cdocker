@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
+//#include <strings.h>
 #include "log.h"
 #include "docker_connection_util.h"
 #include "docker_util.h"
@@ -75,7 +75,7 @@ error_t make_docker_container_ports(docker_container_ports** ports, long priv,
 	}
 	(*ports)->private_port = priv;
 	(*ports)->public_port = pub;
-	if (strcasecmp(type, "tcp") == 0) {
+	if (strcmp(type, "tcp") == 0) {
 		(*ports)->type = CONTAINER_PORT_TYPE_TCP;
 	}
 	return E_SUCCESS;
@@ -756,7 +756,7 @@ error_t docker_process_list_container(docker_context* ctx,
  * \return error code
  */
 error_t docker_container_logs(docker_context* ctx, docker_result** result,
-		char** log, char* id, int follow, int stdout, int stderr, long since,
+		char** log, char* id, int follow, int std_out, int std_err, long since,
 		long until, int timestamps, int tail) {
 	char* method = "/logs";
 	char* containers = "containers/";
@@ -770,12 +770,12 @@ error_t docker_container_logs(docker_context* ctx, docker_result** result,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 
-	if (stdout > 0) {
+	if (std_out > 0) {
 		make_url_param(&p, "stdout", "true");
 		array_list_add(params, p);
 	}
 
-	if (stderr > 0) {
+	if (std_err > 0) {
 		make_url_param(&p, "stderr", "true");
 		array_list_add(params, p);
 	}

@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <json-c/json_object.h>
-#include <log.h>
+#include "log.h"
 
 char* make_defensive_copy(const char* from) {
 	char* to = NULL;

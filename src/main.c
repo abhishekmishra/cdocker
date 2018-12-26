@@ -4,7 +4,6 @@
 
 #include <curl/curl.h>
 #include <json-c/json.h>
-
 #include "docker_result.h"
 #include "docker_connection_util.h"
 #include "docker_containers.h"
@@ -22,9 +21,9 @@ int main() {
 	docker_context* ctx;
 	docker_result* res;
 
-//	if (make_docker_context_url(&ctx, "http://192.168.1.33:2376/")
-//			== E_SUCCESS) {
-	if (make_docker_context_socket(&ctx, "/var/run/docker.sock") == E_SUCCESS) {
+	if (make_docker_context_url(&ctx, "http://192.168.1.33:2376/")
+			== E_SUCCESS) {
+//	if (make_docker_context_socket(&ctx, "/var/run/docker.sock") == E_SUCCESS) {
 
 		docker_ping(ctx, &res);
 		handle_error(res);

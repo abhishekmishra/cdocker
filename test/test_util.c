@@ -26,7 +26,7 @@
  *
  */
 
-#include "docker_result.h"
+#include "../src/docker_result.h"
 
 void handle_error(docker_result* res) {
 	docker_simple_error_handler_log(res);

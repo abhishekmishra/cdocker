@@ -142,8 +142,8 @@ void docker_simple_error_handler_print(docker_result* res) {
  * which just want to log the error (if any).
  */
 void docker_simple_error_handler_log(docker_result* res) {
-	docker_log_info("DOCKER_RESULT: For URL: %s", get_url(res));
-	docker_log_info("DOCKER RESULT: Response error_code = %d, http_response = %ld",
+	docker_log_debug("DOCKER_RESULT: For URL: %s", get_url(res));
+	docker_log_debug("DOCKER RESULT: Response error_code = %d, http_response = %ld",
 			get_error(res), get_http_error(res));
 	if (!is_ok(res)) {
 		docker_log_error("DOCKER RESULT: %s", get_message(res));

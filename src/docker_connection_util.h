@@ -8,6 +8,7 @@
 #ifndef DOCKER_CONNECTION_UTIL_H_
 #define DOCKER_CONNECTION_UTIL_H_
 
+#include <stdbool.h>
 #include <json-c/arraylist.h>
 #include <json-c/json_object.h>
 #include <json-c/json_tokener.h>
@@ -16,6 +17,11 @@
 #include "docker_result.h"
 
 #define DOCKER_API_VERSION_1_39 "1.39"
+#define DOCKER_DEFINE_DEFAULT_UNIX_SOCKET "/var/run/docker.sock"
+
+bool is_http_url(char* url);
+
+bool is_unix_socket(char* url);
 
 typedef enum {
 	CONTAINER = 1, IMAGE = 2, SYSTEM = 3

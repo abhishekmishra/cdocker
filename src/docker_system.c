@@ -70,7 +70,7 @@ error_t docker_ping(docker_context* ctx, docker_result** result) {
 	struct MemoryStruct chunk;
 	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
 
-	if ((*result)->http_error_code >= 400) {
+	if ((*result)->http_error_code != 200) {
 		(*result)->message = make_defensive_copy("Docker Server not OK.");
 		return E_PING_FAILED;
 	}

@@ -39,6 +39,30 @@
 #include <json-c/json_object.h>
 #include <json-c/json_tokener.h>
 #include <json-c/linkhash.h>
+#include <stdbool.h>
+
+bool prefix(const char *pre, const char *str)
+{
+    return strncmp(pre, str, strlen(pre)) == 0;
+}
+
+bool is_http_url(char* url) {
+	if(url) {
+		if(strlen(url) > 0) {
+			return prefix("http", url);
+		}
+	}
+	return false;
+}
+
+bool is_unix_socket(char* url) {
+	if(url) {
+		if(strlen(url) > 0) {
+			return prefix("/", url);
+		}
+	}
+	return false;
+}
 
 error_t make_url_param(url_param** p, char* key, char* value) {
 	(*p) = (url_param*) malloc(sizeof(url_param));

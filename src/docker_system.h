@@ -97,4 +97,37 @@ DOCKER_SYSTEM_GETTER(version, int, experimental)
 error_t docker_system_version(docker_context* ctx, docker_result** result,
 		docker_version** version);
 
+// Docker System Info
+
+typedef struct docker_info_t {
+	unsigned long containers;
+	unsigned long containers_running;
+	unsigned long containers_paused;
+	unsigned long containers_stopped;
+	unsigned long images;
+} docker_info;
+
+error_t make_docker_info(docker_info** info, unsigned long containers,
+		unsigned long containers_running, unsigned long containers_paused,
+		unsigned long containers_stopped, unsigned long images);
+
+void free_docker_info(docker_info* info);
+
+DOCKER_SYSTEM_GETTER(info, unsigned long, containers)
+DOCKER_SYSTEM_GETTER(info, unsigned long, containers_running)
+DOCKER_SYSTEM_GETTER(info, unsigned long, containers_paused)
+DOCKER_SYSTEM_GETTER(info, unsigned long, containers_stopped)
+DOCKER_SYSTEM_GETTER(info, unsigned long, images)
+
+/**
+ * Gets the docker system information
+ *
+ * \param ctx docker context
+ * \param result object
+ * \param info object to return
+ * \return error code.
+ */
+error_t docker_system_info(docker_context* ctx, docker_result** result,
+		docker_info** info);
+
 #endif /* SRC_DOCKER_SYSTEM_H_ */

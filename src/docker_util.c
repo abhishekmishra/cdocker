@@ -87,6 +87,17 @@ long get_attr_long(json_object* obj, char* name) {
 	return attr;
 }
 
+unsigned long get_attr_unsigned_long(json_object* obj, char* name) {
+	json_object* extractObj;
+	unsigned long attr = -1;
+	if (json_object_object_get_ex(obj, name, &extractObj)) {
+		sscanf(json_object_get_string(extractObj), "%lu", &attr);
+		free(extractObj);
+	}
+	docker_log_debug("%s is |%lu|.", name, attr);
+	return attr;
+}
+
 long long get_attr_long_long(json_object* obj, char* name) {
 	json_object* extractObj;
 	long long attr = -1;

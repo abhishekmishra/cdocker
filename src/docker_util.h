@@ -38,7 +38,8 @@ int get_attr_boolean(json_object* obj, char* name);
 
 long get_attr_long(json_object* obj, char* name);
 
-long long get_attr_long_long(json_object* obj, char* name);
+unsigned long get_attr_unsigned_long(json_object* obj, char* name);
 
+long long get_attr_long_long(json_object* obj, char* name);
 
 #endif /* SRC_DOCKER_UTIL_H_ */

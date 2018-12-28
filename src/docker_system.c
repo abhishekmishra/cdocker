@@ -85,8 +85,8 @@ error_t make_docker_version(docker_version** dv, char* version, char* os,
 		char* kernel_version, char* go_version, char* git_commit, char* arch,
 		char* api_version, char* min_api_version, char* build_time,
 		int experimental) {
-	(*dv) = (docker_version*)malloc(sizeof(docker_version));
-	if(!(*dv)) {
+	(*dv) = (docker_version*) malloc(sizeof(docker_version));
+	if (!(*dv)) {
 		return E_ALLOC_FAILED;
 	}
 	(*dv)->version = make_defensive_copy(version);
@@ -143,19 +143,73 @@ error_t docker_system_version(docker_context* ctx, docker_result** result,
 	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
 
 	if ((*result)->http_error_code >= 200) {
-		make_docker_version(version,
-		get_attr_str(response_obj, "Version"),
-		get_attr_str(response_obj, "Os"),
-		get_attr_str(response_obj, "KernelVersion"),
-		get_attr_str(response_obj, "GoVersion"),
-		get_attr_str(response_obj, "GitCommit"),
-		get_attr_str(response_obj, "Arch"),
-		get_attr_str(response_obj, "ApiVersion"),
-		get_attr_str(response_obj, "MinAPIVersion"),
-		get_attr_str(response_obj, "BuildTime"),
-		get_attr_boolean(response_obj, "Experimental"));
+		make_docker_version(version, get_attr_str(response_obj, "Version"),
+				get_attr_str(response_obj, "Os"),
+				get_attr_str(response_obj, "KernelVersion"),
+				get_attr_str(response_obj, "GoVersion"),
+				get_attr_str(response_obj, "GitCommit"),
+				get_attr_str(response_obj, "Arch"),
+				get_attr_str(response_obj, "ApiVersion"),
+				get_attr_str(response_obj, "MinAPIVersion"),
+				get_attr_str(response_obj, "BuildTime"),
+				get_attr_boolean(response_obj, "Experimental"));
 	}
 
 	return E_SUCCESS;
 
 }
+
+error_t make_docker_info(docker_info** info, unsigned long containers,
+		unsigned long containers_running, unsigned long containers_paused,
+		unsigned long containers_stopped, unsigned long images) {
+	(*info) = (docker_info*) malloc(sizeof(docker_info));
+	if (!(*info)) {
+		return E_ALLOC_FAILED;
+	}
+	(*info)->containers = containers;
+	(*info)->containers_running = containers_running;
+	(*info)->containers_paused = containers_paused;
+	(*info)->containers_stopped = containers_stopped;
+	(*info)->images = images;
+	return E_SUCCESS;
+}
+
+void free_docker_info(docker_info* info) {
+	free(info);
+}
+
+DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, containers)
+DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, containers_running)
+DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, containers_paused)
+DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, containers_stopped)
+DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, images)
+
+/**
+ * Gets the docker system information
+ *
+ * \param ctx docker context
+ * \param result object
+ * \param info object to return
+ * \return error code.
+ */
+error_t docker_system_info(docker_context* ctx, docker_result** result,
+		docker_info** info) {
+	char* url = create_service_url_id_method(SYSTEM, NULL, "info");
+
+	json_object *response_obj = NULL;
+	struct MemoryStruct chunk;
+	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
+
+	if ((*result)->http_error_code >= 200) {
+		make_docker_info(info,
+				get_attr_unsigned_long(response_obj, "Containers"),
+				get_attr_unsigned_long(response_obj, "ContainersRunning"),
+				get_attr_unsigned_long(response_obj, "ContainersPaused"),
+				get_attr_unsigned_long(response_obj, "ContainersStopped"),
+				get_attr_unsigned_long(response_obj, "Images"));
+	}
+
+	return E_SUCCESS;
+
+}
+

@@ -131,6 +131,8 @@ time_t get_docker_result_start_time(docker_result* result);
 time_t get_docker_result_end_time(docker_result* result);
 char* get_docker_result_request(docker_result* result);
 char* get_docker_result_response(docker_result* result);
+char* get_docker_result_http_method(docker_result* result);
+
 
 /**
  * Check if the error_code is E_SUCCESS

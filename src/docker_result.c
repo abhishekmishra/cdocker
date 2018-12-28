@@ -147,6 +147,9 @@ char* get_docker_result_response(docker_result* result) {
 	return result->response_json_str;
 }
 
+char* get_docker_result_http_method(docker_result* result) {
+	return result->method;
+}
 /**
  * A simple error handler suitable for programs
  * which just want to log the error (if any).

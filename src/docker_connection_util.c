@@ -41,14 +41,13 @@
 #include <json-c/linkhash.h>
 #include <stdbool.h>
 
-bool prefix(const char *pre, const char *str)
-{
-    return strncmp(pre, str, strlen(pre)) == 0;
+bool prefix(const char *pre, const char *str) {
+	return strncmp(pre, str, strlen(pre)) == 0;
 }
 
 bool is_http_url(char* url) {
-	if(url) {
-		if(strlen(url) > 0) {
+	if (url) {
+		if (strlen(url) > 0) {
 			return prefix("http", url);
 		}
 	}
@@ -56,8 +55,8 @@ bool is_http_url(char* url) {
 }
 
 bool is_unix_socket(char* url) {
-	if(url) {
-		if(strlen(url) > 0) {
+	if (url) {
+		if (strlen(url) > 0) {
 			return prefix("/", url);
 		}
 	}
@@ -231,9 +230,9 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 	if (chunk->size > 0) {
 		response_obj = json_tokener_parse(chunk->memory);
 		(*response) = response_obj;
-		docker_log_debug("Response = %s", json_object_to_json_string(response_obj));
-	}
-	else {
+		docker_log_debug("Response = %s",
+				json_object_to_json_string(response_obj));
+	} else {
 		docker_log_debug("Response = Empty");
 	}
 
@@ -270,6 +269,9 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
+	time_t start, end;
+
+	start = time(NULL);
 
 	chunk->memory = malloc(1); /* will be grown as needed by the realloc above */
 	chunk->size = 0; /* no data at this point */
@@ -307,6 +309,19 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 
 		/* Check for errors */
 		handle_response(res, curl, result, chunk, response);
+		end = time(NULL);
+		if (result != NULL && (*result) != NULL) {
+			(*result)->method = HTTP_POST_STR;
+			if (post_data != NULL) {
+				(*result)->request_json_str = make_defensive_copy(post_data);
+			}
+			if (chunk->memory != NULL) {
+				(*result)->response_json_str = make_defensive_copy(
+						chunk->memory);
+			}
+			(*result)->start_time = start;
+			(*result)->end_time = end;
+		}
 		/* always cleanup */
 		curl_easy_cleanup(curl);
 	}
@@ -319,6 +334,9 @@ error_t docker_api_get(docker_context* ctx, docker_result** result,
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
+	time_t start, end;
+
+	start = time(NULL);
 
 	chunk->memory = malloc(1); /* will be grown as needed by the realloc above */
 	chunk->size = 0; /* no data at this point */
@@ -348,6 +366,17 @@ error_t docker_api_get(docker_context* ctx, docker_result** result,
 		res = curl_easy_perform(curl);
 
 		handle_response(res, curl, result, chunk, response);
+		end = time(NULL);
+		if (result != NULL && (*result) != NULL) {
+			(*result)->method = HTTP_GET_STR;
+			(*result)->request_json_str = NULL;
+			if (chunk->memory != NULL) {
+				(*result)->response_json_str = make_defensive_copy(
+						chunk->memory);
+			}
+			(*result)->start_time = start;
+			(*result)->end_time = end;
+		}
 
 		/* always cleanup */
 		curl_easy_cleanup(curl);

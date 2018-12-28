@@ -32,6 +32,8 @@
 #define DOCKER_PARAM_TRUE 1
 #define DOCKER_PARAM_FALSE 0
 
+#include <time.h>
+
 // The error code usage below based on suggestions at
 // https://stackoverflow.com/questions/6286874/c-naming-suggestion-for-error-code-enums
 
@@ -45,6 +47,10 @@ enum _config_error {
 
 /* type to provide in your API */
 typedef enum _config_error error_t;
+
+#define HTTP_GET_STR "GET"
+#define HTTP_POST_STR "POST"
+#define HTTP_DELETE_STR "DELETE"
 
 /* use this to provide a perror style method to help consumers out */
 //struct _errordesc {
@@ -67,6 +73,11 @@ typedef enum _config_error error_t;
  */
 typedef struct docker_result_t {
 	error_t error_code;
+	time_t start_time;
+	time_t end_time;
+	char* method;
+	char* request_json_str;
+	char* response_json_str;
 	long http_error_code;
 	char* url;
 	char* message;
@@ -93,28 +104,33 @@ error_t free_docker_result(docker_result** result);
  * Use this method instead of direct attribute access to the struct to ensure
  * future changes to the struct will not break your code.
  */
-error_t get_error(docker_result* result);
+error_t get_docker_result_error(docker_result* result);
 
 /**
  * This method provides the HTTP error code returned by the API call.
  * Use this method instead of direct attribute access to the struct to ensure
  * future changes to the struct will not break your code.
  */
-long get_http_error(docker_result* result);
+long get_docker_result_http_error(docker_result* result);
 
 /**
  * This method provides the URL used when calling the API.
  * Use this method instead of direct attribute access to the struct to ensure
  * future changes to the struct will not break your code.
  */
-char* get_url(docker_result* result);
+char* get_docker_result_url(docker_result* result);
 
 /**
  * This method provides the error message returned by the API.
  * Use this method instead of direct attribute access to the struct to ensure
  * future changes to the struct will not break your code.
  */
-char* get_message(docker_result* result);
+char* get_docker_result_message(docker_result* result);
+
+time_t get_docker_result_start_time(docker_result* result);
+time_t get_docker_result_end_time(docker_result* result);
+char* get_docker_result_request(docker_result* result);
+char* get_docker_result_response(docker_result* result);
 
 /**
  * Check if the error_code is E_SUCCESS

@@ -97,7 +97,7 @@ error_t make_docker_result(docker_result** result, error_t error_code,
  * Frees all internal memory used in the docker_result, should be
  * called for all result objects as soon as they are no longer needed.
  */
-error_t free_docker_result(docker_result** result);
+void free_docker_result(docker_result** result);
 
 /**
  * This method provides the error_code based on the standard error code enum.

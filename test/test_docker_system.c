@@ -69,11 +69,21 @@ static void test_version(void **state) {
 	assert_non_null(version->version);
 }
 
+static void test_info(void **state) {
+	docker_info* info;
+	docker_system_info(ctx, &res, &info);
+	handle_error(res);
+	assert_int_equal(res->http_error_code, 200);
+	assert_non_null(info);
+	assert_non_null(info->containers);
+}
+
 
 int docker_system_tests() {
 	const struct CMUnitTest tests[] = {
 	cmocka_unit_test(test_ping),
-	cmocka_unit_test(test_version)
+	cmocka_unit_test(test_version),
+	cmocka_unit_test(test_info)
  };
 	return cmocka_run_group_tests_name("docker system tests", tests,
 			group_setup, group_teardown);

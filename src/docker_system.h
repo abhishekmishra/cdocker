@@ -130,4 +130,58 @@ DOCKER_SYSTEM_GETTER(info, unsigned long, images)
 error_t docker_system_info(docker_context* ctx, docker_result** result,
 		docker_info** info);
 
+// Docker System Events
+
+//{
+//
+//    "Type": "container",
+//    "Action": "create",
+//    "Actor":
+//
+//{
+//
+//    "ID": "ede54ee1afda366ab42f824e8a5ffd195155d853ceaec74a927f249ea270c743",
+//    "Attributes":
+//
+//        {
+//            "com.example.some-label": "some-label-value",
+//            "image": "alpine",
+//            "name": "my-container"
+//        }
+//    },
+//    "time": 1461943101
+//
+//}
+
+typedef struct docker_event_t {
+	char* type;
+	char* action;
+	char* actor_id;
+	json_object* actor_attributes;
+	time_t time;
+} docker_event;
+
+error_t make_docker_event(docker_event** event, char* type, char* action, char* actor_id, json_object* actor_attributes, time_t time);
+
+void free_docker_event(docker_event* event);
+
+DOCKER_SYSTEM_GETTER(event, char*, type)
+DOCKER_SYSTEM_GETTER(event, char*, action)
+DOCKER_SYSTEM_GETTER(event, char*, actor_id)
+DOCKER_SYSTEM_GETTER(event, json_object*, actor_attributes)
+DOCKER_SYSTEM_GETTER(event, time_t, time)
+
+/**
+ * Get the docker events in a time range.
+ *
+ * \param ctx the docker context
+ * \param result the docker result object to return
+ * \param events is an array_list containing objects of type docker_event
+ * \param start_time
+ * \param end_time
+ * \return error code
+ */
+error_t docker_system_events(docker_context* ctx, docker_result** result,
+		array_list** events, time_t start_time, time_t end_time);
+
 #endif /* SRC_DOCKER_SYSTEM_H_ */

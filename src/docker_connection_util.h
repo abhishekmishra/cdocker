@@ -100,6 +100,12 @@ error_t docker_api_get(docker_context* ctx, docker_result** res, char* api_url,
 		struct array_list* url_params, struct MemoryStruct *chunk, json_object** response);
 
 /**
+ * Util method used internally to HTTP GET to the Docker url.
+ */
+error_t docker_api_stream(docker_context* ctx, docker_result** res, char* api_url,
+		struct array_list* url_params, struct MemoryStruct *chunk, json_object** response);
+
+/**
  * Create service call part of the url using components.
  *
  * \param object which api to call (container, image etc. can also be null)

@@ -78,12 +78,23 @@ static void test_info(void **state) {
 	assert_non_null(info->containers);
 }
 
+static void test_events(void **state) {
+	array_list* events;
+	time_t now = time(NULL);
+	docker_system_events(ctx, &res, &events, now - 360000, now);
+	handle_error(res);
+	assert_int_equal(res->http_error_code, 200);
+	assert_non_null(events);
+	assert_int_not_equal(array_list_length(events), 0);
+}
+
 
 int docker_system_tests() {
 	const struct CMUnitTest tests[] = {
 	cmocka_unit_test(test_ping),
 	cmocka_unit_test(test_version),
-	cmocka_unit_test(test_info)
+	cmocka_unit_test(test_info),
+	cmocka_unit_test(test_events)
  };
 	return cmocka_run_group_tests_name("docker system tests", tests,
 			group_setup, group_teardown);

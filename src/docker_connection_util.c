@@ -194,7 +194,7 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
 	memcpy(&(mem->memory[mem->size]), contents, realsize);
 	mem->size += realsize;
 	mem->memory[mem->size] = 0;
-
+//	docker_log_error("MEMORY-------\n%s\n", mem->memory);
 	return realsize;
 }
 
@@ -376,6 +376,64 @@ error_t docker_api_get(docker_context* ctx, docker_result** result,
 			}
 			(*result)->start_time = start;
 			(*result)->end_time = end;
+		}
+
+		/* always cleanup */
+		curl_easy_cleanup(curl);
+	}
+	return E_SUCCESS;
+}
+
+error_t docker_api_stream(docker_context* ctx, docker_result** result,
+		char* api_url, struct array_list* url_params,
+		struct MemoryStruct *chunk, json_object** response) {
+	CURL *curl;
+	CURLcode res;
+	struct curl_slist *headers = NULL;
+	time_t start, end;
+
+	start = time(NULL);
+
+	chunk->memory = malloc(1); /* will be grown as needed by the realloc above */
+	chunk->size = 0; /* no data at this point */
+
+	/* get a curl handle */
+	curl = curl_easy_init();
+	if (curl) {
+		/* First set the URL that is about to receive our POST. This URL can
+		 just as well be a https:// URL if that is what should receive the
+		 data. */
+		int set_url_err = set_curl_url(curl, ctx, api_url, url_params);
+		if (set_url_err) {
+			return -1;
+		}
+
+		/* send all data to this function  */
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+
+		/* we pass our 'chunk' struct to the callback function */
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void * )chunk);
+
+		/* some servers don't like requests that are made without a user-agent
+		 field, so we provide one */
+		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+		/* Perform the request, res will get the return code */
+		res = curl_easy_perform(curl);
+
+		if (res == CURLE_OK) {
+			handle_response(res, curl, result, chunk, response);
+			end = time(NULL);
+			if (result != NULL && (*result) != NULL) {
+				(*result)->method = HTTP_GET_STR;
+				(*result)->request_json_str = NULL;
+				if (chunk->memory != NULL) {
+					(*result)->response_json_str = make_defensive_copy(
+							chunk->memory);
+				}
+				(*result)->start_time = start;
+				(*result)->end_time = end;
+			}
 		}
 
 		/* always cleanup */

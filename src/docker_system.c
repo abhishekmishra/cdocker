@@ -26,6 +26,7 @@
  *
  */
 #include <stdlib.h>
+#include <string.h>
 #include <json-c/json_object.h>
 #include <json-c/json_tokener.h>
 
@@ -213,3 +214,112 @@ error_t docker_system_info(docker_context* ctx, docker_result** result,
 
 }
 
+error_t make_docker_event(docker_event** event, char* type, char* action,
+		char* actor_id, json_object* actor_attributes, time_t time) {
+	(*event) = (docker_event*) malloc(sizeof(docker_event));
+	if (!(*event)) {
+		return E_ALLOC_FAILED;
+	}
+	(*event)->type = make_defensive_copy(type);
+	(*event)->action = make_defensive_copy(action);
+	(*event)->actor_id = make_defensive_copy(actor_id);
+	(*event)->actor_attributes = actor_attributes;
+	(*event)->time = time;
+	return E_SUCCESS;
+}
+
+void free_docker_event(docker_event* event) {
+	free(event->type);
+	free(event->action);
+	free(event->actor_id);
+	free(event->actor_attributes);
+	free(event);
+}
+
+DOCKER_SYSTEM_GETTER_IMPL(event, char*, type)
+DOCKER_SYSTEM_GETTER_IMPL(event, char*, action)
+DOCKER_SYSTEM_GETTER_IMPL(event, char*, actor_id)
+DOCKER_SYSTEM_GETTER_IMPL(event, json_object*, actor_attributes)
+DOCKER_SYSTEM_GETTER_IMPL(event, time_t, time)
+
+/**
+ * Get the docker events in a time range.
+ *
+ * \param ctx the docker context
+ * \param result the docker result object to return
+ * \param events is an array_list containing objects of type docker_event
+ * \param start_time
+ * \param end_time
+ * \return error code
+ */
+error_t docker_system_events(docker_context* ctx, docker_result** result,
+		array_list** events, time_t start_time, time_t end_time) {
+	char* url = create_service_url_id_method(SYSTEM, NULL, "events");
+
+	struct array_list* params = array_list_new(
+			(void (*)(void *)) &free_url_param);
+	url_param* p;
+	char* start_time_str = (char*) calloc(128, sizeof(char));
+
+	sprintf(start_time_str, "%lu", start_time);
+	make_url_param(&p, "since", start_time_str);
+	array_list_add(params, p);
+
+	if (end_time != 0) {
+		char* end_time_str = (char*) calloc(128, sizeof(char));
+		sprintf(end_time_str, "%lu", end_time);
+		make_url_param(&p, "until", end_time_str);
+		array_list_add(params, p);
+	}
+
+	json_object *response_obj = NULL;
+	struct MemoryStruct chunk;
+
+	docker_api_stream(ctx, result, url, params, &chunk, &response_obj);
+
+	//cannot use the default response object, as that parses only one object from the response
+
+	array_list* json_arr = array_list_new(&free);
+
+	if ((*result)->http_error_code >= 200) {
+		if (chunk.memory && strlen(chunk.memory) > 0) {
+			int len = strlen(chunk.memory);
+			int start = 0;
+			int end = 0;
+			for (int i = 0; i < len; i++) {
+				if (chunk.memory[i] == '\n') {
+					chunk.memory[i] = '\0';
+					json_object* item = json_tokener_parse(
+							chunk.memory + start);
+					array_list_add(json_arr, item);
+					chunk.memory[i] = '\n';
+					start = i;
+				}
+			}
+		}
+
+		int num_events = array_list_length(json_arr);
+		docker_log_debug("Read %d items.", num_events);
+
+		array_list* evtls = array_list_new(
+				(void (*)(void *)) &free_docker_event);
+
+		for (int j = 0; j < num_events; j++) {
+			json_object* evt_obj = array_list_get_idx(json_arr, j);
+			docker_event* evt;
+			json_object* extractObj;
+			char* attr = NULL;
+			if (json_object_object_get_ex(evt_obj, "Actor", &extractObj)) {
+				json_object* attrs_obj;
+				json_object_object_get_ex(extractObj, "Attributes", &attrs_obj);
+				make_docker_event(&evt, get_attr_str(evt_obj, "Type"),
+						get_attr_str(evt_obj, "Action"),
+						get_attr_str(extractObj, "ID"), attrs_obj,
+						get_attr_unsigned_long(evt_obj, "time"));
+			}
+		}
+	}
+
+	return E_SUCCESS;
+
+}

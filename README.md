@@ -114,5 +114,5 @@ At some point I will write corresponding asynchronous API endpoints (but not pla
 |Get System Info      |            :ok: |          :ok: |  :ok: | Only few attrs deserialized, rest tbd                          |
 |Get Version          |            :ok: |          :ok: |  :ok: |                          |
 |Ping   	          |            :ok: |          :ok: |  :ok: |                          |
-|Monitor events       |             :x: |           :x: |   :x: |                          |
+|Monitor events       |            :ok: |          :ok: |  :ok: | Callback mode for continous listening.                         |
 |Get Data Usage Info  |             :x: |           :x: |   :x: |                          |

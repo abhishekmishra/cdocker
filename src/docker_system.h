@@ -105,6 +105,9 @@ typedef struct docker_info_t {
 	unsigned long containers_paused;
 	unsigned long containers_stopped;
 	unsigned long images;
+	char* name;
+	int ncpu;
+	unsigned long memtotal;
 } docker_info;
 
 error_t make_docker_info(docker_info** info, unsigned long containers,
@@ -118,6 +121,9 @@ DOCKER_SYSTEM_GETTER(info, unsigned long, containers_running)
 DOCKER_SYSTEM_GETTER(info, unsigned long, containers_paused)
 DOCKER_SYSTEM_GETTER(info, unsigned long, containers_stopped)
 DOCKER_SYSTEM_GETTER(info, unsigned long, images)
+DOCKER_SYSTEM_GETTER(info, char*, name)
+DOCKER_SYSTEM_GETTER(info, int, ncpu)
+DOCKER_SYSTEM_GETTER(info, unsigned long, memtotal)
 
 /**
  * Gets the docker system information
@@ -161,7 +167,8 @@ typedef struct docker_event_t {
 	time_t time;
 } docker_event;
 
-error_t make_docker_event(docker_event** event, char* type, char* action, char* actor_id, json_object* actor_attributes, time_t time);
+error_t make_docker_event(docker_event** event, char* type, char* action,
+		char* actor_id, json_object* actor_attributes, time_t time);
 
 void free_docker_event(docker_event* event);
 

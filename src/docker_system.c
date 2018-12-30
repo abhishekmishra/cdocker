@@ -176,6 +176,7 @@ error_t make_docker_info(docker_info** info, unsigned long containers,
 }
 
 void free_docker_info(docker_info* info) {
+	free(info->name);
 	free(info);
 }
 
@@ -184,6 +185,9 @@ DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, containers_running)
 DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, containers_paused)
 DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, containers_stopped)
 DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, images)
+DOCKER_SYSTEM_GETTER_IMPL(info, char*, name)
+DOCKER_SYSTEM_GETTER_IMPL(info, int, ncpu)
+DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, memtotal)
 
 /**
  * Gets the docker system information
@@ -208,6 +212,9 @@ error_t docker_system_info(docker_context* ctx, docker_result** result,
 				get_attr_unsigned_long(response_obj, "ContainersPaused"),
 				get_attr_unsigned_long(response_obj, "ContainersStopped"),
 				get_attr_unsigned_long(response_obj, "Images"));
+		(*info)->name = get_attr_str(response_obj, "Name");
+		(*info)->ncpu = get_attr_int(response_obj, "NCPU");
+		(*info)->memtotal = get_attr_unsigned_long(response_obj, "MemTotal");
 	}
 
 	return E_SUCCESS;

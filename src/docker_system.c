@@ -279,6 +279,7 @@ error_t docker_system_events(docker_context* ctx, docker_result** result,
 
 	//cannot use the default response object, as that parses only one object from the response
 
+	(*events) = array_list_new((void (*)(void *))&free_docker_event);
 	array_list* json_arr = array_list_new(&free);
 
 	if ((*result)->http_error_code >= 200) {
@@ -317,6 +318,7 @@ error_t docker_system_events(docker_context* ctx, docker_result** result,
 						get_attr_str(extractObj, "ID"), attrs_obj,
 						get_attr_unsigned_long(evt_obj, "time"));
 			}
+			array_list_add((*events), evt);
 		}
 	}
 

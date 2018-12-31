@@ -71,20 +71,22 @@ error_t make_docker_result(docker_result** result, error_t error_code,
  * called for all result objects as soon as they are no longer needed.
  */
 void free_docker_result(docker_result** result) {
-	if ((*result)) {
-		if ((*result)->message) {
-			free((*result)->message);
+	if (result) {
+		if ((*result)) {
+			if ((*result)->message) {
+				free((*result)->message);
+			}
+			if ((*result)->url) {
+				free((*result)->url);
+			}
+			if ((*result)->request_json_str != NULL) {
+				free((*result)->request_json_str);
+			}
+			if ((*result)->response_json_str != NULL) {
+				free((*result)->response_json_str);
+			}
+			free(*result);
 		}
-		if ((*result)->url) {
-			free((*result)->url);
-		}
-		if ((*result)->request_json_str != NULL) {
-			free((*result)->request_json_str);
-		}
-		if ((*result)->response_json_str != NULL) {
-			free((*result)->response_json_str);
-		}
-		free(*result);
 	}
 }
 

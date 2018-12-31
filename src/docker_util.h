@@ -28,6 +28,8 @@
 #ifndef SRC_DOCKER_UTIL_H_
 #define SRC_DOCKER_UTIL_H_
 
+#include "json-c/json_object.h"
+
 char* make_defensive_copy(const char* from);
 
 char* get_attr_str(json_object* obj, char* name);

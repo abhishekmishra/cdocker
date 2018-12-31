@@ -286,9 +286,9 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 		if (set_url_err) {
 			return -1;
 		}
-		headers = curl_slist_append(headers, "Expect:");
-		headers = curl_slist_append(headers, "Content-Type: application/json");
-		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+//		headers = curl_slist_append(headers, "Expect:");
+//		headers = curl_slist_append(headers, "Content-Type: application/json");
+//		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
 		/* Now specify the POST data */
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
@@ -450,7 +450,7 @@ char* create_service_url_id_method(docker_object_type object, char* id,
 		object_url = "containers";
 		break;
 	case IMAGE:
-		object_url = "image";
+		object_url = "images";
 		break;
 	case SYSTEM:
 		object_url = NULL;
@@ -458,11 +458,19 @@ char* create_service_url_id_method(docker_object_type object, char* id,
 	}
 	char* url = NULL;
 	if (object_url) {
-		url = (char*) malloc(
-				(strlen(object_url) + strlen(id) + strlen(method) + 3)
-						* sizeof(char));
-		sprintf(url, "%s/%s/%s", object_url, id, method);
-		docker_log_debug("%s url is %s", method, url);
+		if (id) {
+			url = (char*) malloc(
+					(strlen(object_url) + strlen(id) + strlen(method) + 3)
+							* sizeof(char));
+			sprintf(url, "%s/%s/%s", object_url, id, method);
+			docker_log_debug("%s url is %s", method, url);
+		} else {
+			url = (char*) malloc(
+					(strlen(object_url) + strlen(method) + 3)
+							* sizeof(char));
+			sprintf(url, "%s/%s", object_url, method);
+			docker_log_debug("%s url is %s", method, url);
+		}
 	} else {
 		//when there is no object ignore both object and id
 		url = (char*) malloc((strlen(method) + 1) * sizeof(char));

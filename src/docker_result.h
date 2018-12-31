@@ -38,6 +38,7 @@
 // https://stackoverflow.com/questions/6286874/c-naming-suggestion-for-error-code-enums
 
 enum _config_error {
+	E_UNKNOWN_ERROR = 1,
 	E_SUCCESS = 0,
 	E_INVALID_INPUT = -1,
 	E_FILE_NOT_FOUND = -2,

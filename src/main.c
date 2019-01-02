@@ -15,7 +15,7 @@ void handle_error(docker_result* res) {
 	docker_simple_error_handler_log(res);
 }
 
-void log_pull_message(docker_image_create_status* status) {
+void log_pull_message(docker_image_create_status* status, void* client_cbargs) {
 	if (status) {
 		if (status->id) {
 			docker_log_debug("message is %s, id is %s", status->status,
@@ -26,9 +26,10 @@ void log_pull_message(docker_image_create_status* status) {
 	}
 }
 
-void log_events(docker_event* evt) {
+void log_events(docker_event* evt, void* client_cbargs) {
 	if (evt) {
-		docker_log_debug("%d: %s: %s: %s", evt->time, evt->type, evt->action, evt->actor_id);
+		docker_log_debug("%d: %s: %s: %s", evt->time, evt->type, evt->action,
+				evt->actor_id);
 	}
 }
 
@@ -47,8 +48,8 @@ int main() {
 		handle_error(res);
 
 		array_list* evts;
-		docker_system_events_cb(ctx, &res, &log_events, &evts, time(NULL) - (3600 * 24),
-				time(NULL));
+		docker_system_events_cb(ctx, &res, &log_events, NULL, &evts,
+				time(NULL) - (3600 * 24), time(NULL));
 		//This is an example for listening endlessly
 //		docker_system_events_cb(ctx, &res, &log_events, &evts, time(NULL) - (3600 * 24),
 //				0);
@@ -58,7 +59,7 @@ int main() {
 		docker_system_version(ctx, &res, &version);
 		handle_error(res);
 
-		docker_image_create_from_image_cb(ctx, &res, &log_pull_message,
+		docker_image_create_from_image_cb(ctx, &res, &log_pull_message, NULL,
 				"alpine", "latest", NULL);
 		handle_error(res);
 

@@ -82,8 +82,9 @@ struct http_response_memory {
 	char *memory;
 	size_t size;
 	int flush_end;
-	void (*status_callback)(char* msg, void* cbargs);
+	void (*status_callback)(char* msg, void* cbargs, void* client_cbargs);
 	void* cbargs;
+	void* client_cbargs;
 };
 
 /**
@@ -96,7 +97,8 @@ error_t docker_api_post(docker_context* ctx, docker_result** res, char* api_url,
 error_t docker_api_post_cb(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params, char* post_data,
 		struct http_response_memory *chunk, json_object** response,
-		void (*status_callback)(char* msg, void* cbargs), void* cbargs);
+		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
+		void* cbargs, void* client_cbargs);
 
 /**
  * Util method used internally to HTTP GET to the Docker url.
@@ -108,7 +110,8 @@ error_t docker_api_get(docker_context* ctx, docker_result** res, char* api_url,
 error_t docker_api_get_cb(docker_context* ctx, docker_result** res,
 		char* api_url, struct array_list* url_params,
 		struct http_response_memory *chunk, json_object** response,
-		void (*status_callback)(char* msg, void* cbargs), void* cbargs);
+		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
+		void* cbargs, void* client_cbargs);
 
 /**
  * Create service call part of the url using components.

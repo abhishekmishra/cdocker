@@ -203,7 +203,7 @@ static size_t write_memory_callback(void *contents, size_t size, size_t nmemb,
 		char* flush_str = mem->memory + (mem->flush_end * sizeof(char));
 		if (flush_str[strlen(flush_str) - 1] == '\n') {
 			char* msg = make_defensive_copy(flush_str);
-			mem->status_callback(msg, mem->cbargs);
+			mem->status_callback(msg, mem->cbargs, mem->client_cbargs);
 			mem->flush_end += strlen(flush_str);
 		}
 	}
@@ -278,13 +278,14 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params, char* post_data,
 		struct http_response_memory *chunk, json_object** response) {
 	return docker_api_post_cb(ctx, result, api_url, url_params, post_data,
-			chunk, response, NULL, NULL);
+			chunk, response, NULL, NULL, NULL);
 }
 
 error_t docker_api_post_cb(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params, char* post_data,
 		struct http_response_memory *chunk, json_object** response,
-		void (*status_callback)(char* msg, void* cbargs), void* cbargs) {
+		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs), void* cbargs,
+		void* client_cbargs) {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
@@ -297,6 +298,7 @@ error_t docker_api_post_cb(docker_context* ctx, docker_result** result,
 	chunk->flush_end = 0;
 	chunk->status_callback = status_callback;
 	chunk->cbargs = cbargs;
+	chunk->client_cbargs = client_cbargs;
 
 	/* get a curl handle */
 	curl = curl_easy_init();
@@ -355,13 +357,14 @@ error_t docker_api_get(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params,
 		struct http_response_memory *chunk, json_object** response) {
 	return docker_api_get_cb(ctx, result, api_url, url_params, chunk, response,
-	NULL, NULL);
+	NULL, NULL, NULL);
 }
 
 error_t docker_api_get_cb(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params,
 		struct http_response_memory *chunk, json_object** response,
-		void (*status_callback)(char* msg, void* cbargs), void* cbargs) {
+		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs), void* cbargs,
+		void* client_cbargs) {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
@@ -374,6 +377,7 @@ error_t docker_api_get_cb(docker_context* ctx, docker_result** result,
 	chunk->flush_end = 0;
 	chunk->status_callback = status_callback;
 	chunk->cbargs = cbargs;
+	chunk->client_cbargs = client_cbargs;
 
 	/* get a curl handle */
 	curl = curl_easy_init();

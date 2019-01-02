@@ -24,9 +24,9 @@
 #include "docker_images.h"
 #include "log.h"
 
-void parse_status_cb(char* msg, void* cb) {
-	void (*status_cb)(
-			docker_image_create_status*) = (void (*)(docker_image_create_status*))cb;
+void parse_status_cb(char* msg, void* cb, void* cbargs) {
+	void (*status_cb)(docker_image_create_status*,
+			void*) = (void (*)(docker_image_create_status*, void*))cb;
 	if (msg) {
 		if(status_cb) {
 			json_object* response_obj = json_tokener_parse(msg);
@@ -37,7 +37,7 @@ void parse_status_cb(char* msg, void* cb) {
 				status->status = status_msg;
 				status->id = id;
 			}
-			status_cb(status);
+			status_cb(status, cbargs);
 		} else {
 			docker_log_debug("Message = Empty");
 		}
@@ -59,8 +59,8 @@ void parse_status_cb(char* msg, void* cb) {
  */
 error_t docker_image_create_from_image(docker_context* ctx,
 		docker_result** result, char* from_image, char* tag, char* platform) {
-	return docker_image_create_from_image_cb(ctx, result, NULL, from_image, tag,
-			platform);
+	return docker_image_create_from_image_cb(ctx, result, NULL, NULL,
+			from_image, tag, platform);
 }
 
 /**
@@ -69,7 +69,8 @@ error_t docker_image_create_from_image(docker_context* ctx,
  *
  * \param ctx docker context
  * \param result the docker result object to return
- * \param status_cb callback to call with the status object
+ * \param status_cb callback to call for updates
+ * \param cbargs callback args for the upate call
  * \param from_image image name
  * \param tag which tag to pull, for e.g. "latest"
  * \param platform which platform to pull the image for (format os[/arch[/variant]]),
@@ -77,8 +78,9 @@ error_t docker_image_create_from_image(docker_context* ctx,
  * \return error code.
  */
 error_t docker_image_create_from_image_cb(docker_context* ctx,
-		docker_result** result, void (*status_cb)(docker_image_create_status*),
-		char* from_image, char* tag, char* platform) {
+		docker_result** result,
+		void (*status_cb)(docker_image_create_status*, void* cbargs),
+		void* cbargs, char* from_image, char* tag, char* platform) {
 	if (from_image == NULL || strlen(from_image) == 0) {
 		return E_INVALID_INPUT;
 	}
@@ -103,7 +105,7 @@ error_t docker_image_create_from_image_cb(docker_context* ctx,
 	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
 	docker_api_post_cb(ctx, result, url, params, "", &chunk, &response_obj,
-			&parse_status_cb, status_cb);
+			&parse_status_cb, status_cb, cbargs);
 
 	if ((*result)->http_error_code >= 200) {
 		return E_UNKNOWN_ERROR;

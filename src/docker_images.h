@@ -53,6 +53,8 @@ error_t docker_image_create_from_image(docker_context* ctx,
  *
  * \param ctx docker context
  * \param result the docker result object to return
+ * \param status_cb callback to call for updates
+ * \param cbargs callback args for the upate call
  * \param from_image image name
  * \param tag which tag to pull, for e.g. "latest"
  * \param platform which platform to pull the image for (format os[/arch[/variant]]),
@@ -60,8 +62,9 @@ error_t docker_image_create_from_image(docker_context* ctx,
  * \return error code.
  */
 error_t docker_image_create_from_image_cb(docker_context* ctx,
-		docker_result** result, void (*status_cb)(docker_image_create_status*),
-		char* from_image, char* tag, char* platform);
+		docker_result** result,
+		void (*status_cb)(docker_image_create_status*, void* cbargs),
+		void* cbargs, char* from_image, char* tag, char* platform);
 
 //error_t docker_image_create_from_src(docker_context* ctx, docker_result** res, char* from_src, char* repo, char* tag, char* platform);
 

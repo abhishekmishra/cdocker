@@ -68,7 +68,7 @@ error_t docker_ping(docker_context* ctx, docker_result** result) {
 	char* url = create_service_url_id_method(SYSTEM, NULL, "_ping");
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
 
 	if ((*result)->http_error_code != 200) {
@@ -140,7 +140,7 @@ error_t docker_system_version(docker_context* ctx, docker_result** result,
 	char* url = create_service_url_id_method(SYSTEM, NULL, "version");
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
 
 	if ((*result)->http_error_code >= 200) {
@@ -202,7 +202,7 @@ error_t docker_system_info(docker_context* ctx, docker_result** result,
 	char* url = create_service_url_id_method(SYSTEM, NULL, "info");
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
 
 	if ((*result)->http_error_code >= 200) {
@@ -249,6 +249,30 @@ DOCKER_SYSTEM_GETTER_IMPL(event, char*, actor_id)
 DOCKER_SYSTEM_GETTER_IMPL(event, json_object*, actor_attributes)
 DOCKER_SYSTEM_GETTER_IMPL(event, time_t, time)
 
+void parse_events_cb(char* msg, void* cb) {
+	void (*events_cb)(docker_event*) = (void (*)(docker_event*))cb;
+	if (msg) {
+		if(events_cb) {
+			json_object* evt_obj = json_tokener_parse(msg);
+			docker_event* evt = (docker_event*)calloc(1, sizeof(docker_event));
+			if(evt != NULL) {
+				json_object* extractObj;
+				char* attr = NULL;
+				if (json_object_object_get_ex(evt_obj, "Actor", &extractObj)) {
+					json_object* attrs_obj;
+					json_object_object_get_ex(extractObj, "Attributes", &attrs_obj);
+					make_docker_event(&evt, get_attr_str(evt_obj, "Type"),
+							get_attr_str(evt_obj, "Action"),
+							get_attr_str(extractObj, "ID"), attrs_obj,
+							get_attr_unsigned_long(evt_obj, "time"));
+				}
+			}events_cb(evt);
+		} else {
+			docker_log_debug("Message = Empty");
+		}
+	}
+}
+
 /**
  * Get the docker events in a time range.
  *
@@ -261,6 +285,31 @@ DOCKER_SYSTEM_GETTER_IMPL(event, time_t, time)
  */
 error_t docker_system_events(docker_context* ctx, docker_result** result,
 		array_list** events, time_t start_time, time_t end_time) {
+	if (end_time <= 0) {
+		docker_log_warn(
+				"This call with end_time %d will never end, and will have no response, use the method with callbacks instead.",
+				end_time);
+		return E_INVALID_INPUT;
+	} else {
+		return docker_system_events_cb(ctx, result, NULL, events, start_time,
+				end_time);
+	}
+}
+
+/**
+ * Get the docker events in a time range.
+ *
+ * \param ctx the docker context
+ * \param result the docker result object to return
+ * \param docker_events_cb pointer to callback when an event is received.
+ * \param events is an array_list containing objects of type docker_event
+ * \param start_time
+ * \param end_time
+ * \return error code
+ */
+error_t docker_system_events_cb(docker_context* ctx, docker_result** result,
+		void (*docker_events_cb)(docker_event* evt), array_list** events,
+		time_t start_time, time_t end_time) {
 	char* url = create_service_url_id_method(SYSTEM, NULL, "events");
 
 	struct array_list* params = array_list_new(
@@ -280,13 +329,14 @@ error_t docker_system_events(docker_context* ctx, docker_result** result,
 	}
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 
-	docker_api_stream(ctx, result, url, params, &chunk, &response_obj);
+	docker_api_get_cb(ctx, result, url, params, &chunk, &response_obj,
+			&parse_events_cb, docker_events_cb);
 
 	//cannot use the default response object, as that parses only one object from the response
 
-	(*events) = array_list_new((void (*)(void *))&free_docker_event);
+	(*events) = array_list_new((void (*)(void *)) &free_docker_event);
 	array_list* json_arr = array_list_new(&free);
 
 	if ((*result)->http_error_code >= 200) {

@@ -191,6 +191,21 @@ DOCKER_SYSTEM_GETTER(event, time_t, time)
 error_t docker_system_events(docker_context* ctx, docker_result** result,
 		array_list** events, time_t start_time, time_t end_time);
 
+/**
+ * Get the docker events in a time range.
+ *
+ * \param ctx the docker context
+ * \param result the docker result object to return
+ * \param docker_events_cb pointer to callback when an event is received.
+ * \param events is an array_list containing objects of type docker_event
+ * \param start_time
+ * \param end_time
+ * \return error code
+ */
+error_t docker_system_events_cb(docker_context* ctx, docker_result** result,
+		void (*docker_events_cb)(docker_event* evt), array_list** events,
+		time_t start_time, time_t end_time);
+
 //Docker df
 
 //{

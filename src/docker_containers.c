@@ -471,7 +471,7 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 	}
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
 	free(params);
 
@@ -647,7 +647,7 @@ error_t docker_create_container(docker_context* ctx, docker_result** result,
 		char** id, docker_create_container_params* params) {
 	(*id) = NULL;
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 
 	json_object* create_obj = json_object_new_object();
 
@@ -695,7 +695,7 @@ error_t docker_process_list_container(docker_context* ctx,
 	docker_log_debug("Top url is %s", url);
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
 
 	if (is_ok((*result))) {
@@ -807,7 +807,7 @@ error_t docker_container_logs(docker_context* ctx, docker_result** result,
 	}
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
 
 	free(params);
@@ -888,7 +888,7 @@ error_t docker_container_changes(docker_context* ctx, docker_result** result,
 	char* url = create_service_url_id_method(CONTAINER, id, "changes");
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
 
 	if ((json_object_get_type(response_obj) != json_type_null)) {
@@ -937,7 +937,7 @@ error_t docker_start_container(docker_context* ctx, docker_result** result,
 	}
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	free(params);
@@ -969,7 +969,7 @@ error_t docker_stop_container(docker_context* ctx, docker_result** result,
 	}
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 304) {
@@ -1010,7 +1010,7 @@ error_t docker_restart_container(docker_context* ctx, docker_result** result,
 	}
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
@@ -1044,7 +1044,7 @@ error_t docker_kill_container(docker_context* ctx, docker_result** result,
 	}
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
@@ -1082,7 +1082,7 @@ error_t docker_rename_container(docker_context* ctx, docker_result** result,
 	}
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
@@ -1110,7 +1110,7 @@ error_t docker_pause_container(docker_context* ctx, docker_result** result,
 	char* url = create_service_url_id_method(CONTAINER, id, "pause");
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_post(ctx, result, url, NULL, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
@@ -1132,7 +1132,7 @@ error_t docker_unpause_container(docker_context* ctx, docker_result** result,
 	char* url = create_service_url_id_method(CONTAINER, id, "unpause");
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_post(ctx, result, url, NULL, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
@@ -1164,7 +1164,7 @@ error_t docker_wait_container(docker_context* ctx, docker_result** result,
 	}
 
 	json_object *response_obj = NULL;
-	struct MemoryStruct chunk;
+	struct http_response_memory chunk;
 	docker_api_post(ctx, result, url, NULL, "", &chunk, &response_obj);
 
 	//TODO free response_obj

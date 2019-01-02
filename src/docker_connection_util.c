@@ -178,10 +178,10 @@ char* build_url(CURL *curl, char* base_url, struct array_list* url_params) {
 	}
 }
 
-static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
+static size_t write_memory_callback(void *contents, size_t size, size_t nmemb,
 		void *userp) {
 	size_t realsize = size * nmemb;
-	struct MemoryStruct *mem = (struct MemoryStruct *) userp;
+	struct http_response_memory *mem = (struct http_response_memory *) userp;
 
 	char *ptr = realloc(mem->memory, mem->size + realsize + 1);
 	if (ptr == NULL) {
@@ -194,7 +194,19 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
 	memcpy(&(mem->memory[mem->size]), contents, realsize);
 	mem->size += realsize;
 	mem->memory[mem->size] = 0;
-//	docker_log_error("MEMORY-------\n%s\n", mem->memory);
+//	docker_log_debug("MEMORY-------\n%s\n", mem->memory);
+
+	/** if callback is not null, and current memory contents end with a newline,
+	 * then flush it to the callback, and empty the memory contents.
+	 */
+	if (mem->status_callback != NULL && mem->memory) {
+		char* flush_str = mem->memory + (mem->flush_end * sizeof(char));
+		if (flush_str[strlen(flush_str) - 1] == '\n') {
+			char* msg = make_defensive_copy(flush_str);
+			mem->status_callback(msg, mem->cbargs);
+			mem->flush_end += strlen(flush_str);
+		}
+	}
 	return realsize;
 }
 
@@ -224,7 +236,7 @@ error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 }
 
 void handle_response(CURLcode res, CURL* curl, docker_result** result,
-		struct MemoryStruct* chunk, json_object** response) {
+		struct http_response_memory* chunk, json_object** response) {
 	docker_log_debug("%lu bytes retrieved\n", (unsigned long ) chunk->size);
 	json_object* response_obj = NULL;
 	if (chunk->size > 0) {
@@ -253,7 +265,6 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 			make_docker_result(result, E_INVALID_INPUT, response_code,
 					effective_url, "error");
 		}
-		//TODO move message extraction to post call
 		if ((*result)->http_error_code >= 400) {
 			char* msg = get_attr_str(response_obj, "message");
 			if (msg) {
@@ -265,7 +276,15 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 
 error_t docker_api_post(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params, char* post_data,
-		struct MemoryStruct *chunk, json_object** response) {
+		struct http_response_memory *chunk, json_object** response) {
+	return docker_api_post_cb(ctx, result, api_url, url_params, post_data,
+			chunk, response, NULL, NULL);
+}
+
+error_t docker_api_post_cb(docker_context* ctx, docker_result** result,
+		char* api_url, struct array_list* url_params, char* post_data,
+		struct http_response_memory *chunk, json_object** response,
+		void (*status_callback)(char* msg, void* cbargs), void* cbargs) {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
@@ -275,6 +294,9 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 
 	chunk->memory = malloc(1); /* will be grown as needed by the realloc above */
 	chunk->size = 0; /* no data at this point */
+	chunk->flush_end = 0;
+	chunk->status_callback = status_callback;
+	chunk->cbargs = cbargs;
 
 	/* get a curl handle */
 	curl = curl_easy_init();
@@ -286,8 +308,8 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 		if (set_url_err) {
 			return -1;
 		}
-//		headers = curl_slist_append(headers, "Expect:");
-//		headers = curl_slist_append(headers, "Content-Type: application/json");
+		headers = curl_slist_append(headers, "Expect:");
+		headers = curl_slist_append(headers, "Content-Type: application/json");
 //		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
 		/* Now specify the POST data */
@@ -295,7 +317,7 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
 
 		/* send all data to this function  */
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
 
 		/* we pass our 'chunk' struct to the callback function */
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void * )chunk);
@@ -325,12 +347,21 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 		/* always cleanup */
 		curl_easy_cleanup(curl);
 	}
+	//TODO check and free chunk
 	return E_SUCCESS;
 }
 
 error_t docker_api_get(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params,
-		struct MemoryStruct *chunk, json_object** response) {
+		struct http_response_memory *chunk, json_object** response) {
+	return docker_api_get_cb(ctx, result, api_url, url_params, chunk, response,
+	NULL, NULL);
+}
+
+error_t docker_api_get_cb(docker_context* ctx, docker_result** result,
+		char* api_url, struct array_list* url_params,
+		struct http_response_memory *chunk, json_object** response,
+		void (*status_callback)(char* msg, void* cbargs), void* cbargs) {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
@@ -340,6 +371,9 @@ error_t docker_api_get(docker_context* ctx, docker_result** result,
 
 	chunk->memory = malloc(1); /* will be grown as needed by the realloc above */
 	chunk->size = 0; /* no data at this point */
+	chunk->flush_end = 0;
+	chunk->status_callback = status_callback;
+	chunk->cbargs = cbargs;
 
 	/* get a curl handle */
 	curl = curl_easy_init();
@@ -353,7 +387,7 @@ error_t docker_api_get(docker_context* ctx, docker_result** result,
 		}
 
 		/* send all data to this function  */
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
 
 		/* we pass our 'chunk' struct to the callback function */
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void * )chunk);
@@ -381,64 +415,7 @@ error_t docker_api_get(docker_context* ctx, docker_result** result,
 		/* always cleanup */
 		curl_easy_cleanup(curl);
 	}
-	return E_SUCCESS;
-}
-
-error_t docker_api_stream(docker_context* ctx, docker_result** result,
-		char* api_url, struct array_list* url_params,
-		struct MemoryStruct *chunk, json_object** response) {
-	CURL *curl;
-	CURLcode res;
-	struct curl_slist *headers = NULL;
-	time_t start, end;
-
-	start = time(NULL);
-
-	chunk->memory = malloc(1); /* will be grown as needed by the realloc above */
-	chunk->size = 0; /* no data at this point */
-
-	/* get a curl handle */
-	curl = curl_easy_init();
-	if (curl) {
-		/* First set the URL that is about to receive our POST. This URL can
-		 just as well be a https:// URL if that is what should receive the
-		 data. */
-		int set_url_err = set_curl_url(curl, ctx, api_url, url_params);
-		if (set_url_err) {
-			return -1;
-		}
-
-		/* send all data to this function  */
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-
-		/* we pass our 'chunk' struct to the callback function */
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void * )chunk);
-
-		/* some servers don't like requests that are made without a user-agent
-		 field, so we provide one */
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-
-		/* Perform the request, res will get the return code */
-		res = curl_easy_perform(curl);
-
-		if (res == CURLE_OK) {
-			handle_response(res, curl, result, chunk, response);
-			end = time(NULL);
-			if (result != NULL && (*result) != NULL) {
-				(*result)->method = HTTP_GET_STR;
-				(*result)->request_json_str = NULL;
-				if (chunk->memory != NULL) {
-					(*result)->response_json_str = make_defensive_copy(
-							chunk->memory);
-				}
-				(*result)->start_time = start;
-				(*result)->end_time = end;
-			}
-		}
-
-		/* always cleanup */
-		curl_easy_cleanup(curl);
-	}
+	//TODO check and free chunk
 	return E_SUCCESS;
 }
 
@@ -466,8 +443,7 @@ char* create_service_url_id_method(docker_object_type object, char* id,
 			docker_log_debug("%s url is %s", method, url);
 		} else {
 			url = (char*) malloc(
-					(strlen(object_url) + strlen(method) + 3)
-							* sizeof(char));
+					(strlen(object_url) + strlen(method) + 3) * sizeof(char));
 			sprintf(url, "%s/%s", object_url, method);
 			docker_log_debug("%s url is %s", method, url);
 		}

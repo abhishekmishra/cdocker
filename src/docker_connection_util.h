@@ -78,32 +78,37 @@ char* build_url(CURL *curl, char* base_url, struct array_list* url_params);
 error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 		struct array_list* url_params);
 
-struct MemoryStruct {
+struct http_response_memory {
 	char *memory;
 	size_t size;
+	int flush_end;
+	void (*status_callback)(char* msg, void* cbargs);
+	void* cbargs;
 };
-
-static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb,
-		void *userp);
 
 /**
  * Util method used internally to HTTP POST to the Docker url.
  */
 error_t docker_api_post(docker_context* ctx, docker_result** res, char* api_url,
 		struct array_list* url_params, char* post_data,
-		struct MemoryStruct *chunk, json_object** response);
+		struct http_response_memory *chunk, json_object** response);
+
+error_t docker_api_post_cb(docker_context* ctx, docker_result** result,
+		char* api_url, struct array_list* url_params, char* post_data,
+		struct http_response_memory *chunk, json_object** response,
+		void (*status_callback)(char* msg, void* cbargs), void* cbargs);
 
 /**
  * Util method used internally to HTTP GET to the Docker url.
  */
 error_t docker_api_get(docker_context* ctx, docker_result** res, char* api_url,
-		struct array_list* url_params, struct MemoryStruct *chunk, json_object** response);
+		struct array_list* url_params, struct http_response_memory *chunk,
+		json_object** response);
 
-/**
- * Util method used internally to HTTP GET to the Docker url.
- */
-error_t docker_api_stream(docker_context* ctx, docker_result** res, char* api_url,
-		struct array_list* url_params, struct MemoryStruct *chunk, json_object** response);
+error_t docker_api_get_cb(docker_context* ctx, docker_result** res,
+		char* api_url, struct array_list* url_params,
+		struct http_response_memory *chunk, json_object** response,
+		void (*status_callback)(char* msg, void* cbargs), void* cbargs);
 
 /**
  * Create service call part of the url using components.

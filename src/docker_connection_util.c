@@ -252,6 +252,8 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 	if (res != CURLE_OK) {
 		fprintf(stderr, "curl_easy_perform() failed: %s\n",
 				curl_easy_strerror(res));
+		make_docker_result(result, E_SUCCESS, -1, NULL,
+		NULL);
 	} else {
 		long response_code;
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
@@ -284,8 +286,8 @@ error_t docker_api_post(docker_context* ctx, docker_result** result,
 error_t docker_api_post_cb(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params, char* post_data,
 		struct http_response_memory *chunk, json_object** response,
-		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs), void* cbargs,
-		void* client_cbargs) {
+		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
+		void* cbargs, void* client_cbargs) {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;
@@ -363,8 +365,8 @@ error_t docker_api_get(docker_context* ctx, docker_result** result,
 error_t docker_api_get_cb(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params,
 		struct http_response_memory *chunk, json_object** response,
-		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs), void* cbargs,
-		void* client_cbargs) {
+		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
+		void* cbargs, void* client_cbargs) {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *headers = NULL;

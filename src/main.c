@@ -33,16 +33,53 @@ void log_events(docker_event* evt, void* client_cbargs) {
 	}
 }
 
-int main() {
+int extract_args_url_connection(int argc, char* url, char* argv[],
+		docker_context** ctx, docker_result** res) {
+	int connected = 0;
+	if (argc > 1) {
+		url = argv[1];
+		if (is_http_url(url)) {
+			if (make_docker_context_url(ctx, url) == E_SUCCESS) {
+				connected = 1;
+			}
+		} else if (is_unix_socket(url)) {
+			if (make_docker_context_socket(ctx, url) == E_SUCCESS) {
+				connected = 1;
+			}
+		}
+	} else {
+		url = DOCKER_DEFINE_DEFAULT_UNIX_SOCKET;
+		if (make_docker_context_socket(ctx, url) == E_SUCCESS) {
+			connected = 1;
+		}
+	}
+	if (connected) {
+		if (docker_ping((*ctx), res) != E_SUCCESS) {
+			docker_log_fatal("Could not ping the server %s", url);
+			connected = 0;
+		} else {
+			docker_log_info("%s is alive.", url);
+		}
+	}
+	return connected;
+}
+
+int main(int argc, char* argv[]) {
 	curl_global_init(CURL_GLOBAL_ALL);
 	char* id;
-
+	char* url;
+	int connected = 0;
 	docker_context* ctx;
 	docker_result* res;
 
+	connected = extract_args_url_connection(argc, url, argv, &ctx, &res);
+	if (!connected) {
+		return E_PING_FAILED;
+	}
+	
 //	if (make_docker_context_url(&ctx, "http://192.168.1.33:2376/")
 //			== E_SUCCESS) {
-	if (make_docker_context_socket(&ctx, "/var/run/docker.sock") == E_SUCCESS) {
+//	if (make_docker_context_socket(&ctx, "/var/run/docker.sock") == E_SUCCESS) {
 
 		docker_ping(ctx, &res);
 		handle_error(res);
@@ -140,7 +177,7 @@ int main() {
 //		}
 
 		free_docker_context(&ctx);
-	}
+//	}
 	curl_global_cleanup();
 	return 0;
 

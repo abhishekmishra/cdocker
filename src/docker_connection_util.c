@@ -314,7 +314,7 @@ error_t docker_api_post_cb(docker_context* ctx, docker_result** result,
 		}
 		headers = curl_slist_append(headers, "Expect:");
 		headers = curl_slist_append(headers, "Content-Type: application/json");
-//		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
 		/* Now specify the POST data */
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);

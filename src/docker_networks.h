@@ -22,18 +22,17 @@
 #ifndef SRC_DOCKER_NETWORKS_H_
 #define SRC_DOCKER_NETWORKS_H_
 
+#include <stdlib.h>
 #include <json-c/arraylist.h>
+#include "docker_result.h"
+#include "docker_util.h"
+#include "docker_connection_util.h"
 
-typedef struct ipam_config_t {
-	char* key;
-	char* value;
-} ipam_config;
-
-typedef struct ipam_t {
+typedef struct docker_network_ipam_t {
 	char* driver;
 	struct arraylist* config; //of ipam_config
 	struct arraylist* options;
-} ipam;
+} docker_network_ipam;
 
 typedef struct docker_network_container_t {
 	char* id;
@@ -51,16 +50,30 @@ typedef struct docker_network_t {
 	char* scope;
 	char* driver;
 	int enableIPv6;
-	ipam* ipam;
+	docker_network_ipam* ipam;
 	int internal;
 	int attachable;
 	int ingress;
 	struct arraylist* containers; // of docker_network_container
 	struct arraylist* options; //of pair
 	struct arraylist* labels; //of pair
-
 } docker_network;
 
+/**
+ * List all networks which match the filters given.
+ * If all filters are null, then all networks are listed.
+ *
+ * \param ctx docker context
+ * \param result the result object to be returned
+ * \param containers the arraylist of containers to be returned
+ * \param filter_driver
+ * \param filter_id
+ * \param filter_label
+ * \param filter_name
+ * \param filter_scope
+ * \param filter_type
+ * \return error code
+ */
 error_t docker_networks_list(docker_context* ctx, docker_result** result,
 		struct arraylist** containers, char* filter_driver, char* filter_id,
 		char* filter_label, char* filter_name, char* filter_scope,

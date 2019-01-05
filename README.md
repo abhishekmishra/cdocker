@@ -62,7 +62,7 @@ At some point I will write corresponding asynchronous API endpoints (but not pla
 |List Images          |             :x: |           :x: |   :x: |                          |
 |Build Image          |             :x: |           :x: |   :x: |                          |
 |Delete builder cache |             :x: |           :x: |   :x: |                          |
-|Create Image         |             :x: |           :x: |   :x: |                          |
+|Create Image         |            :ok: |          :ok: |  :ok: | Create from source is pending                         |
 |Inspect Image        |             :x: |           :x: |   :x: |                          |
 |Get history          |             :x: |           :x: |   :x: |                          |
 |Push                 |             :x: |           :x: |   :x: |                          |

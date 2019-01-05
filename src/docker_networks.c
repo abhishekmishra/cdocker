@@ -94,6 +94,15 @@ DOCKER_NETWORK_GETTER_IMPL(item, docker_network_ipam*, ipam)
 DOCKER_NETWORK_GETTER_IMPL(item, int, internal)
 DOCKER_NETWORK_GETTER_IMPL(item, int, attachable)
 DOCKER_NETWORK_GETTER_IMPL(item, int, ingress)
+DOCKER_NETWORK_GETTER_ARR_ADD_IMPL(item, docker_network_container*, containers)
+DOCKER_NETWORK_GETTER_ARR_LEN_IMPL(item, containers)
+DOCKER_NETWORK_GETTER_ARR_GET_IDX_IMPL(item, docker_network_container*, containers)
+DOCKER_NETWORK_GETTER_ARR_ADD_IMPL(item, pair*, options)
+DOCKER_NETWORK_GETTER_ARR_LEN_IMPL(item, options)
+DOCKER_NETWORK_GETTER_ARR_GET_IDX_IMPL(item, pair*, options)
+DOCKER_NETWORK_GETTER_ARR_ADD_IMPL(item, pair*, labels)
+DOCKER_NETWORK_GETTER_ARR_LEN_IMPL(item, labels)
+DOCKER_NETWORK_GETTER_ARR_GET_IDX_IMPL(item, pair*, labels)
 
 /**
  * List all networks which match the filters given.

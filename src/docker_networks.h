@@ -28,11 +28,35 @@
 #include "docker_util.h"
 #include "docker_connection_util.h"
 
+#define DOCKER_NETWORK_GETTER(object, type, name) \
+		type docker_network_ ## object ## _get_ ## name(docker_network_ ## object* object);
+
+#define DOCKER_NETWORK_GETTER_ARR_ADD(object, type, name) \
+		int docker_network_ ## object ## _ ## name ## _add(docker_network_ ## object* object, type data);
+
+#define DOCKER_NETWORK_GETTER_ARR_LEN(object, name) \
+		int docker_network_ ## object ## _ ## name ## _length(docker_network_ ## object* object);
+
+#define DOCKER_NETWORK_GETTER_ARR_GET_IDX(object, type, name) \
+		type docker_network_ ## object ## _ ## name ## _get_idx(docker_network_ ## object* object, int i);
+
 typedef struct docker_network_ipam_t {
 	char* driver;
 	struct arraylist* config; //of ipam_config
 	struct arraylist* options;
 } docker_network_ipam;
+
+error_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver);
+void free_docker_network_ipam(docker_network_ipam* ipam);
+DOCKER_NETWORK_GETTER(ipam, char*, driver)
+DOCKER_NETWORK_GETTER(ipam, struct arraylist*, config)
+DOCKER_NETWORK_GETTER_ARR_ADD(ipam, struct arraylist*, config)
+DOCKER_NETWORK_GETTER_ARR_LEN(ipam, config)
+DOCKER_NETWORK_GETTER_ARR_GET_IDX(ipam, struct arraylist*, config)
+DOCKER_NETWORK_GETTER(ipam, struct arraylist*, options)
+DOCKER_NETWORK_GETTER_ARR_ADD(ipam, struct arraylist*, options)
+DOCKER_NETWORK_GETTER_ARR_LEN(ipam, options)
+DOCKER_NETWORK_GETTER_ARR_GET_IDX(ipam, struct arraylist*, options)
 
 typedef struct docker_network_container_t {
 	char* id;
@@ -43,7 +67,18 @@ typedef struct docker_network_container_t {
 	char* ipv6_address;
 } docker_network_container;
 
-typedef struct docker_network_t {
+error_t make_docker_network_container(docker_network_container** container,
+		char* id, char* name, char* endpoint_id, char* mac_address,
+		char* ipv4_address, char* ipv6_address);
+void free_docker_network_container(docker_network_container* container);
+DOCKER_NETWORK_GETTER(container, char*, id)
+DOCKER_NETWORK_GETTER(container, char*, name)
+DOCKER_NETWORK_GETTER(container, char*, endpoint_id)
+DOCKER_NETWORK_GETTER(container, char*, mac_address)
+DOCKER_NETWORK_GETTER(container, char*, ipv4_address)
+DOCKER_NETWORK_GETTER(container, char*, ipv6_address)
+
+typedef struct docker_network_item_t {
 	char* name;
 	char* id;
 	time_t created;
@@ -57,7 +92,12 @@ typedef struct docker_network_t {
 	struct arraylist* containers; // of docker_network_container
 	struct arraylist* options; //of pair
 	struct arraylist* labels; //of pair
-} docker_network;
+} docker_network_item;
+
+error_t make_docker_network_item(docker_network_item** network, char* name,
+		char* id, time_t created, char* scope, char* driver, int enableIPv6,
+		docker_network_ipam* ipam, int internal, int attachable, int ingress);
+void free_docker_network_item(docker_network_item* network);
 
 /**
  * List all networks which match the filters given.

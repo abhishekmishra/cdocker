@@ -42,21 +42,19 @@
 
 typedef struct docker_network_ipam_t {
 	char* driver;
-	struct arraylist* config; //of ipam_config
-	struct arraylist* options;
+	struct array_list* config; //of ipam_config
+	struct array_list* options;
 } docker_network_ipam;
 
 error_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver);
 void free_docker_network_ipam(docker_network_ipam* ipam);
 DOCKER_NETWORK_GETTER(ipam, char*, driver)
-DOCKER_NETWORK_GETTER(ipam, struct arraylist*, config)
-DOCKER_NETWORK_GETTER_ARR_ADD(ipam, struct arraylist*, config)
+DOCKER_NETWORK_GETTER_ARR_ADD(ipam, pair*, config)
 DOCKER_NETWORK_GETTER_ARR_LEN(ipam, config)
-DOCKER_NETWORK_GETTER_ARR_GET_IDX(ipam, struct arraylist*, config)
-DOCKER_NETWORK_GETTER(ipam, struct arraylist*, options)
-DOCKER_NETWORK_GETTER_ARR_ADD(ipam, struct arraylist*, options)
+DOCKER_NETWORK_GETTER_ARR_GET_IDX(ipam, pair*, config)
+DOCKER_NETWORK_GETTER_ARR_ADD(ipam, pair*, options)
 DOCKER_NETWORK_GETTER_ARR_LEN(ipam, options)
-DOCKER_NETWORK_GETTER_ARR_GET_IDX(ipam, struct arraylist*, options)
+DOCKER_NETWORK_GETTER_ARR_GET_IDX(ipam, pair*, options)
 
 typedef struct docker_network_container_t {
 	char* id;
@@ -89,15 +87,25 @@ typedef struct docker_network_item_t {
 	int internal;
 	int attachable;
 	int ingress;
-	struct arraylist* containers; // of docker_network_container
-	struct arraylist* options; //of pair
-	struct arraylist* labels; //of pair
+	struct array_list* containers; // of docker_network_container
+	struct array_list* options; //of pair
+	struct array_list* labels; //of pair
 } docker_network_item;
 
 error_t make_docker_network_item(docker_network_item** network, char* name,
 		char* id, time_t created, char* scope, char* driver, int enableIPv6,
 		docker_network_ipam* ipam, int internal, int attachable, int ingress);
 void free_docker_network_item(docker_network_item* network);
+DOCKER_NETWORK_GETTER(item, char*, name)
+DOCKER_NETWORK_GETTER(item, char*, id)
+DOCKER_NETWORK_GETTER(item, time_t, created)
+DOCKER_NETWORK_GETTER(item, char*, scope)
+DOCKER_NETWORK_GETTER(item, char*, driver)
+DOCKER_NETWORK_GETTER(item, int, enableIPv6)
+DOCKER_NETWORK_GETTER(item, docker_network_ipam*, ipam)
+DOCKER_NETWORK_GETTER(item, int, internal)
+DOCKER_NETWORK_GETTER(item, int, attachable)
+DOCKER_NETWORK_GETTER(item, int, ingress)
 
 /**
  * List all networks which match the filters given.
@@ -105,7 +113,7 @@ void free_docker_network_item(docker_network_item* network);
  *
  * \param ctx docker context
  * \param result the result object to be returned
- * \param containers the arraylist of containers to be returned
+ * \param containers the array_list of containers to be returned
  * \param filter_driver
  * \param filter_id
  * \param filter_label
@@ -115,7 +123,7 @@ void free_docker_network_item(docker_network_item* network);
  * \return error code
  */
 error_t docker_networks_list(docker_context* ctx, docker_result** result,
-		struct arraylist** containers, char* filter_driver, char* filter_id,
+		struct array_list** containers, char* filter_driver, char* filter_id,
 		char* filter_label, char* filter_name, char* filter_scope,
 		char* filter_type);
 

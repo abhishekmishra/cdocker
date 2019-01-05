@@ -28,7 +28,29 @@
 #ifndef SRC_DOCKER_UTIL_H_
 #define SRC_DOCKER_UTIL_H_
 
-#include "json-c/json_object.h"
+#include <json-c/json_object.h>
+#include "docker_result.h"
+
+typedef struct pair_t {
+	char* key;
+	char* value;
+} pair;
+
+/**
+ * Create a new pair with the given key and value.
+ * The key and value strings can be freed, as the constructor creates its own copy of the strings.
+ *
+ * \param key
+ * \param value
+ * \return error code
+ */
+error_t make_pair(pair** p, char* key, char* value);
+
+char* get_value(pair*p);
+
+char* get_key(pair*p);
+
+void free_pair(pair*p);
 
 char* make_defensive_copy(const char* from);
 

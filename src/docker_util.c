@@ -30,6 +30,7 @@
 #include <string.h>
 #include <json-c/json_object.h>
 #include "log.h"
+#include "docker_util.h"
 
 char* make_defensive_copy(const char* from) {
 	char* to = NULL;
@@ -56,7 +57,7 @@ int get_attr_boolean(json_object* obj, char* name) {
 	int flag = 0;
 	if (json_object_object_get_ex(obj, name, &extractObj)) {
 		attr = (char*) json_object_get_string(extractObj);
-		if(strcmp(attr, "true")) {
+		if (strcmp(attr, "true")) {
 			flag = 1;
 		}
 		free(extractObj);
@@ -109,3 +110,27 @@ long long get_attr_long_long(json_object* obj, char* name) {
 	return attr;
 }
 
+error_t make_pair(pair** p, char* key, char* value) {
+	pair* p1 = (pair*) calloc(1, sizeof(pair));
+	if (p1 == NULL) {
+		return E_ALLOC_FAILED;
+	}
+	p1->key = make_defensive_copy(key);
+	p1->value = make_defensive_copy(value);
+	(*p) = p1;
+	return E_SUCCESS;
+}
+
+char* get_value(pair*p) {
+	return p->value;
+}
+
+char* get_key(pair*p) {
+	return p->key;
+}
+
+void free_pair(pair*p) {
+	free(p->key);
+	free(p->value);
+	free(p);
+}

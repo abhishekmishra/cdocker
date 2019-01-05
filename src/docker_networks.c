@@ -45,12 +45,23 @@
 
 
 error_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver) {
-	//TODO
+	(*ipam) = (docker_network_ipam*) malloc(sizeof(docker_network_ipam));
+	if ((*ipam) == NULL) {
+		return E_ALLOC_FAILED;
+	}
+	(*ipam)->driver = make_defensive_copy(driver);
+	(*ipam)->config = array_list_new((void (*)(void *)) &free_pair);
+	(*ipam)->options = array_list_new((void (*)(void *)) &free_pair);
 	return E_SUCCESS;
 }
+
 void free_docker_network_ipam(docker_network_ipam* ipam) {
-	//TODO
+	free(ipam->driver);
+	array_list_free(ipam->config);
+	array_list_free(ipam->options);
+	free(ipam);
 }
+
 DOCKER_NETWORK_GETTER_IMPL(ipam, char*, driver)
 DOCKER_NETWORK_GETTER_ARR_ADD_IMPL(ipam, pair*, config)
 DOCKER_NETWORK_GETTER_ARR_LEN_IMPL(ipam, config)
@@ -62,12 +73,30 @@ DOCKER_NETWORK_GETTER_ARR_GET_IDX_IMPL(ipam, pair*, options)
 error_t make_docker_network_container(docker_network_container** container,
 		char* id, char* name, char* endpoint_id, char* mac_address,
 		char* ipv4_address, char* ipv6_address) {
-	//TODO
+	(*container) = (docker_network_container*) malloc(
+			sizeof(docker_network_container));
+	if ((*container) == NULL) {
+		return E_ALLOC_FAILED;
+	}
+	(*container)->id = make_defensive_copy(id);
+	(*container)->name = make_defensive_copy(name);
+	(*container)->endpoint_id = make_defensive_copy(endpoint_id);
+	(*container)->mac_address = make_defensive_copy(mac_address);
+	(*container)->ipv4_address = make_defensive_copy(ipv4_address);
+	(*container)->ipv6_address = make_defensive_copy(ipv6_address);
 	return E_SUCCESS;
 }
+
 void free_docker_network_container(docker_network_container* container) {
-	//TODO
+	free(container->id);
+	free(container->name);
+	free(container->endpoint_id);
+	free(container->mac_address);
+	free(container->ipv4_address);
+	free(container->ipv6_address);
+	free(container);
 }
+
 DOCKER_NETWORK_GETTER_IMPL(container, char*, id)
 DOCKER_NETWORK_GETTER_IMPL(container, char*, name)
 DOCKER_NETWORK_GETTER_IMPL(container, char*, endpoint_id)
@@ -78,7 +107,24 @@ DOCKER_NETWORK_GETTER_IMPL(container, char*, ipv6_address)
 error_t make_docker_network_item(docker_network_item** network, char* name,
 		char* id, time_t created, char* scope, char* driver, int enableIPv6,
 		docker_network_ipam* ipam, int internal, int attachable, int ingress) {
-	//TODO
+	(*network) = (docker_network_item*) malloc(sizeof(docker_network_item));
+	if ((*network) == NULL) {
+		return E_ALLOC_FAILED;
+	}
+	(*network)->name = make_defensive_copy(name);
+	(*network)->id = make_defensive_copy(id);
+	(*network)->created = created;
+	(*network)->scope = make_defensive_copy(scope);
+	(*network)->driver = make_defensive_copy(driver);
+	(*network)->enableIPv6 = enableIPv6;
+	(*network)->ipam = ipam;
+	(*network)->internal = internal;
+	(*network)->attachable = attachable;
+	(*network)->ingress = ingress;
+	(*network)->containers = array_list_new(
+			(void (*)(void *)) &free_docker_network_container);
+	(*network)->options = array_list_new((void (*)(void *)) &free_pair);
+	(*network)->labels = array_list_new((void (*)(void *)) &free_pair);
 	return E_SUCCESS;
 }
 void free_docker_network_item(docker_network_item* network) {
@@ -96,7 +142,8 @@ DOCKER_NETWORK_GETTER_IMPL(item, int, attachable)
 DOCKER_NETWORK_GETTER_IMPL(item, int, ingress)
 DOCKER_NETWORK_GETTER_ARR_ADD_IMPL(item, docker_network_container*, containers)
 DOCKER_NETWORK_GETTER_ARR_LEN_IMPL(item, containers)
-DOCKER_NETWORK_GETTER_ARR_GET_IDX_IMPL(item, docker_network_container*, containers)
+DOCKER_NETWORK_GETTER_ARR_GET_IDX_IMPL(item, docker_network_container*,
+		containers)
 DOCKER_NETWORK_GETTER_ARR_ADD_IMPL(item, pair*, options)
 DOCKER_NETWORK_GETTER_ARR_LEN_IMPL(item, options)
 DOCKER_NETWORK_GETTER_ARR_GET_IDX_IMPL(item, pair*, options)

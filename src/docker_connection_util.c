@@ -438,6 +438,9 @@ char* create_service_url_id_method(docker_object_type object, char* id,
 	case SYSTEM:
 		object_url = NULL;
 		break;
+	case NETWORK:
+		object_url = "networks";
+		break;
 	}
 	char* url = NULL;
 	if (object_url) {

@@ -79,7 +79,7 @@ At some point I will write corresponding asynchronous API endpoints (but not pla
 
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
 |---------------------|-----------------|---------------|-------|--------------------------|
-|List networks        |             :x: |           :x: |   :x: |                          |
+|List networks        |            :ok: |          :ok: |  :ok: | missing some attributes in response obj        |
 |Inspect a network    |             :x: |           :x: |   :x: |                          |
 |Remove				  |             :x: |           :x: |   :x: |                          |
 |Create 		      |             :x: |           :x: |   :x: |                          |

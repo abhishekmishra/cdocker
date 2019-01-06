@@ -122,7 +122,7 @@ DOCKER_NETWORK_GETTER_ARR_GET_IDX(item, pair*, labels)
  *
  * \param ctx docker context
  * \param result the result object to be returned
- * \param containers the array_list of containers to be returned
+ * \param networks the array_list of networks to be returned
  * \param filter_driver
  * \param filter_id
  * \param filter_label
@@ -132,7 +132,7 @@ DOCKER_NETWORK_GETTER_ARR_GET_IDX(item, pair*, labels)
  * \return error code
  */
 error_t docker_networks_list(docker_context* ctx, docker_result** result,
-		struct array_list** containers, char* filter_driver, char* filter_id,
+		struct array_list** networks, char* filter_driver, char* filter_id,
 		char* filter_label, char* filter_name, char* filter_scope,
 		char* filter_type);
 

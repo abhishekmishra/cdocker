@@ -13,6 +13,7 @@
 #include "test_docker_containers.h"
 #include "test_docker_system.h"
 #include "test_docker_images.h"
+#include "test_docker_networks.h"
 #include "log.h"
 
 int main(int argc, char **argv) {
@@ -30,6 +31,10 @@ int main(int argc, char **argv) {
 
 	docker_log_info("#### Docker system API      	####");
 	res = docker_system_tests();
+	docker_log_info("#### Done                      ####");
+
+	docker_log_info("#### Docker networks API      	####");
+	res = docker_networks_tests();
 	docker_log_info("#### Done                      ####");
 	return res;
 }

@@ -10,6 +10,7 @@
 #include "docker_system.h"
 #include "docker_images.h"
 #include "docker_networks.h"
+#include "docker_volumes.h"
 #include "log.h"
 
 void handle_error(docker_result* res) {
@@ -108,6 +109,18 @@ int main(int argc, char* argv[]) {
 	for(int i = 0; i < len_nets; i++) {
 		docker_network_item* ni = (docker_network_item*)array_list_get_idx(networks, i);
 		docker_log_info("Found network %s %s", ni->name, ni->id);
+	}
+
+	//Volume API
+
+	struct array_list* volumes;
+	struct array_list* warnings;
+	docker_volumes_list(ctx, &res, &volumes, &warnings, 0, NULL, NULL, NULL);
+	handle_error(res);
+	int len_vols = array_list_length(volumes);
+	for (int i = 0; i < len_vols; i++) {
+		docker_volume_item* vi = (docker_volume_item*)array_list_get_idx(volumes, i);
+		docker_log_info("Found volume %s at %s", vi->name, vi->mountpoint);
 	}
 
 	//Containers API

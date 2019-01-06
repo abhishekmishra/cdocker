@@ -441,6 +441,9 @@ char* create_service_url_id_method(docker_object_type object, char* id,
 	case NETWORK:
 		object_url = "networks";
 		break;
+	case VOLUME:
+		object_url = "volumes";
+		break;
 	}
 	char* url = NULL;
 	if (object_url) {
@@ -450,11 +453,17 @@ char* create_service_url_id_method(docker_object_type object, char* id,
 							* sizeof(char));
 			sprintf(url, "%s/%s/%s", object_url, id, method);
 			docker_log_debug("%s url is %s", method, url);
-		} else {
+		} else if (method) {
 			url = (char*) malloc(
 					(strlen(object_url) + strlen(method) + 3) * sizeof(char));
 			sprintf(url, "%s/%s", object_url, method);
 			docker_log_debug("%s url is %s", method, url);
+		}
+		else {
+			url = (char*)malloc(
+				(strlen(object_url) + 1) * sizeof(char));
+			sprintf(url, "%s", object_url);
+			docker_log_debug("url is %s", url);
 		}
 	} else {
 		//when there is no object ignore both object and id

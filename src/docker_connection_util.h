@@ -24,7 +24,7 @@ bool is_http_url(char* url);
 bool is_unix_socket(char* url);
 
 typedef enum {
-	CONTAINER = 1, IMAGE = 2, SYSTEM = 3, NETWORK = 4
+	CONTAINER = 1, IMAGE = 2, SYSTEM = 3, NETWORK = 4, VOLUME = 5
 } docker_object_type;
 
 /**

@@ -132,6 +132,7 @@
     <ClCompile Include="src\docker_result.c" />
     <ClCompile Include="src\docker_system.c" />
     <ClCompile Include="src\docker_util.c" />
+    <ClCompile Include="src\docker_volumes.c" />
     <ClCompile Include="src\log.c" />
     <ClCompile Include="src\main.c" />
   </ItemGroup>
@@ -143,6 +144,7 @@
     <ClInclude Include="src\docker_result.h" />
     <ClInclude Include="src\docker_system.h" />
     <ClInclude Include="src\docker_util.h" />
+    <ClInclude Include="src\docker_volumes.h" />
     <ClInclude Include="src\log.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

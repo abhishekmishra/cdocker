@@ -36,6 +36,12 @@
     <ClCompile Include="src\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\docker_images.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\docker_networks.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\docker_connection_util.h">
@@ -54,6 +60,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\docker_images.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\docker_networks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

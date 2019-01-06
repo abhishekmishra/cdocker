@@ -34,8 +34,9 @@ void log_events(docker_event* evt, void* client_cbargs) {
 	}
 }
 
-int extract_args_url_connection(int argc, char* url, char* argv[],
+int extract_args_url_connection(int argc, char** url_ret, char* argv[],
 		docker_context** ctx, docker_result** res) {
+	char* url;
 	int connected = 0;
 	if (argc > 1) {
 		url = argv[1];
@@ -62,6 +63,7 @@ int extract_args_url_connection(int argc, char* url, char* argv[],
 			docker_log_info("%s is alive.", url);
 		}
 	}
+	(*url_ret) = url;
 	return connected;
 }
 
@@ -73,7 +75,7 @@ int main(int argc, char* argv[]) {
 	docker_context* ctx;
 	docker_result* res;
 
-	connected = extract_args_url_connection(argc, url, argv, &ctx, &res);
+	connected = extract_args_url_connection(argc, &url, argv, &ctx, &res);
 	if (!connected) {
 		return E_PING_FAILED;
 	}

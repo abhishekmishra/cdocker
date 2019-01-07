@@ -91,7 +91,7 @@ At some point I will write corresponding asynchronous API endpoints (but not pla
 
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
 |---------------------|-----------------|---------------|-------|--------------------------|
-|List		          |            :ok: |          :ok: |  :ok: |  filters not implemeted yet |
+|List		          |            :ok: |          :ok: |  :ok: |                          |
 |Create               |            :ok: |          :ok: |  :ok: |                          |
 |Inspect			  |             :x: |           :x: |   :x: |                          |
 |Remove 		      |            :ok: |          :ok: |  :ok: |                          |

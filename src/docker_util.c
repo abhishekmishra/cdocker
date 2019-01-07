@@ -160,6 +160,6 @@ void add_filter_int(json_object* filters, char* name, int value) {
 	json_object_array_add(value_obj, json_object_new_int(value));
 }
 
-const char* filter_to_str(json_object* filters) {
+const char* filters_to_str(json_object* filters) {
 	return json_object_get_string(filters);
 }

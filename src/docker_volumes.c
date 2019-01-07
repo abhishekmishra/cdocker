@@ -122,22 +122,22 @@ error_t docker_volumes_list(docker_context* ctx, docker_result** result,
 	struct array_list* params = array_list_new(
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
-	if (filter_dangling != 0) {
-		make_url_param(&p, "dangling", make_defensive_copy("true"));
-		array_list_add(params, p);
+	json_object* filters = make_filters();
+
+	if (filter_dangling == 0) {
+		add_filter_str(filters, "dangling", "false");
 	}
 	if (filter_driver != NULL) {
-		make_url_param(&p, "driver", make_defensive_copy(filter_driver));
-		array_list_add(params, p);
+		add_filter_str(filters, "driver", filter_driver);
 	}
 	if (filter_label != NULL) {
-		make_url_param(&p, "label", make_defensive_copy(filter_label));
-		array_list_add(params, p);
+		add_filter_str(filters, "label", filter_label);
 	}
 	if (filter_name != NULL) {
-		make_url_param(&p, "name", make_defensive_copy(filter_name));
-		array_list_add(params, p);
+		add_filter_str(filters, "name", filter_name);
 	}
+	make_url_param(&p, "filters", (char*) filters_to_str(filters));
+	array_list_add(params, p);
 
 	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
@@ -349,7 +349,7 @@ error_t docker_volumes_delete_unused(docker_context* ctx,
 			add_filter_str(filters, "label", filter_value);
 		}
 	}
-	make_url_param(&p, "filters", (char*) filter_to_str(filters));
+	make_url_param(&p, "filters", (char*) filters_to_str(filters));
 	array_list_add(params, p);
 
 	json_object *response_obj = NULL;

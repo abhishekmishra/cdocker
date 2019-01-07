@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
 	//create two test volumes
 	docker_volume_item* vi = NULL;
 	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol01", "local", 1,
-			"test_label", "test_value");
+			"clibdocker_test_label", "clibdocker_test_value");
 	handle_error(res);
 	if (vi != NULL) {
 		docker_log_info("Created volume with name %s at %d", vi->name,
@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
 	//list volumes
 	struct array_list* volumes;
 	struct array_list* warnings;
-	docker_volumes_list(ctx, &res, &volumes, &warnings, 0, NULL, NULL, NULL);
+	docker_volumes_list(ctx, &res, &volumes, &warnings, 1, NULL, NULL, NULL);
 	handle_error(res);
 	int len_vols = array_list_length(volumes);
 	for (int i = 0; i < len_vols; i++) {

@@ -58,7 +58,7 @@ void free_pair(pair*p);
 json_object* make_filters();
 void add_filter_str(json_object* filters, char* name, char* value);
 void add_filter_int(json_object* filters, char* name, int value);
-const char* filter_to_str(json_object* filters);
+const char* filters_to_str(json_object* filters);
 
 char* make_defensive_copy(const char* from);
 

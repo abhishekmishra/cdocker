@@ -71,11 +71,11 @@ static void test_create_volumes(void **state) {
 static void test_list_volumes(void **state) {
 	struct array_list* volumes;
 	struct array_list* warnings;
-	docker_volumes_list(ctx, &res, &volumes, &warnings, 0, NULL, NULL, NULL);
+	docker_volumes_list(ctx, &res, &volumes, &warnings, 1, NULL, "clibdocker_test_label=clibdocker_test_value", NULL);
 	handle_error(res);
 	int len_vols = array_list_length(volumes);
-
 	assert_int_equal(res->http_error_code, 200);
+	assert_int_equal(len_vols, 2);
 }
 
 static void test_delete_volume(void **state) {

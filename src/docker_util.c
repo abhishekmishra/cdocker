@@ -134,3 +134,32 @@ void free_pair(pair*p) {
 	free(p->value);
 	free(p);
 }
+
+// Filter utility functions
+json_object* make_filters() {
+	return json_object_new_object();
+}
+
+void add_filter_str(json_object* filters, char* name, char* value) {
+	json_object* value_obj;
+	json_object_object_get_ex(filters, name, &value_obj);
+	if (!value_obj) {
+		value_obj = json_object_new_array();
+		json_object_object_add(filters, name, value_obj);
+	}
+	json_object_array_add(value_obj, json_object_new_string(value));
+}
+
+void add_filter_int(json_object* filters, char* name, int value) {
+	json_object* value_obj;
+	json_object_object_get_ex(filters, name, &value_obj);
+	if (!value_obj) {
+		value_obj = json_object_new_array();
+		json_object_object_add(filters, name, value_obj);
+	}
+	json_object_array_add(value_obj, json_object_new_int(value));
+}
+
+const char* filter_to_str(json_object* filters) {
+	return json_object_get_string(filters);
+}

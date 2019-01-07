@@ -327,24 +327,24 @@ error_t docker_volumes_delete_unused(docker_context* ctx,
 
 	url_param* p;
 	if (label_name != NULL) {
-		json_object* label_filter = json_object_new_object();
-		char* filter_value = (char*) calloc(1024, sizeof(char));
-		char* type = "=";
-		strcpy(filter_value, label_name);
+		json_object* filters = make_filters();
+		char* filter_value;
 		if (label_value != NULL) {
+			filter_value = (char*) calloc(
+					strlen(label_name) + strlen(label_value) + 2, sizeof(char));
+			strcpy(filter_value, label_name);
 			strcat(filter_value, "=");
 			strcat(filter_value, label_value);
-		}
-		json_object* filter_value_arr = json_object_new_array();
-		json_object_array_add(filter_value_arr,
-				json_object_new_string(filter_value));
-		if (filter_not == 1) {
-			json_object_object_add(label_filter, "label!", filter_value_arr);
 		} else {
-			json_object_object_add(label_filter, "label", filter_value_arr);
+			filter_value = (char*) calloc(strlen(label_name) + 1, sizeof(char));
+			strcpy(filter_value, label_name);
 		}
-		make_url_param(&p, "filters",
-				(char*) json_object_get_string(label_filter));
+		if (filter_not == 1) {
+			add_filter_str(filters, "label!", filter_value);
+		} else {
+			add_filter_str(filters, "label", filter_value);
+		}
+		make_url_param(&p, "filters", (char*) filter_to_str(filters));
 		array_list_add(params, p);
 	}
 

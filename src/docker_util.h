@@ -31,6 +31,8 @@
 #include <json-c/json_object.h>
 #include "docker_result.h"
 
+// A simple pair of strings
+
 typedef struct pair_t {
 	char* key;
 	char* value;
@@ -51,6 +53,12 @@ char* get_value(pair*p);
 char* get_key(pair*p);
 
 void free_pair(pair*p);
+
+// Filter utility functions
+json_object* make_filters();
+void add_filter_str(json_object* filters, char* name, char* value);
+void add_filter_int(json_object* filters, char* name, int value);
+const char* filter_to_str(json_object* filters);
 
 char* make_defensive_copy(const char* from);
 

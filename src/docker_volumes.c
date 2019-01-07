@@ -310,24 +310,28 @@ error_t docker_volume_delete(docker_context* ctx, docker_result** result,
  * \param result the result object to return
  * \param volumes_deleted array_list with names of volumes deleted
  * \param space_reclaimed num bytes freed.
- * \param filter_not whether the filter is NOT
- * \param label_name optional filter label
- * \param label_value optional filter value
+ * \param num_label_filters how many label filters are there
+ * \param varargs triples (int filter_not, char* label_name, char* label_value)
  * \return error code
  */
-//TODO add multiple filters
 error_t docker_volumes_delete_unused(docker_context* ctx,
 		docker_result** result, struct array_list** volumes_deleted,
-		unsigned long* space_reclaimed, int filter_not, char* label_name,
-		char* label_value) {
+		unsigned long* space_reclaimed, int num_label_filters, ...) {
 	char* url = create_service_url_id_method(VOLUME, NULL, "prune");
 
 	struct array_list* params = array_list_new(
 			(void (*)(void *)) &free_url_param);
 
 	url_param* p;
-	if (label_name != NULL) {
-		json_object* filters = make_filters();
+
+	va_list kvargs;
+	va_start(kvargs, num_label_filters);
+	json_object* filters = make_filters();
+	for (int i = 0; i < num_label_filters; i++) {
+		int filter_not = va_arg(kvargs, int);
+		char* label_name = va_arg(kvargs, char*);
+		char* label_value = va_arg(kvargs, char*);
+
 		char* filter_value;
 		if (label_value != NULL) {
 			filter_value = (char*) calloc(
@@ -344,9 +348,9 @@ error_t docker_volumes_delete_unused(docker_context* ctx,
 		} else {
 			add_filter_str(filters, "label", filter_value);
 		}
-		make_url_param(&p, "filters", (char*) filter_to_str(filters));
-		array_list_add(params, p);
 	}
+	make_url_param(&p, "filters", (char*) filter_to_str(filters));
+	array_list_add(params, p);
 
 	json_object *response_obj = NULL;
 	struct http_response_memory chunk;

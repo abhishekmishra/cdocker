@@ -127,12 +127,11 @@ error_t docker_volume_delete(docker_context* ctx, docker_result** result,
  * \param result the result object to return
  * \param volumes_deleted array_list with names of volumes deleted
  * \param space_reclaimed num bytes freed.
- * \param filter_not whether the filter is NOT
- * \param label_name optional filter label
- * \param label_value optional filter value
+ * \param num_label_filters how many label filters are there
+ * \param varargs triples (int filter_not, char* label_name, char* label_value)
  * \return error code
  */
 error_t docker_volumes_delete_unused(docker_context* ctx,
 		docker_result** result, struct array_list** volumes_deleted,
-		unsigned long* space_reclaimed, int filter_not, char* label_name, char* label_value);
+		unsigned long* space_reclaimed, int num_label_filters, ...);
 #endif

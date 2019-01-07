@@ -147,7 +147,8 @@ int main(int argc, char* argv[]) {
 	//delete unused volumes
 	struct array_list* volumes_deleted;
 	long space_reclaimed;
-	docker_volumes_delete_unused(ctx, &res, &volumes_deleted, &space_reclaimed, 0, "clibdocker_test_label", "clibdocker_test_value");
+	docker_volumes_delete_unused(ctx, &res, &volumes_deleted, &space_reclaimed,
+			1, 0, "clibdocker_test_label", "clibdocker_test_value");
 	handle_error(res);
 	for (int i = 0; i < array_list_length(volumes_deleted); i++) {
 		docker_log_info("Deleted unused volume %s",

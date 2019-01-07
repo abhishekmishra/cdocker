@@ -12,6 +12,17 @@
 extern "C" {
 #endif
 
+#define MODULE_API_EXPORTS
+#ifdef _WIN32
+#  ifdef MODULE_API_EXPORTS
+#    define MODULE_API __declspec(dllexport)
+#  else
+#    define MODULE_API __declspec(dllimport)
+#  endif
+#else
+#  define MODULE_API
+#endif
+
 #include <stdbool.h>
 #include <json-c/arraylist.h>
 #include <json-c/json_object.h>
@@ -23,9 +34,9 @@ extern "C" {
 #define DOCKER_API_VERSION_1_39 "1.39"
 #define DOCKER_DEFINE_DEFAULT_UNIX_SOCKET "/var/run/docker.sock"
 
-bool is_http_url(char* url);
+MODULE_API bool is_http_url(char* url);
 
-bool is_unix_socket(char* url);
+MODULE_API bool is_unix_socket(char* url);
 
 typedef enum {
 	CONTAINER = 1, IMAGE = 2, SYSTEM = 3, NETWORK = 4, VOLUME = 5
@@ -46,7 +57,7 @@ typedef struct docker_context {
  * The method makes a copy of the given string for use, so that it can
  * be safely freed by the calling program.
  */
-error_t make_docker_context_url(docker_context** ctx, const char* url);
+MODULE_API error_t make_docker_context_url(docker_context** ctx, const char* url);
 
 /**
  * Create a new docker context with the given socket.
@@ -54,12 +65,12 @@ error_t make_docker_context_url(docker_context** ctx, const char* url);
  * The method makes a copy of the given string for use, so that it can
  * be safely freed by the calling program.
  */
-error_t make_docker_context_socket(docker_context** ctx, const char* socket);
+MODULE_API error_t make_docker_context_socket(docker_context** ctx, const char* socket);
 
 /**
  * Free docker context memory.
  */
-error_t free_docker_context(docker_context** ctx);
+MODULE_API error_t free_docker_context(docker_context** ctx);
 
 /**
  * Url parameter structure which holds a string key (k) and string value (v).
@@ -69,17 +80,17 @@ typedef struct url_param {
 	char* v;
 } url_param;
 
-error_t make_url_param(url_param** p, char* key, char* value);
-char* url_param_key(url_param* p);
-char* url_param_value(url_param* p);
-void free_url_param(url_param* p);
+MODULE_API error_t make_url_param(url_param** p, char* key, char* value);
+MODULE_API char* url_param_key(url_param* p);
+MODULE_API char* url_param_value(url_param* p);
+MODULE_API void free_url_param(url_param* p);
 
 /**
  * Build a url given a CURL object, a base url and url parameters object (and it's length).
  */
-char* build_url(CURL *curl, char* base_url, struct array_list* url_params);
+MODULE_API char* build_url(CURL *curl, char* base_url, struct array_list* url_params);
 
-error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
+MODULE_API error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 		struct array_list* url_params);
 
 struct http_response_memory {
@@ -94,11 +105,11 @@ struct http_response_memory {
 /**
  * Util method used internally to HTTP POST to the Docker url.
  */
-error_t docker_api_post(docker_context* ctx, docker_result** res, char* api_url,
+MODULE_API error_t docker_api_post(docker_context* ctx, docker_result** res, char* api_url,
 		struct array_list* url_params, const char* post_data,
 		struct http_response_memory *chunk, json_object** response);
 
-error_t docker_api_post_cb(docker_context* ctx, docker_result** result,
+MODULE_API error_t docker_api_post_cb(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params, const char* post_data,
 		struct http_response_memory *chunk, json_object** response,
 		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
@@ -107,11 +118,11 @@ error_t docker_api_post_cb(docker_context* ctx, docker_result** result,
 /**
  * Util method used internally to HTTP GET to the Docker url.
  */
-error_t docker_api_get(docker_context* ctx, docker_result** res, char* api_url,
+MODULE_API error_t docker_api_get(docker_context* ctx, docker_result** res, char* api_url,
 		struct array_list* url_params, struct http_response_memory *chunk,
 		json_object** response);
 
-error_t docker_api_get_cb(docker_context* ctx, docker_result** res,
+MODULE_API error_t docker_api_get_cb(docker_context* ctx, docker_result** res,
 		char* api_url, struct array_list* url_params,
 		struct http_response_memory *chunk, json_object** response,
 		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
@@ -120,7 +131,7 @@ error_t docker_api_get_cb(docker_context* ctx, docker_result** res,
 /**
  * Util method used internally to HTTP DELETE to the Docker url.
  */
-error_t docker_api_delete(docker_context* ctx, docker_result** res, char* api_url,
+MODULE_API error_t docker_api_delete(docker_context* ctx, docker_result** res, char* api_url,
 		struct array_list* url_params, struct http_response_memory *chunk,
 		json_object** response);
 
@@ -132,7 +143,7 @@ error_t docker_api_delete(docker_context* ctx, docker_result** res, char* api_ur
  * \param method to call
  * \return string url
  */
-char* create_service_url_id_method(docker_object_type object, const char* id,
+MODULE_API char* create_service_url_id_method(docker_object_type object, const char* id,
 		const char* method);
 
 #ifdef __cplusplus 

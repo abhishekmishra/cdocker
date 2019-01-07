@@ -32,6 +32,18 @@
 extern "C" {
 #endif
 
+#define MODULE_API_EXPORTS
+#ifdef _WIN32
+#  ifdef MODULE_API_EXPORTS
+#    define MODULE_API __declspec(dllexport)
+#  else
+#    define MODULE_API __declspec(dllimport)
+#  endif
+#else
+#  define MODULE_API
+#endif
+
+
 #include "docker_result.h"
 #include "docker_connection_util.h"
 
@@ -54,7 +66,7 @@ extern "C" {
  * \param result docker result object
  * \return error code
  */
-error_t docker_ping(docker_context* ctx, docker_result** result);
+MODULE_API error_t docker_ping(docker_context* ctx, docker_result** result);
 
 typedef struct docker_version_t {
 	char* version;

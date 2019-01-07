@@ -50,9 +50,9 @@
 	} \
 
 
-error_t make_docker_volume_item(docker_volume_item** volume, time_t created_at, char* name,
-	char* driver, char* mountpoint, char* scope) {
-	(*volume) = (docker_volume_item*)malloc(sizeof(docker_volume_item));
+error_t make_docker_volume_item(docker_volume_item** volume, time_t created_at,
+		char* name, char* driver, char* mountpoint, char* scope) {
+	(*volume) = (docker_volume_item*) malloc(sizeof(docker_volume_item));
 	if ((*volume) == NULL) {
 		return E_ALLOC_FAILED;
 	}
@@ -61,8 +61,8 @@ error_t make_docker_volume_item(docker_volume_item** volume, time_t created_at, 
 	(*volume)->driver = make_defensive_copy(driver);
 	(*volume)->mountpoint = make_defensive_copy(mountpoint);
 	(*volume)->scope = make_defensive_copy(scope);
-	(*volume)->labels = array_list_new((void(*)(void *)) &free_pair);
-	(*volume)->options = array_list_new((void(*)(void *)) &free_pair);
+	(*volume)->labels = array_list_new((void (*)(void *)) &free_pair);
+	(*volume)->options = array_list_new((void (*)(void *)) &free_pair);
 	return E_SUCCESS;
 }
 
@@ -92,26 +92,27 @@ DOCKER_VOLUME_GETTER_ARR_LEN_IMPL(item, options)
 DOCKER_VOLUME_GETTER_ARR_GET_IDX_IMPL(item, pair*, options)
 
 /**
-* Get the list of volumes, matching the filters provided.
-* (Any and all filters can be null/0.)
-*
-* \param ctx the docker context
-* \param result the result object to be returned.
-* \param volumes the list of docker_volume_item objects
-* \param warnings the list of warnings
-* \param filter_dangling 0 indicates false, anything else is true
-* \param filter_driver driver filter
-* \param filter_label
-* \param filter_name
-* \return error code.
-*/
+ * Get the list of volumes, matching the filters provided.
+ * (Any and all filters can be null/0.)
+ *
+ * \param ctx the docker context
+ * \param result the result object to be returned.
+ * \param volumes the list of docker_volume_item objects
+ * \param warnings the list of warnings
+ * \param filter_dangling 0 indicates false, anything else is true
+ * \param filter_driver driver filter
+ * \param filter_label
+ * \param filter_name
+ * \return error code.
+ */
 error_t docker_volumes_list(docker_context* ctx, docker_result** result,
-	struct array_list** volumes, struct array_list** warnings,
-	int filter_dangling, char* filter_driver, char* filter_label, char* filter_name) {
+		struct array_list** volumes, struct array_list** warnings,
+		int filter_dangling, char* filter_driver, char* filter_label,
+		char* filter_name) {
 	char* url = create_service_url_id_method(VOLUME, NULL, NULL);
 
 	struct array_list* params = array_list_new(
-		(void(*)(void *)) &free_url_param);
+			(void (*)(void *)) &free_url_param);
 	url_param* p;
 	if (filter_dangling != 0) {
 		make_url_param(&p, "dangling", make_defensive_copy("true"));
@@ -134,7 +135,7 @@ error_t docker_volumes_list(docker_context* ctx, docker_result** result,
 	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
 
-	(*volumes) = array_list_new((void(*)(void *)) &free_docker_volume_item);
+	(*volumes) = array_list_new((void (*)(void *)) &free_docker_volume_item);
 	(*warnings) = array_list_new(&free);
 
 	json_object* volumes_obj;
@@ -142,19 +143,21 @@ error_t docker_volumes_list(docker_context* ctx, docker_result** result,
 	if (volumes_obj) {
 		int num_vols = json_object_array_length(volumes_obj);
 		for (int i = 0; i < num_vols; i++) {
-			json_object* current_obj = json_object_array_get_idx(volumes_obj, i);
+			json_object* current_obj = json_object_array_get_idx(volumes_obj,
+					i);
 			docker_volume_item* vi;
-			make_docker_volume_item(&vi, get_attr_unsigned_long(current_obj, "CreatedAt"),
-				get_attr_str(current_obj, "Name"),
-				get_attr_str(current_obj, "Driver"),
-				get_attr_str(current_obj, "Mountpoint"),
-				get_attr_str(current_obj, "Scope"));
+			make_docker_volume_item(&vi,
+					get_attr_unsigned_long(current_obj, "CreatedAt"),
+					get_attr_str(current_obj, "Name"),
+					get_attr_str(current_obj, "Driver"),
+					get_attr_str(current_obj, "Mountpoint"),
+					get_attr_str(current_obj, "Scope"));
 
 			json_object* labels_obj;
 			json_object_object_get_ex(current_obj, "Labels", &labels_obj);
 			json_object_object_foreach(labels_obj, key, val) {
 				pair* p;
-				make_pair(&p, key, json_object_get_string(val));
+				make_pair(&p, key, (char*) json_object_get_string(val));
 				docker_volume_item_labels_add(vi, p);
 			}
 
@@ -162,7 +165,7 @@ error_t docker_volumes_list(docker_context* ctx, docker_result** result,
 			json_object_object_get_ex(current_obj, "Options", &options_obj);
 			json_object_object_foreach(options_obj, key1, val1) {
 				pair* p;
-				make_pair(&p, key1, json_object_get_string(val1));
+				make_pair(&p, key1, (char*) json_object_get_string(val1));
 				docker_volume_item_options_add(vi, p);
 			}
 
@@ -175,8 +178,9 @@ error_t docker_volumes_list(docker_context* ctx, docker_result** result,
 	if (warnings_obj) {
 		int num_warns = json_object_array_length(warnings_obj);
 		for (int i = 0; i < num_warns; i++) {
-			json_object* current_obj = json_object_array_get_idx(warnings_obj, i);
-			char* warning = json_object_get_string(current_obj);
+			json_object* current_obj = json_object_array_get_idx(warnings_obj,
+					i);
+			char* warning = (char*) json_object_get_string(current_obj);
 			array_list_add((*warnings), warning);
 		}
 	}

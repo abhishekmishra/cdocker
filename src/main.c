@@ -101,26 +101,57 @@ int main(int argc, char* argv[]) {
 //			"alpine", "latest", NULL);
 //	handle_error(res);
 
-	//Network API
+//Network API
 	struct array_list* networks;
-	docker_networks_list(ctx, &res, &networks, NULL, NULL, NULL, NULL, NULL, NULL);
+	docker_networks_list(ctx, &res, &networks, NULL, NULL, NULL, NULL, NULL,
+	NULL);
 	handle_error(res);
 	int len_nets = array_list_length(networks);
-	for(int i = 0; i < len_nets; i++) {
-		docker_network_item* ni = (docker_network_item*)array_list_get_idx(networks, i);
+	for (int i = 0; i < len_nets; i++) {
+		docker_network_item* ni = (docker_network_item*) array_list_get_idx(
+				networks, i);
 		docker_log_info("Found network %s %s", ni->name, ni->id);
 	}
 
 	//Volume API
 
+	//create two test volumes
+	docker_volume_item* vi = NULL;
+	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol01", "local", 1,
+			"test_label", "test_value");
+	handle_error(res);
+	if (vi != NULL) {
+		docker_log_info("Created volume with name %s at %d", vi->name,
+				vi->created_at);
+	}
+	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol02", "local", 1,
+			"clibdocker_test_label", "clibdocker_test_value");
+	handle_error(res);
+
+	//list volumes
 	struct array_list* volumes;
 	struct array_list* warnings;
 	docker_volumes_list(ctx, &res, &volumes, &warnings, 0, NULL, NULL, NULL);
 	handle_error(res);
 	int len_vols = array_list_length(volumes);
 	for (int i = 0; i < len_vols; i++) {
-		docker_volume_item* vi = (docker_volume_item*)array_list_get_idx(volumes, i);
+		docker_volume_item* vi = (docker_volume_item*) array_list_get_idx(
+				volumes, i);
 		docker_log_info("Found volume %s at %s", vi->name, vi->mountpoint);
+	}
+
+	//delete volumes
+	docker_volume_delete(ctx, &res, "clibdocker_test_vol01", 0);
+	handle_error(res);
+
+	//delete unused volumes
+	struct array_list* volumes_deleted;
+	long space_reclaimed;
+	docker_volumes_delete_unused(ctx, &res, &volumes_deleted, &space_reclaimed, 0, "clibdocker_test_label", "clibdocker_test_value");
+	handle_error(res);
+	for (int i = 0; i < array_list_length(volumes_deleted); i++) {
+		docker_log_info("Deleted unused volume %s",
+				(char* )array_list_get_idx(volumes_deleted, i));
 	}
 
 	//Containers API

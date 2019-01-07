@@ -91,11 +91,11 @@ At some point I will write corresponding asynchronous API endpoints (but not pla
 
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
 |---------------------|-----------------|---------------|-------|--------------------------|
-|List		          |            :ok: |          :ok: |   :x: |                          |
-|Create               |             :x: |           :x: |   :x: |                          |
+|List		          |            :ok: |          :ok: |  :ok: |  filters not implemeted yet |
+|Create               |            :ok: |          :ok: |  :ok: |                          |
 |Inspect			  |             :x: |           :x: |   :x: |                          |
-|Remove 		      |             :x: |           :x: |   :x: |                          |
-|Delete unused        |             :x: |           :x: |   :x: |                          |
+|Remove 		      |            :ok: |          :ok: |  :ok: |                          |
+|Delete unused        |            :ok: |          :ok: |  :ok: |                          |
 
 ### Exec API
 

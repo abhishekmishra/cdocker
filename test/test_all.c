@@ -14,6 +14,7 @@
 #include "test_docker_system.h"
 #include "test_docker_images.h"
 #include "test_docker_networks.h"
+#include "test_docker_volumes.h"
 #include "log.h"
 
 int main(int argc, char **argv) {
@@ -36,6 +37,11 @@ int main(int argc, char **argv) {
 	docker_log_info("#### Docker networks API      	####");
 	res = docker_networks_tests();
 	docker_log_info("#### Done                      ####");
+
+	docker_log_info("#### Docker volumes API      	####");
+	res = docker_volumes_tests();
+	docker_log_info("#### Done                      ####");
+
 	return res;
 }
 

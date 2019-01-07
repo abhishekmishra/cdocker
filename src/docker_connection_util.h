@@ -91,11 +91,11 @@ struct http_response_memory {
  * Util method used internally to HTTP POST to the Docker url.
  */
 error_t docker_api_post(docker_context* ctx, docker_result** res, char* api_url,
-		struct array_list* url_params, char* post_data,
+		struct array_list* url_params, const char* post_data,
 		struct http_response_memory *chunk, json_object** response);
 
 error_t docker_api_post_cb(docker_context* ctx, docker_result** result,
-		char* api_url, struct array_list* url_params, char* post_data,
+		char* api_url, struct array_list* url_params, const char* post_data,
 		struct http_response_memory *chunk, json_object** response,
 		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
 		void* cbargs, void* client_cbargs);
@@ -114,6 +114,13 @@ error_t docker_api_get_cb(docker_context* ctx, docker_result** res,
 		void* cbargs, void* client_cbargs);
 
 /**
+ * Util method used internally to HTTP DELETE to the Docker url.
+ */
+error_t docker_api_delete(docker_context* ctx, docker_result** res, char* api_url,
+		struct array_list* url_params, struct http_response_memory *chunk,
+		json_object** response);
+
+/**
  * Create service call part of the url using components.
  *
  * \param object which api to call (container, image etc. can also be null)
@@ -121,7 +128,7 @@ error_t docker_api_get_cb(docker_context* ctx, docker_result** res,
  * \param method to call
  * \return string url
  */
-char* create_service_url_id_method(docker_object_type object, char* id,
-		char* method);
+char* create_service_url_id_method(docker_object_type object, const char* id,
+		const char* method);
 
 #endif /* DOCKER_CONNECTION_UTIL_H_ */

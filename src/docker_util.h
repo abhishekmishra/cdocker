@@ -28,6 +28,10 @@
 #ifndef SRC_DOCKER_UTIL_H_
 #define SRC_DOCKER_UTIL_H_
 
+#ifdef __cplusplus  
+extern "C" {
+#endif
+
 #include <json-c/json_object.h>
 #include "docker_result.h"
 
@@ -75,5 +79,9 @@ unsigned long get_attr_unsigned_long(json_object* obj, char* name);
 long long get_attr_long_long(json_object* obj, char* name);
 
 void parse_iso_datetime(char* date_str, struct tm* tm);
+
+#ifdef __cplusplus 
+}
+#endif
 
 #endif /* SRC_DOCKER_UTIL_H_ */

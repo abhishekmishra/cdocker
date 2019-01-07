@@ -32,6 +32,10 @@
 #define DOCKER_PARAM_TRUE 1
 #define DOCKER_PARAM_FALSE 0
 
+#ifdef __cplusplus  
+extern "C" {
+#endif
+
 #include <time.h>
 
 // The error code usage below based on suggestions at
@@ -153,5 +157,9 @@ void docker_simple_error_handler_print(docker_result* res);
  * which just want to log the error (if any).
  */
 void docker_simple_error_handler_log(docker_result* res);
+
+#ifdef __cplusplus 
+}
+#endif
 
 #endif /* SRC_DOCKER_RESULT_H_ */

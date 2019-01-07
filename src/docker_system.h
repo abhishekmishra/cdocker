@@ -28,6 +28,10 @@
 #ifndef SRC_DOCKER_SYSTEM_H_
 #define SRC_DOCKER_SYSTEM_H_
 
+#ifdef __cplusplus  
+extern "C" {
+#endif
+
 #include "docker_result.h"
 #include "docker_connection_util.h"
 
@@ -285,5 +289,9 @@ error_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 //}
 
 //TODO docker df
+
+#ifdef __cplusplus 
+}
+#endif
 
 #endif /* SRC_DOCKER_SYSTEM_H_ */

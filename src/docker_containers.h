@@ -8,6 +8,10 @@
 #ifndef DOCKER_CONTAINERS_H_
 #define DOCKER_CONTAINERS_H_
 
+#ifdef __cplusplus  
+extern "C" {
+#endif
+
 #include "docker_result.h"
 #include "docker_connection_util.h"
 
@@ -554,5 +558,9 @@ error_t docker_unpause_container(docker_context* ctx, docker_result** result,
  */
 error_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id, char* condition);
+
+#ifdef __cplusplus 
+}
+#endif
 
 #endif /* DOCKER_CONTAINERS_H_ */

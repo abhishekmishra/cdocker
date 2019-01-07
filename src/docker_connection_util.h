@@ -8,6 +8,10 @@
 #ifndef DOCKER_CONNECTION_UTIL_H_
 #define DOCKER_CONNECTION_UTIL_H_
 
+#ifdef __cplusplus  
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <json-c/arraylist.h>
 #include <json-c/json_object.h>
@@ -130,5 +134,9 @@ error_t docker_api_delete(docker_context* ctx, docker_result** res, char* api_ur
  */
 char* create_service_url_id_method(docker_object_type object, const char* id,
 		const char* method);
+
+#ifdef __cplusplus 
+}
+#endif
 
 #endif /* DOCKER_CONNECTION_UTIL_H_ */

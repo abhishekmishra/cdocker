@@ -22,6 +22,10 @@
 #ifndef SRC_DOCKER_IMAGES_H_
 #define SRC_DOCKER_IMAGES_H_
 
+#ifdef __cplusplus  
+extern "C" {
+#endif
+
 #include "docker_connection_util.h"
 #include "docker_result.h"
 #include "docker_util.h"
@@ -67,5 +71,9 @@ error_t docker_image_create_from_image_cb(docker_context* ctx,
 		void* cbargs, char* from_image, char* tag, char* platform);
 
 //error_t docker_image_create_from_src(docker_context* ctx, docker_result** res, char* from_src, char* repo, char* tag, char* platform);
+
+#ifdef __cplusplus 
+}
+#endif
 
 #endif /* SRC_DOCKER_IMAGES_H_ */

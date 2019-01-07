@@ -22,6 +22,10 @@
 #ifndef SRC_DOCKER_NETWORKS_H_
 #define SRC_DOCKER_NETWORKS_H_
 
+#ifdef __cplusplus  
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <json-c/arraylist.h>
 #include "docker_result.h"
@@ -135,5 +139,9 @@ error_t docker_networks_list(docker_context* ctx, docker_result** result,
 		struct array_list** networks, char* filter_driver, char* filter_id,
 		char* filter_label, char* filter_name, char* filter_scope,
 		char* filter_type);
+
+#ifdef __cplusplus 
+}
+#endif
 
 #endif /* SRC_DOCKER_NETWORKS_H_ */

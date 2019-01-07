@@ -22,6 +22,10 @@
 #ifndef SRC_DOCKER_VOLUMES_H_
 #define SRC_DOCKER_VOLUMES_H_
 
+#ifdef __cplusplus  
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <json-c/arraylist.h>
 #include "docker_connection_util.h"
@@ -146,4 +150,9 @@ error_t docker_volume_delete(docker_context* ctx, docker_result** result,
 error_t docker_volumes_delete_unused(docker_context* ctx,
 		docker_result** result, struct array_list** volumes_deleted,
 		unsigned long* space_reclaimed, int num_label_filters, ...);
+
+#ifdef __cplusplus 
+}
+#endif
+
 #endif

@@ -1,0 +1,25 @@
+﻿  docker_connection_util.c
+c:\users\abhis\code\clibdocker\src\docker_connection_util.h(12): fatal error C1083: Cannot open include file: 'json-c/arraylist.h': No such file or directory
+  docker_containers.c
+c:\users\abhis\code\clibdocker\src\docker_connection_util.h(12): fatal error C1083: Cannot open include file: 'json-c/arraylist.h': No such file or directory
+  docker_images.c
+c:\users\abhis\code\clibdocker\src\docker_connection_util.h(12): fatal error C1083: Cannot open include file: 'json-c/arraylist.h': No such file or directory
+  docker_networks.c
+c:\users\abhis\code\clibdocker\src\docker_networks.c(22): fatal error C1083: Cannot open include file: 'json-c/arraylist.h': No such file or directory
+  docker_result.c
+c:\users\abhis\code\clibdocker\src\docker_result.c(53): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(119): note: see declaration of 'strcpy'
+c:\users\abhis\code\clibdocker\src\docker_result.c(59): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(119): note: see declaration of 'strcpy'
+  docker_system.c
+c:\users\abhis\code\clibdocker\src\docker_system.c(30): fatal error C1083: Cannot open include file: 'json-c/json_object.h': No such file or directory
+  docker_util.c
+c:\users\abhis\code\clibdocker\src\docker_util.c(31): fatal error C1083: Cannot open include file: 'json-c/json_object.h': No such file or directory
+  docker_volumes.c
+c:\users\abhis\code\clibdocker\src\docker_volumes.h(26): fatal error C1083: Cannot open include file: 'json-c/arraylist.h': No such file or directory
+  log.c
+c:\users\abhis\code\clibdocker\src\log.c(100): warning C4996: 'localtime': This function or variable may be unsafe. Consider using localtime_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\time.h(505): note: see declaration of 'localtime'
+  main.c
+c:\users\abhis\code\clibdocker\src\main.c(6): fatal error C1083: Cannot open include file: 'json-c/json.h': No such file or directory
+  Generating Code...

@@ -110,7 +110,7 @@ DOCKER_SYSTEM_GETTER(version, int, experimental)
  * \param version object to return
  * \return error code.
  */
-error_t docker_system_version(docker_context* ctx, docker_result** result,
+MODULE_API error_t docker_system_version(docker_context* ctx, docker_result** result,
 		docker_version** version);
 
 // Docker System Info

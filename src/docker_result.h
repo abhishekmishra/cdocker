@@ -36,6 +36,17 @@
 extern "C" {
 #endif
 
+#define MODULE_API_EXPORTS
+#ifdef _WIN32
+#  ifdef MODULE_API_EXPORTS
+#    define MODULE_API __declspec(dllexport)
+#  else
+#    define MODULE_API __declspec(dllimport)
+#  endif
+#else
+#  define MODULE_API
+#endif
+
 #include <time.h>
 
 // The error code usage below based on suggestions at
@@ -95,54 +106,54 @@ typedef struct docker_result_t {
  * Makes a defensive copy of all provided data so that they can be
  * freed after creation of the result.
  */
-error_t make_docker_result(docker_result** result, error_t error_code,
+MODULE_API error_t make_docker_result(docker_result** result, error_t error_code,
 		long http_error_code, const char* url, const char* msg);
 
 /**
  * Frees all internal memory used in the docker_result, should be
  * called for all result objects as soon as they are no longer needed.
  */
-void free_docker_result(docker_result** result);
+MODULE_API void free_docker_result(docker_result** result);
 
 /**
  * This method provides the error_code based on the standard error code enum.
  * Use this method instead of direct attribute access to the struct to ensure
  * future changes to the struct will not break your code.
  */
-error_t get_docker_result_error(docker_result* result);
+MODULE_API error_t get_docker_result_error(docker_result* result);
 
 /**
  * This method provides the HTTP error code returned by the API call.
  * Use this method instead of direct attribute access to the struct to ensure
  * future changes to the struct will not break your code.
  */
-long get_docker_result_http_error(docker_result* result);
+MODULE_API long get_docker_result_http_error(docker_result* result);
 
 /**
  * This method provides the URL used when calling the API.
  * Use this method instead of direct attribute access to the struct to ensure
  * future changes to the struct will not break your code.
  */
-char* get_docker_result_url(docker_result* result);
+MODULE_API char* get_docker_result_url(docker_result* result);
 
 /**
  * This method provides the error message returned by the API.
  * Use this method instead of direct attribute access to the struct to ensure
  * future changes to the struct will not break your code.
  */
-char* get_docker_result_message(docker_result* result);
+MODULE_API char* get_docker_result_message(docker_result* result);
 
-time_t get_docker_result_start_time(docker_result* result);
-time_t get_docker_result_end_time(docker_result* result);
-char* get_docker_result_request(docker_result* result);
-char* get_docker_result_response(docker_result* result);
-char* get_docker_result_http_method(docker_result* result);
+MODULE_API time_t get_docker_result_start_time(docker_result* result);
+MODULE_API time_t get_docker_result_end_time(docker_result* result);
+MODULE_API char* get_docker_result_request(docker_result* result);
+MODULE_API char* get_docker_result_response(docker_result* result);
+MODULE_API char* get_docker_result_http_method(docker_result* result);
 
 
 /**
  * Check if the error_code is E_SUCCESS
  */
-int is_ok(docker_result* result);
+MODULE_API int is_ok(docker_result* result);
 
 
 //TODO these two functions can be made a single generic function.
@@ -150,13 +161,13 @@ int is_ok(docker_result* result);
  * A simple error handler suitable for programs
  * which just want to log the error (if any).
  */
-void docker_simple_error_handler_print(docker_result* res);
+MODULE_API void docker_simple_error_handler_print(docker_result* res);
 
 /**
  * A simple error handler suitable for programs
  * which just want to log the error (if any).
  */
-void docker_simple_error_handler_log(docker_result* res);
+MODULE_API void docker_simple_error_handler_log(docker_result* res);
 
 #ifdef __cplusplus 
 }

@@ -74,4 +74,6 @@ unsigned long get_attr_unsigned_long(json_object* obj, char* name);
 
 long long get_attr_long_long(json_object* obj, char* name);
 
+void parse_iso_datetime(char* date_str, struct tm* tm);
+
 #endif /* SRC_DOCKER_UTIL_H_ */

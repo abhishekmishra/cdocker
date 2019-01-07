@@ -29,6 +29,7 @@
 #include <string.h>
 #include <time.h>
 #include "docker_volumes.h"
+#include "docker_util.h"
 #include "log.h"
 
 #define DOCKER_VOLUME_GETTER_IMPL(object, type, name) \
@@ -155,8 +156,12 @@ error_t docker_volumes_list(docker_context* ctx, docker_result** result,
 			json_object* current_obj = json_object_array_get_idx(volumes_obj,
 					i);
 			docker_volume_item* vi;
-			make_docker_volume_item(&vi,
-					get_attr_unsigned_long(current_obj, "CreatedAt"),
+			struct tm ctime;
+			memset(&ctime, 0, sizeof(struct tm));
+			parse_iso_datetime(get_attr_str(current_obj, "CreatedAt"), &ctime);
+			time_t created_time = mktime(&ctime);
+
+			make_docker_volume_item(&vi, created_time,
 					get_attr_str(current_obj, "Name"),
 					get_attr_str(current_obj, "Driver"),
 					get_attr_str(current_obj, "Mountpoint"),
@@ -244,10 +249,9 @@ error_t docker_volume_create(docker_context* ctx, docker_result** result,
 		docker_volume_item* vi;
 		struct tm ctime;
 		memset(&ctime, 0, sizeof(struct tm));
-		strptime(get_attr_str(response_obj, "CreatedAt"), "%FT%T%z", &ctime);
+		parse_iso_datetime(get_attr_str(response_obj, "CreatedAt"), &ctime);
 		time_t created_time = mktime(&ctime);
-		make_docker_volume_item(&vi,
-				created_time,
+		make_docker_volume_item(&vi, created_time,
 				get_attr_str(response_obj, "Name"),
 				get_attr_str(response_obj, "Driver"),
 				get_attr_str(response_obj, "Mountpoint"),
@@ -304,9 +308,10 @@ error_t docker_volume_inspect(docker_context* ctx, docker_result** result,
 		docker_volume_item* vi;
 		struct tm ctime;
 		memset(&ctime, 0, sizeof(struct tm));
-		strptime(get_attr_str(response_obj, "CreatedAt"), "%FT%T%z", &ctime);
+		parse_iso_datetime(get_attr_str(response_obj, "CreatedAt"), &ctime);
 		time_t created_time = mktime(&ctime);
-		make_docker_volume_item(&vi, created_time, get_attr_str(response_obj, "Name"),
+		make_docker_volume_item(&vi, created_time,
+				get_attr_str(response_obj, "Name"),
 				get_attr_str(response_obj, "Driver"),
 				get_attr_str(response_obj, "Mountpoint"),
 				get_attr_str(response_obj, "Scope"));

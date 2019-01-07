@@ -163,3 +163,24 @@ void add_filter_int(json_object* filters, char* name, int value) {
 const char* filters_to_str(json_object* filters) {
 	return json_object_get_string(filters);
 }
+
+// implementation based on suggestions at
+// https://stackoverflow.com/questions/26895428/how-do-i-parse-an-iso-8601-date-with-optional-milliseconds-to-a-struct-tm-in-c
+void parse_iso_datetime(char* date_str, struct tm* tm) {
+	int y, M, d, h, m;
+	float s;
+	int tzh = 0, tzm = 0;
+	if (6
+			< sscanf(date_str, "%d-%d-%dT%d:%d:%f%d:%dZ", &y, &M, &d, &h, &m,
+					&s, &tzh, &tzm)) {
+		if (tzh < 0) {
+			tzm = -tzm;    // Fix the sign on minutes.
+		}
+	}
+	tm->tm_year = y - 1900; // Year since 1900
+	tm->tm_mon = M - 1;     // 0-11
+	tm->tm_mday = d;        // 1-31
+	tm->tm_hour = h;        // 0-23
+	tm->tm_min = m;         // 0-59
+	tm->tm_sec = (int) s;    // 0-61 (0-60 in C++11)
+}

@@ -93,7 +93,7 @@ At some point I will write corresponding asynchronous API endpoints (but not pla
 |---------------------|-----------------|---------------|-------|--------------------------|
 |List		          |            :ok: |          :ok: |  :ok: |                          |
 |Create               |            :ok: |          :ok: |  :ok: |                          |
-|Inspect			  |             :x: |           :x: |   :x: |                          |
+|Inspect			  |            :ok: |          :ok: |  :ok: |                          |
 |Remove 		      |            :ok: |          :ok: |  :ok: |                          |
 |Delete unused        |            :ok: |          :ok: |  :ok: |                          |
 

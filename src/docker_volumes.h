@@ -109,6 +109,18 @@ error_t docker_volume_create(docker_context* ctx, docker_result** result,
 		...);
 
 /**
+ * Inspect an existing volume.
+ *
+ * \param ctx the docker context
+ * \param result the result object to return
+ * \param volume the volume object to return
+ * \param name name of the volume to inspect (cannot be NULL)
+ * \return error code
+ */
+error_t docker_volume_inspect(docker_context* ctx, docker_result** result,
+		docker_volume_item** volume, char* name);
+
+/**
  * Delete the given volume (identified by name).
  *
  * \param ctx the docker context

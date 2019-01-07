@@ -27,6 +27,7 @@
  */
 #include <stdarg.h>
 #include <string.h>
+#include <time.h>
 #include "docker_volumes.h"
 #include "log.h"
 
@@ -241,9 +242,71 @@ error_t docker_volume_create(docker_context* ctx, docker_result** result,
 	//If volume was created parse the response and return the details.
 	if ((*result)->http_error_code == 201) {
 		docker_volume_item* vi;
+		struct tm ctime;
+		memset(&ctime, 0, sizeof(struct tm));
+		strptime(get_attr_str(response_obj, "CreatedAt"), "%FT%T%z", &ctime);
+		time_t created_time = mktime(&ctime);
 		make_docker_volume_item(&vi,
-				get_attr_unsigned_long(response_obj, "CreatedAt"),
+				created_time,
 				get_attr_str(response_obj, "Name"),
+				get_attr_str(response_obj, "Driver"),
+				get_attr_str(response_obj, "Mountpoint"),
+				get_attr_str(response_obj, "Scope"));
+
+		json_object* labels_obj;
+		json_object_object_get_ex(response_obj, "Labels", &labels_obj);
+		if (labels_obj != NULL) {
+			json_object_object_foreach(labels_obj, key, val)
+			{
+				pair* p;
+				make_pair(&p, key, (char*) json_object_get_string(val));
+				docker_volume_item_labels_add(vi, p);
+			}
+		}
+
+		json_object* status_obj;
+		json_object_object_get_ex(response_obj, "Status", &status_obj);
+		if (status_obj != NULL) {
+			json_object_object_foreach(status_obj, key1, val1)
+			{
+				pair* p;
+				make_pair(&p, key1, (char*) json_object_get_string(val1));
+				docker_volume_item_status_add(vi, p);
+			}
+		}
+		(*volume) = vi;
+	}
+
+	return E_SUCCESS;
+}
+
+/**
+ * Inspect an existing volume.
+ *
+ * \param ctx the docker context
+ * \param result the result object to return
+ * \param volume the volume object to return
+ * \param name name of the volume to inspect (cannot be NULL)
+ * \return error code
+ */
+error_t docker_volume_inspect(docker_context* ctx, docker_result** result,
+		docker_volume_item** volume, char* name) {
+	if (name == NULL) {
+		return E_INVALID_INPUT;
+	}
+	char* url = create_service_url_id_method(VOLUME, NULL, name);
+	json_object *response_obj = NULL;
+	struct http_response_memory chunk;
+	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
+
+	//If volume was returned parse the response and return the details.
+	if ((*result)->http_error_code == 200) {
+		docker_volume_item* vi;
+		struct tm ctime;
+		memset(&ctime, 0, sizeof(struct tm));
+		strptime(get_attr_str(response_obj, "CreatedAt"), "%FT%T%z", &ctime);
+		time_t created_time = mktime(&ctime);
+		make_docker_volume_item(&vi, created_time, get_attr_str(response_obj, "Name"),
 				get_attr_str(response_obj, "Driver"),
 				get_attr_str(response_obj, "Mountpoint"),
 				get_attr_str(response_obj, "Scope"));

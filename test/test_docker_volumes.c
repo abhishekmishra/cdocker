@@ -66,8 +66,16 @@ static void test_create_volumes(void **state) {
 	assert_non_null(vi->name);
 	assert_string_equal(vi->name, "clibdocker_test_vol02");
 }
+static void test_inspect_volume(void **state) {
+	docker_volume_item* vi = NULL;
+	docker_volume_inspect(ctx, &res, &vi, "clibdocker_test_vol01");
+	handle_error(res);
+	assert_int_equal(res->http_error_code, 200);
+	assert_non_null(vi);
+	assert_non_null(vi->name);
+	assert_string_equal(vi->name, "clibdocker_test_vol01");
+}
 
-//TODO implement list with filter and check for exact number of results returned.
 static void test_list_volumes(void **state) {
 	struct array_list* volumes;
 	struct array_list* warnings;
@@ -99,6 +107,7 @@ static void test_prune_unused_volumes(void **state) {
 int docker_volumes_tests() {
 	const struct CMUnitTest tests[] = {
 	cmocka_unit_test(test_create_volumes),
+	cmocka_unit_test(test_inspect_volume),
 	cmocka_unit_test(test_list_volumes),
 	cmocka_unit_test(test_delete_volume),
 	cmocka_unit_test(test_prune_unused_volumes)};

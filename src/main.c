@@ -121,7 +121,7 @@ int main(int argc, char* argv[]) {
 			"clibdocker_test_label", "clibdocker_test_value");
 	handle_error(res);
 	if (vi != NULL) {
-		docker_log_info("Created volume with name %s at %d", vi->name,
+		docker_log_info("Created volume with name %s at %lu", vi->name,
 				vi->created_at);
 	}
 	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol02", "local", 1,
@@ -138,6 +138,15 @@ int main(int argc, char* argv[]) {
 		docker_volume_item* vi = (docker_volume_item*) array_list_get_idx(
 				volumes, i);
 		docker_log_info("Found volume %s at %s", vi->name, vi->mountpoint);
+	}
+
+	//inspect volume
+	vi = NULL;
+	docker_volume_inspect(ctx, &res, &vi, "clibdocker_test_vol01");
+	handle_error(res);
+	if (vi != NULL) {
+		docker_log_info("Inspect found volume with name %s at %lu", vi->name,
+				vi->created_at);
 	}
 
 	//delete volumes

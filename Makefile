@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-std=c11 `pkg-config --cflags json-c` `pkg-config --cflags libcurl` -I./src
+CFLAGS=-std=c11 `pkg-config --cflags json-c` `pkg-config --cflags libcurl` -I./src -D_GNU_SOURCE
 # To use colour logs...
 #CFLAGS+= -DLOG_USE_COLOR
 LIBS=`pkg-config --libs json-c` `pkg-config --libs libcurl`

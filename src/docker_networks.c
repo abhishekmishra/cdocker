@@ -43,6 +43,26 @@
 		return (type) array_list_get_idx(object->name, i); \
 	} \
 
+error_t make_docker_network_ipam_config(docker_network_ipam_config** config,
+		char* subnet, char* gateway) {
+	(*config) = (docker_network_ipam_config*) malloc(
+			sizeof(docker_network_ipam_config*));
+	if ((*config) == NULL) {
+		return E_ALLOC_FAILED;
+	}
+	(*config)->gateway = make_defensive_copy(gateway);
+	(*config)->subnet = make_defensive_copy(subnet);
+	return E_SUCCESS;
+}
+
+void free_docker_network_ipam_config(docker_network_ipam_config* config) {
+	free(config->gateway);
+	free(config->subnet);
+	free(config);
+}
+
+DOCKER_NETWORK_GETTER_IMPL(ipam_config, char*, subnet)
+DOCKER_NETWORK_GETTER_IMPL(ipam_config, char*, gateway)
 
 error_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver) {
 	(*ipam) = (docker_network_ipam*) malloc(sizeof(docker_network_ipam));
@@ -50,7 +70,8 @@ error_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver) {
 		return E_ALLOC_FAILED;
 	}
 	(*ipam)->driver = make_defensive_copy(driver);
-	(*ipam)->config = array_list_new((void (*)(void *)) &free_pair);
+	(*ipam)->config = array_list_new(
+			(void (*)(void *)) &free_docker_network_ipam_config);
 	(*ipam)->options = array_list_new((void (*)(void *)) &free_pair);
 	return E_SUCCESS;
 }
@@ -63,9 +84,10 @@ void free_docker_network_ipam(docker_network_ipam* ipam) {
 }
 
 DOCKER_NETWORK_GETTER_IMPL(ipam, char*, driver)
-DOCKER_NETWORK_GETTER_ARR_ADD_IMPL(ipam, pair*, config)
+DOCKER_NETWORK_GETTER_ARR_ADD_IMPL(ipam, docker_network_ipam_config*, config)
 DOCKER_NETWORK_GETTER_ARR_LEN_IMPL(ipam, config)
-DOCKER_NETWORK_GETTER_ARR_GET_IDX_IMPL(ipam, pair*, config)
+DOCKER_NETWORK_GETTER_ARR_GET_IDX_IMPL(ipam, docker_network_ipam_config*,
+		config)
 DOCKER_NETWORK_GETTER_ARR_ADD_IMPL(ipam, pair*, options)
 DOCKER_NETWORK_GETTER_ARR_LEN_IMPL(ipam, options)
 DOCKER_NETWORK_GETTER_ARR_GET_IDX_IMPL(ipam, pair*, options)
@@ -175,30 +197,27 @@ error_t docker_networks_list(docker_context* ctx, docker_result** result,
 	struct array_list* params = array_list_new(
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
+	json_object* filters = make_filters();
 	if (filter_driver != NULL) {
-		make_url_param(&p, "driver", make_defensive_copy(filter_driver));
-		array_list_add(params, p);
+		add_filter_str(filters, "driver", make_defensive_copy(filter_driver));
 	}
 	if (filter_id != NULL) {
-		make_url_param(&p, "id", make_defensive_copy(filter_id));
-		array_list_add(params, p);
+		add_filter_str(filters, "id", make_defensive_copy(filter_id));
 	}
 	if (filter_label != NULL) {
-		make_url_param(&p, "label", make_defensive_copy(filter_label));
-		array_list_add(params, p);
+		add_filter_str(filters, "label", make_defensive_copy(filter_label));
 	}
 	if (filter_name != NULL) {
-		make_url_param(&p, "name", make_defensive_copy(filter_name));
-		array_list_add(params, p);
+		add_filter_str(filters, "name", make_defensive_copy(filter_name));
 	}
 	if (filter_scope != NULL) {
-		make_url_param(&p, "scope", make_defensive_copy(filter_scope));
-		array_list_add(params, p);
+		add_filter_str(filters, "scope", make_defensive_copy(filter_scope));
 	}
 	if (filter_type != NULL) {
-		make_url_param(&p, "type", make_defensive_copy(filter_type));
-		array_list_add(params, p);
+		add_filter_str(filters, "type", make_defensive_copy(filter_type));
 	}
+	make_url_param(&p, "filters", (char *) filters_to_str(filters));
+	array_list_add(params, p);
 
 	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
@@ -208,11 +227,40 @@ error_t docker_networks_list(docker_context* ctx, docker_result** result,
 	int num_nets = json_object_array_length(response_obj);
 	for (int i = 0; i < num_nets; i++) {
 		json_object* current_obj = json_object_array_get_idx(response_obj, i);
+		docker_network_item* ni;
+
 		docker_network_ipam* ipam;
 		json_object* ipam_obj;
 		json_object_object_get_ex(current_obj, "IPAM", &ipam_obj);
 		make_docker_network_ipam(&ipam, get_attr_str(ipam_obj, "driver"));
-		docker_network_item* ni;
+
+		json_object* ipam_options_obj;
+		json_object_object_get_ex(ipam_obj, "Options", &ipam_options_obj);
+		if (ipam_options_obj != NULL) {
+			json_object_object_foreach(ipam_options_obj, key, val)
+			{
+				pair* p;
+				make_pair(&p, key, (char*) json_object_get_string(val));
+				docker_network_ipam_options_add(ipam, p);
+			}
+		}
+
+		json_object* ipam_config_obj;
+		json_object_object_get_ex(ipam_obj, "Config", &ipam_config_obj);
+		int num_configs = json_object_array_length(ipam_config_obj);
+		if (ipam_config_obj != NULL) {
+			int num_configs = json_object_array_length(ipam_config_obj);
+			for (int j = 0; j < num_configs; j++) {
+
+				json_object* current_config_obj = json_object_array_get_idx(ipam_config_obj, j);
+				docker_network_ipam_config* config;
+				make_docker_network_ipam_config(&config,
+						get_attr_str(current_config_obj, "Subnet"),
+						get_attr_str(current_config_obj, "Gateway"));
+				docker_network_ipam_config_add(ipam, config);
+			}
+		}
+
 		make_docker_network_item(&ni, get_attr_str(current_obj, "Name"),
 				get_attr_str(current_obj, "Id"),
 				get_attr_unsigned_long(current_obj, "Created"),
@@ -222,6 +270,41 @@ error_t docker_networks_list(docker_context* ctx, docker_result** result,
 				get_attr_int(current_obj, "Internal"),
 				get_attr_int(current_obj, "Attachable"),
 				get_attr_int(current_obj, "Ingress"));
+		json_object* labels_obj;
+		json_object_object_get_ex(current_obj, "Labels", &labels_obj);
+		if (labels_obj != NULL) {
+			json_object_object_foreach(labels_obj, key, val)
+			{
+				pair* p;
+				make_pair(&p, key, (char*) json_object_get_string(val));
+				docker_network_item_labels_add(ni, p);
+			}
+		}
+		json_object* options_obj;
+		json_object_object_get_ex(current_obj, "Options", &options_obj);
+		if (options_obj != NULL) {
+			json_object_object_foreach(options_obj, key, val)
+			{
+				pair* p;
+				make_pair(&p, key, (char*) json_object_get_string(val));
+				docker_network_item_options_add(ni, p);
+			}
+		}
+		json_object* containers_obj;
+		json_object_object_get_ex(current_obj, "Containers", &containers_obj);
+		if (containers_obj != NULL) {
+			json_object_object_foreach(containers_obj, key, val)
+			{
+				docker_network_container* container;
+				make_docker_network_container(&container,
+						get_attr_str(val, "Id"), get_attr_str(val, "Name"),
+						get_attr_str(val, "EndpointID"),
+						get_attr_str(val, "MacAddress"),
+						get_attr_str(val, "IPv4Address"),
+						get_attr_str(val, "IPv6Address"));
+				docker_network_item_containers_add(ni, container);
+			}
+		}
 		array_list_add((*networks), ni);
 	}
 
@@ -229,3 +312,124 @@ error_t docker_networks_list(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
+/**
+ * Inspect details of a network looked up by name or id.
+ *
+ * \param ctx docker context
+ * \param result the result object to be returned
+ * \param net details of the network returned
+ * \param id_or_name id or name of the network to be looked up
+ * \param verbose whether inspect output is verbose (0 means false, true otherwise)
+ * \param scope filter by one of swarm, global, or local
+ * \return error code
+ */
+error_t docker_network_inspect(docker_context* ctx, docker_result** result,
+		docker_network_item** net, char* id_or_name, int verbose, char* scope) {
+	if (id_or_name == NULL) {
+		return E_INVALID_INPUT;
+	}
+	char* url = create_service_url_id_method(NETWORK, NULL, id_or_name);
+
+	struct array_list* params = array_list_new(
+			(void (*)(void *)) &free_url_param);
+	url_param* p;
+	if (verbose != 0) {
+		make_url_param(&p, "verbose", make_defensive_copy("true"));
+		array_list_add(params, p);
+	}
+	if (scope != NULL) {
+		make_url_param(&p, "scope", make_defensive_copy(scope));
+		array_list_add(params, p);
+	}
+
+	json_object *response_obj = NULL;
+	struct http_response_memory chunk;
+	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
+
+	//If network was returned parse the response and return the details.
+	if ((*result)->http_error_code == 200) {
+		docker_network_item* ni;
+
+		docker_network_ipam* ipam;
+		json_object* ipam_obj;
+		json_object_object_get_ex(response_obj, "IPAM", &ipam_obj);
+		make_docker_network_ipam(&ipam, get_attr_str(ipam_obj, "driver"));
+
+		json_object* ipam_options_obj;
+		json_object_object_get_ex(ipam_obj, "Options", &ipam_options_obj);
+		if (ipam_options_obj != NULL) {
+			json_object_object_foreach(ipam_options_obj, key, val)
+			{
+				pair* p;
+				make_pair(&p, key, (char*) json_object_get_string(val));
+				docker_network_ipam_options_add(ipam, p);
+			}
+		}
+
+		json_object* ipam_config_obj;
+		json_object_object_get_ex(ipam_obj, "Config", &ipam_config_obj);
+		int num_configs = json_object_array_length(ipam_config_obj);
+		if (ipam_config_obj != NULL) {
+			int num_configs = json_object_array_length(ipam_config_obj);
+			for (int j = 0; j < num_configs; j++) {
+
+				json_object* current_config_obj = json_object_array_get_idx(ipam_config_obj, j);
+				docker_network_ipam_config* config;
+				make_docker_network_ipam_config(&config,
+						get_attr_str(current_config_obj, "Subnet"),
+						get_attr_str(current_config_obj, "Gateway"));
+				docker_network_ipam_config_add(ipam, config);
+			}
+		}
+
+		make_docker_network_item(&ni, get_attr_str(response_obj, "Name"),
+				get_attr_str(response_obj, "Id"),
+				get_attr_unsigned_long(response_obj, "Created"),
+				get_attr_str(response_obj, "Scope"),
+				get_attr_str(response_obj, "Driver"),
+				get_attr_int(response_obj, "EnableIPv6"), ipam,
+				get_attr_int(response_obj, "Internal"),
+				get_attr_int(response_obj, "Attachable"),
+				get_attr_int(response_obj, "Ingress"));
+		json_object* labels_obj;
+		json_object_object_get_ex(response_obj, "Labels", &labels_obj);
+		if (labels_obj != NULL) {
+			json_object_object_foreach(labels_obj, key, val)
+			{
+				pair* p;
+				make_pair(&p, key, (char*) json_object_get_string(val));
+				docker_network_item_labels_add(ni, p);
+			}
+		}
+		json_object* options_obj;
+		json_object_object_get_ex(response_obj, "Options", &options_obj);
+		if (options_obj != NULL) {
+			json_object_object_foreach(options_obj, key, val)
+			{
+				pair* p;
+				make_pair(&p, key, (char*) json_object_get_string(val));
+				docker_network_item_options_add(ni, p);
+			}
+		}
+		json_object* containers_obj;
+		json_object_object_get_ex(response_obj, "Containers", &containers_obj);
+		if (containers_obj != NULL) {
+			json_object_object_foreach(containers_obj, key, val)
+			{
+				docker_network_container* container;
+				make_docker_network_container(&container,
+						get_attr_str(val, "Id"), get_attr_str(val, "Name"),
+						get_attr_str(val, "EndpointID"),
+						get_attr_str(val, "MacAddress"),
+						get_attr_str(val, "IPv4Address"),
+						get_attr_str(val, "IPv6Address"));
+				docker_network_item_containers_add(ni, container);
+			}
+		}
+
+		(*net) = ni;
+	}
+
+	free(params);
+	return E_SUCCESS;
+}

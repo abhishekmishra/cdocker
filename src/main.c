@@ -113,6 +113,10 @@ int main(int argc, char* argv[]) {
 		docker_log_info("Found network %s %s", ni->name, ni->id);
 	}
 
+	docker_network_item* net;
+	docker_network_inspect(ctx, &res, &net, "host", 0, NULL);
+	handle_error(res);
+
 	//Volume API
 
 	//create two test volumes

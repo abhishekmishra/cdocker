@@ -44,18 +44,28 @@ extern "C" {
 #define DOCKER_NETWORK_GETTER_ARR_GET_IDX(object, type, name) \
 		type docker_network_ ## object ## _ ## name ## _get_idx(docker_network_ ## object* object, int i);
 
+typedef struct docker_network_ipam_config_t {
+	char* subnet;
+	char* gateway;
+} docker_network_ipam_config;
+
+error_t make_docker_network_ipam_config(docker_network_ipam_config** config, char* subnet, char* gateway);
+void free_docker_network_ipam_config(docker_network_ipam_config* config);
+DOCKER_NETWORK_GETTER(ipam_config, char*, subnet)
+DOCKER_NETWORK_GETTER(ipam_config, char*, gateway)
+
 typedef struct docker_network_ipam_t {
 	char* driver;
-	struct array_list* config; //of ipam_config
+	struct array_list* config; //of docker_network_ipam_config
 	struct array_list* options;
 } docker_network_ipam;
 
 error_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver);
 void free_docker_network_ipam(docker_network_ipam* ipam);
 DOCKER_NETWORK_GETTER(ipam, char*, driver)
-DOCKER_NETWORK_GETTER_ARR_ADD(ipam, pair*, config)
+DOCKER_NETWORK_GETTER_ARR_ADD(ipam, docker_network_ipam_config*, config)
 DOCKER_NETWORK_GETTER_ARR_LEN(ipam, config)
-DOCKER_NETWORK_GETTER_ARR_GET_IDX(ipam, pair*, config)
+DOCKER_NETWORK_GETTER_ARR_GET_IDX(ipam, docker_network_ipam_config*, config)
 DOCKER_NETWORK_GETTER_ARR_ADD(ipam, pair*, options)
 DOCKER_NETWORK_GETTER_ARR_LEN(ipam, options)
 DOCKER_NETWORK_GETTER_ARR_GET_IDX(ipam, pair*, options)
@@ -139,6 +149,20 @@ error_t docker_networks_list(docker_context* ctx, docker_result** result,
 		struct array_list** networks, char* filter_driver, char* filter_id,
 		char* filter_label, char* filter_name, char* filter_scope,
 		char* filter_type);
+
+/**
+ * Inspect details of a network looked up by name or id.
+ *
+ * \param ctx docker context
+ * \param result the result object to be returned
+ * \param net details of the network returned
+ * \param id_or_name id or name of the network to be looked up
+ * \param verbose whether inspect output is verbose (0 means false, true otherwise)
+ * \param scope filter by one of swarm, global, or local
+ * \return error code
+ */
+error_t docker_network_inspect(docker_context* ctx, docker_result** result,
+		docker_network_item** net, char* id_or_name, int verbose, char* scope);
 
 #ifdef __cplusplus 
 }

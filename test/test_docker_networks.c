@@ -60,10 +60,18 @@ static void test_list_networks(void **state) {
 	assert_int_equal(res->http_error_code, 200);
 }
 
+static void test_inspect_network(void **state) {
+	docker_network_item* net;
+	docker_network_inspect(ctx, &res, &net, "host", 0, NULL);
+	handle_error(res);
+	assert_int_equal(res->http_error_code, 200);
+	assert_string_equal(net->name, "host");
+}
 
 int docker_networks_tests() {
 	const struct CMUnitTest tests[] = {
-	cmocka_unit_test(test_list_networks)
+	cmocka_unit_test(test_list_networks),
+	cmocka_unit_test(test_inspect_network)
  };
 	return cmocka_run_group_tests_name("docker images tests", tests,
 			group_setup, group_teardown);

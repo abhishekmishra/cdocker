@@ -82,7 +82,7 @@ char* url_param_value(url_param* p) {
 }
 
 void free_url_param(url_param* p) {
-	free(p->k);
+	//we do not free k as it is always a constant string.
 	free(p->v);
 	free(p);
 }
@@ -488,7 +488,6 @@ error_t docker_api_delete(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
-
 char* create_service_url_id_method(docker_object_type object, const char* id,
 		const char* method) {
 	char* object_url = NULL;
@@ -522,10 +521,8 @@ char* create_service_url_id_method(docker_object_type object, const char* id,
 					(strlen(object_url) + strlen(method) + 3) * sizeof(char));
 			sprintf(url, "%s/%s", object_url, method);
 			docker_log_debug("%s url is %s", method, url);
-		}
-		else {
-			url = (char*)malloc(
-				(strlen(object_url) + 1) * sizeof(char));
+		} else {
+			url = (char*) malloc((strlen(object_url) + 1) * sizeof(char));
 			sprintf(url, "%s", object_url);
 			docker_log_debug("url is %s", url);
 		}

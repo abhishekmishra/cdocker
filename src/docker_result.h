@@ -36,17 +36,7 @@
 extern "C" {
 #endif
 
-#define MODULE_API_EXPORTS
-#ifdef _WIN32
-#  ifdef MODULE_API_EXPORTS
-#    define MODULE_API __declspec(dllexport)
-#  else
-#    define MODULE_API __declspec(dllimport)
-#  endif
-#else
-#  define MODULE_API
-#endif
-
+#include "docker_common.h"
 #include <time.h>
 
 // The error code usage below based on suggestions at

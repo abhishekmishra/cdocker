@@ -131,6 +131,9 @@ int main(int argc, char* argv[]) {
 	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol02", "local", 1,
 			"clibdocker_test_label", "clibdocker_test_value");
 	handle_error(res);
+	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol03", "local", 1,
+			"clibdocker_test_label", "no_delete");
+	handle_error(res);
 
 	//list volumes
 	struct array_list* volumes;

@@ -14,18 +14,7 @@ extern "C" {
 
 #include "docker_result.h"
 #include "docker_connection_util.h"
-
-#define DOCKER_CONTAINER_GETTER(object, type, name) \
-		type docker_container_ ## object ## _get_ ## name(docker_container_ ## object* object);
-
-#define DOCKER_CONTAINER_GETTER_ARR_ADD(object, type, name) \
-		int docker_container_ ## object ## _ ## name ## _add(docker_container_ ## object* object, type data);
-
-#define DOCKER_CONTAINER_GETTER_ARR_LEN(object, name) \
-		int docker_container_ ## object ## _ ## name ## _length(docker_container_ ## object* object);
-
-#define DOCKER_CONTAINER_GETTER_ARR_GET_IDX(object, type, name) \
-		type docker_container_ ## object ## _ ## name ## _get_idx(docker_container_ ## object* object, int i);
+#include "docker_util.h"
 
 typedef enum docker_container_port_type_t {
 	CONTAINER_PORT_TYPE_TCP = 1
@@ -54,9 +43,9 @@ error_t make_docker_container_ports(docker_container_ports** ports, long priv,
 
 void free_docker_container_ports(docker_container_ports* ports);
 
-DOCKER_CONTAINER_GETTER(ports, long, public_port)
-DOCKER_CONTAINER_GETTER(ports, long, private_port)
-DOCKER_CONTAINER_GETTER(ports, docker_container_port_type, type)
+DOCKER_GETTER(container_ports, long, public_port)
+DOCKER_GETTER(container_ports, long, private_port)
+DOCKER_GETTER(container_ports, docker_container_port_type, type)
 
 /**
  * A container label struct: Key value pair.
@@ -79,8 +68,8 @@ error_t make_docker_container_label(docker_container_label** label,
 
 void free_docker_container_label(docker_container_label* label);
 
-DOCKER_CONTAINER_GETTER(label, char*, key)
-DOCKER_CONTAINER_GETTER(label, char*, value)
+DOCKER_GETTER(container_label, char*, key)
+DOCKER_GETTER(container_label, char*, value)
 
 /**
  * Struct for the container host config.
@@ -102,7 +91,7 @@ error_t make_docker_container_host_config(
 void free_docker_container_host_config(
 		docker_container_host_config* host_config);
 
-DOCKER_CONTAINER_GETTER(host_config, char*, network_mode)
+DOCKER_GETTER(container_host_config, char*, network_mode)
 
 /**
  * Struct for the network settings item
@@ -133,16 +122,16 @@ error_t make_docker_container_network_settings_item(
 void free_docker_container_network_settings_item(
 		docker_container_network_settings_item* settings_item);
 
-DOCKER_CONTAINER_GETTER(network_settings_item, char*, name)
-DOCKER_CONTAINER_GETTER(network_settings_item, char*, network_id)
-DOCKER_CONTAINER_GETTER(network_settings_item, char*, endpoint_id)
-DOCKER_CONTAINER_GETTER(network_settings_item, char*, gateway)
-DOCKER_CONTAINER_GETTER(network_settings_item, char*, ip_address)
-DOCKER_CONTAINER_GETTER(network_settings_item, int, ip_prefix_len)
-DOCKER_CONTAINER_GETTER(network_settings_item, char*, ipv6_gateway)
-DOCKER_CONTAINER_GETTER(network_settings_item, char*, global_ipv6_address)
-DOCKER_CONTAINER_GETTER(network_settings_item, int, global_ipv6_prefix_len)
-DOCKER_CONTAINER_GETTER(network_settings_item, char*, mac_address)
+DOCKER_GETTER(container_network_settings_item, char*, name)
+DOCKER_GETTER(container_network_settings_item, char*, network_id)
+DOCKER_GETTER(container_network_settings_item, char*, endpoint_id)
+DOCKER_GETTER(container_network_settings_item, char*, gateway)
+DOCKER_GETTER(container_network_settings_item, char*, ip_address)
+DOCKER_GETTER(container_network_settings_item, int, ip_prefix_len)
+DOCKER_GETTER(container_network_settings_item, char*, ipv6_gateway)
+DOCKER_GETTER(container_network_settings_item, char*, global_ipv6_address)
+DOCKER_GETTER(container_network_settings_item, int, global_ipv6_prefix_len)
+DOCKER_GETTER(container_network_settings_item, char*, mac_address)
 
 typedef struct docker_container_mount_t {
 	char* name;
@@ -165,14 +154,14 @@ error_t make_docker_container_mount(docker_container_mount** mount,
 
 void free_docker_container_mount(docker_container_mount* mount);
 
-DOCKER_CONTAINER_GETTER(mount, char*, name)
-DOCKER_CONTAINER_GETTER(mount, char*, type)
-DOCKER_CONTAINER_GETTER(mount, char*, source)
-DOCKER_CONTAINER_GETTER(mount, char*, destination)
-DOCKER_CONTAINER_GETTER(mount, char*, driver)
-DOCKER_CONTAINER_GETTER(mount, char*, mode)
-DOCKER_CONTAINER_GETTER(mount, int, rw)
-DOCKER_CONTAINER_GETTER(mount, char*, propagation)
+DOCKER_GETTER(container_mount, char*, name)
+DOCKER_GETTER(container_mount, char*, type)
+DOCKER_GETTER(container_mount, char*, source)
+DOCKER_GETTER(container_mount, char*, destination)
+DOCKER_GETTER(container_mount, char*, driver)
+DOCKER_GETTER(container_mount, char*, mode)
+DOCKER_GETTER(container_mount, int, rw)
+DOCKER_GETTER(container_mount, char*, propagation)
 
 typedef struct docker_container_list_item_t {
 	char* id;
@@ -204,37 +193,37 @@ error_t make_docker_containers_list_item(docker_container_list_item** item,
 
 void free_docker_container_list_item(docker_container_list_item* item);
 
-DOCKER_CONTAINER_GETTER(list_item, char*, id)
-DOCKER_CONTAINER_GETTER(list_item, char*, image)
-DOCKER_CONTAINER_GETTER(list_item, char*, image_id)
-DOCKER_CONTAINER_GETTER(list_item, char*, command)
-DOCKER_CONTAINER_GETTER(list_item, long long, created)
-DOCKER_CONTAINER_GETTER(list_item, char*, state)
-DOCKER_CONTAINER_GETTER(list_item, char*, status)
-DOCKER_CONTAINER_GETTER(list_item, long long, size_rw)
-DOCKER_CONTAINER_GETTER(list_item, long long, size_root_fs)
+DOCKER_GETTER(container_list_item, char*, id)
+DOCKER_GETTER(container_list_item, char*, image)
+DOCKER_GETTER(container_list_item, char*, image_id)
+DOCKER_GETTER(container_list_item, char*, command)
+DOCKER_GETTER(container_list_item, long long, created)
+DOCKER_GETTER(container_list_item, char*, state)
+DOCKER_GETTER(container_list_item, char*, status)
+DOCKER_GETTER(container_list_item, long long, size_rw)
+DOCKER_GETTER(container_list_item, long long, size_root_fs)
 
-DOCKER_CONTAINER_GETTER_ARR_ADD(list_item, char*, names)
-DOCKER_CONTAINER_GETTER_ARR_LEN(list_item, names)
-DOCKER_CONTAINER_GETTER_ARR_GET_IDX(list_item, char*, names)
+DOCKER_GETTER_ARR_ADD(container_list_item, char*, names)
+DOCKER_GETTER_ARR_LEN(container_list_item, names)
+DOCKER_GETTER_ARR_GET_IDX(container_list_item, char*, names)
 
-DOCKER_CONTAINER_GETTER_ARR_ADD(list_item, docker_container_ports*, ports)
-DOCKER_CONTAINER_GETTER_ARR_LEN(list_item, ports)
-DOCKER_CONTAINER_GETTER_ARR_GET_IDX(list_item, docker_container_ports*, ports)
+DOCKER_GETTER_ARR_ADD(container_list_item, docker_container_ports*, ports)
+DOCKER_GETTER_ARR_LEN(container_list_item, ports)
+DOCKER_GETTER_ARR_GET_IDX(container_list_item, docker_container_ports*, ports)
 
-DOCKER_CONTAINER_GETTER_ARR_ADD(list_item, docker_container_label*, labels)
-DOCKER_CONTAINER_GETTER_ARR_LEN(list_item, labels)
-DOCKER_CONTAINER_GETTER_ARR_GET_IDX(list_item, docker_container_label*, labels)
+DOCKER_GETTER_ARR_ADD(container_list_item, docker_container_label*, labels)
+DOCKER_GETTER_ARR_LEN(container_list_item, labels)
+DOCKER_GETTER_ARR_GET_IDX(container_list_item, docker_container_label*, labels)
 
-DOCKER_CONTAINER_GETTER_ARR_ADD(list_item,
+DOCKER_GETTER_ARR_ADD(container_list_item,
 		docker_container_network_settings_item*, network_settings)
-DOCKER_CONTAINER_GETTER_ARR_LEN(list_item, network_settings)
-DOCKER_CONTAINER_GETTER_ARR_GET_IDX(list_item,
+DOCKER_GETTER_ARR_LEN(container_list_item, network_settings)
+DOCKER_GETTER_ARR_GET_IDX(container_list_item,
 		docker_container_network_settings_item*, network_settings)
 
-DOCKER_CONTAINER_GETTER_ARR_ADD(list_item, docker_container_mount*, mounts)
-DOCKER_CONTAINER_GETTER_ARR_LEN(list_item, mounts)
-DOCKER_CONTAINER_GETTER_ARR_GET_IDX(list_item, docker_container_mount*, mounts)
+DOCKER_GETTER_ARR_ADD(container_list_item, docker_container_mount*, mounts)
+DOCKER_GETTER_ARR_LEN(container_list_item, mounts)
+DOCKER_GETTER_ARR_GET_IDX(container_list_item, docker_container_mount*, mounts)
 
 typedef struct docker_containers_list_filter_t {
 	char** ancestor;
@@ -438,8 +427,8 @@ error_t make_docker_container_change(docker_container_change** item,
 
 void free_docker_container_change(docker_container_change* item);
 
-DOCKER_CONTAINER_GETTER(change, char*, path)
-DOCKER_CONTAINER_GETTER(change, change_kind, kind)
+DOCKER_GETTER(container_change, char*, path)
+DOCKER_GETTER(container_change, change_kind, kind)
 
 typedef struct array_list docker_changes_list;
 

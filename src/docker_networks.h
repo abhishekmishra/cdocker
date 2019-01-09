@@ -32,18 +32,6 @@ extern "C" {
 #include "docker_util.h"
 #include "docker_connection_util.h"
 
-#define DOCKER_NETWORK_GETTER(object, type, name) \
-		type docker_network_ ## object ## _get_ ## name(docker_network_ ## object* object);
-
-#define DOCKER_NETWORK_GETTER_ARR_ADD(object, type, name) \
-		int docker_network_ ## object ## _ ## name ## _add(docker_network_ ## object* object, type data);
-
-#define DOCKER_NETWORK_GETTER_ARR_LEN(object, name) \
-		int docker_network_ ## object ## _ ## name ## _length(docker_network_ ## object* object);
-
-#define DOCKER_NETWORK_GETTER_ARR_GET_IDX(object, type, name) \
-		type docker_network_ ## object ## _ ## name ## _get_idx(docker_network_ ## object* object, int i);
-
 typedef struct docker_network_ipam_config_t {
 	char* subnet;
 	char* gateway;
@@ -51,8 +39,8 @@ typedef struct docker_network_ipam_config_t {
 
 error_t make_docker_network_ipam_config(docker_network_ipam_config** config, char* subnet, char* gateway);
 void free_docker_network_ipam_config(docker_network_ipam_config* config);
-DOCKER_NETWORK_GETTER(ipam_config, char*, subnet)
-DOCKER_NETWORK_GETTER(ipam_config, char*, gateway)
+DOCKER_GETTER(network_ipam_config, char*, subnet)
+DOCKER_GETTER(network_ipam_config, char*, gateway)
 
 typedef struct docker_network_ipam_t {
 	char* driver;
@@ -62,13 +50,13 @@ typedef struct docker_network_ipam_t {
 
 error_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver);
 void free_docker_network_ipam(docker_network_ipam* ipam);
-DOCKER_NETWORK_GETTER(ipam, char*, driver)
-DOCKER_NETWORK_GETTER_ARR_ADD(ipam, docker_network_ipam_config*, config)
-DOCKER_NETWORK_GETTER_ARR_LEN(ipam, config)
-DOCKER_NETWORK_GETTER_ARR_GET_IDX(ipam, docker_network_ipam_config*, config)
-DOCKER_NETWORK_GETTER_ARR_ADD(ipam, pair*, options)
-DOCKER_NETWORK_GETTER_ARR_LEN(ipam, options)
-DOCKER_NETWORK_GETTER_ARR_GET_IDX(ipam, pair*, options)
+DOCKER_GETTER(network_ipam, char*, driver)
+DOCKER_GETTER_ARR_ADD(network_ipam, docker_network_ipam_config*, config)
+DOCKER_GETTER_ARR_LEN(network_ipam, config)
+DOCKER_GETTER_ARR_GET_IDX(network_ipam, docker_network_ipam_config*, config)
+DOCKER_GETTER_ARR_ADD(network_ipam, pair*, options)
+DOCKER_GETTER_ARR_LEN(network_ipam, options)
+DOCKER_GETTER_ARR_GET_IDX(network_ipam, pair*, options)
 
 typedef struct docker_network_container_t {
 	char* id;
@@ -83,14 +71,14 @@ error_t make_docker_network_container(docker_network_container** container,
 		char* id, char* name, char* endpoint_id, char* mac_address,
 		char* ipv4_address, char* ipv6_address);
 void free_docker_network_container(docker_network_container* container);
-DOCKER_NETWORK_GETTER(container, char*, id)
-DOCKER_NETWORK_GETTER(container, char*, name)
-DOCKER_NETWORK_GETTER(container, char*, endpoint_id)
-DOCKER_NETWORK_GETTER(container, char*, mac_address)
-DOCKER_NETWORK_GETTER(container, char*, ipv4_address)
-DOCKER_NETWORK_GETTER(container, char*, ipv6_address)
+DOCKER_GETTER(network_container, char*, id)
+DOCKER_GETTER(network_container, char*, name)
+DOCKER_GETTER(network_container, char*, endpoint_id)
+DOCKER_GETTER(network_container, char*, mac_address)
+DOCKER_GETTER(network_container, char*, ipv4_address)
+DOCKER_GETTER(network_container, char*, ipv6_address)
 
-typedef struct docker_network_item_t {
+typedef struct docker_network_t {
 	char* name;
 	char* id;
 	time_t created;
@@ -104,31 +92,31 @@ typedef struct docker_network_item_t {
 	struct array_list* containers; // of docker_network_container
 	struct array_list* options; //of pair
 	struct array_list* labels; //of pair
-} docker_network_item;
+} docker_network;
 
-error_t make_docker_network_item(docker_network_item** network, char* name,
+error_t make_docker_network(docker_network** network, char* name,
 		char* id, time_t created, char* scope, char* driver, int enableIPv6,
 		docker_network_ipam* ipam, int internal, int attachable, int ingress);
-void free_docker_network_item(docker_network_item* network);
-DOCKER_NETWORK_GETTER(item, char*, name)
-DOCKER_NETWORK_GETTER(item, char*, id)
-DOCKER_NETWORK_GETTER(item, time_t, created)
-DOCKER_NETWORK_GETTER(item, char*, scope)
-DOCKER_NETWORK_GETTER(item, char*, driver)
-DOCKER_NETWORK_GETTER(item, int, enableIPv6)
-DOCKER_NETWORK_GETTER(item, docker_network_ipam*, ipam)
-DOCKER_NETWORK_GETTER(item, int, internal)
-DOCKER_NETWORK_GETTER(item, int, attachable)
-DOCKER_NETWORK_GETTER(item, int, ingress)
-DOCKER_NETWORK_GETTER_ARR_ADD(item, docker_network_container*, containers)
-DOCKER_NETWORK_GETTER_ARR_LEN(item, containers)
-DOCKER_NETWORK_GETTER_ARR_GET_IDX(item, docker_network_container*, containers)
-DOCKER_NETWORK_GETTER_ARR_ADD(item, pair*, options)
-DOCKER_NETWORK_GETTER_ARR_LEN(item, options)
-DOCKER_NETWORK_GETTER_ARR_GET_IDX(item, pair*, options)
-DOCKER_NETWORK_GETTER_ARR_ADD(item, pair*, labels)
-DOCKER_NETWORK_GETTER_ARR_LEN(item, labels)
-DOCKER_NETWORK_GETTER_ARR_GET_IDX(item, pair*, labels)
+void free_docker_network(docker_network* network);
+DOCKER_GETTER(network, char*, name)
+DOCKER_GETTER(network, char*, id)
+DOCKER_GETTER(network, time_t, created)
+DOCKER_GETTER(network, char*, scope)
+DOCKER_GETTER(network, char*, driver)
+DOCKER_GETTER(network, int, enableIPv6)
+DOCKER_GETTER(network, docker_network_ipam*, ipam)
+DOCKER_GETTER(network, int, internal)
+DOCKER_GETTER(network, int, attachable)
+DOCKER_GETTER(network, int, ingress)
+DOCKER_GETTER_ARR_ADD(network, docker_network_container*, containers)
+DOCKER_GETTER_ARR_LEN(network, containers)
+DOCKER_GETTER_ARR_GET_IDX(network, docker_network_container*, containers)
+DOCKER_GETTER_ARR_ADD(network, pair*, options)
+DOCKER_GETTER_ARR_LEN(network, options)
+DOCKER_GETTER_ARR_GET_IDX(network, pair*, options)
+DOCKER_GETTER_ARR_ADD(network, pair*, labels)
+DOCKER_GETTER_ARR_LEN(network, labels)
+DOCKER_GETTER_ARR_GET_IDX(network, pair*, labels)
 
 /**
  * List all networks which match the filters given.
@@ -162,7 +150,7 @@ error_t docker_networks_list(docker_context* ctx, docker_result** result,
  * \return error code
  */
 error_t docker_network_inspect(docker_context* ctx, docker_result** result,
-		docker_network_item** net, char* id_or_name, int verbose, char* scope);
+		docker_network** net, char* id_or_name, int verbose, char* scope);
 
 #ifdef __cplusplus 
 }

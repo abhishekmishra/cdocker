@@ -32,31 +32,9 @@
 #include "docker_util.h"
 #include "log.h"
 
-#define DOCKER_VOLUME_GETTER_IMPL(object, type, name) \
-	type docker_volume_ ## object ## _get_ ## name(docker_volume_ ## object* object) { \
-		return object->name; \
-	} \
-
-
-#define DOCKER_VOLUME_GETTER_ARR_ADD_IMPL(object, type, name) \
-	int docker_volume_ ## object ## _ ## name ## _add(docker_volume_ ## object* object, type data) { \
-		return array_list_add(object->name, (void*) data); \
-	} \
-
-#define DOCKER_VOLUME_GETTER_ARR_LEN_IMPL(object, name) \
-	int docker_volume_ ## object ## _ ## name ##_length(docker_volume_ ## object* object) { \
-		return array_list_length(object->name); \
-	} \
-
-#define DOCKER_VOLUME_GETTER_ARR_GET_IDX_IMPL(object, type, name) \
-	type docker_volume_ ## object ## _ ## name ## _get_idx(docker_volume_ ## object* object, int i) { \
-		return (type) array_list_get_idx(object->name, i); \
-	} \
-
-
-error_t make_docker_volume_item(docker_volume_item** volume, time_t created_at,
+error_t make_docker_volume(docker_volume** volume, time_t created_at,
 		char* name, char* driver, char* mountpoint, char* scope) {
-	(*volume) = (docker_volume_item*) malloc(sizeof(docker_volume_item));
+	(*volume) = (docker_volume*) malloc(sizeof(docker_volume));
 	if ((*volume) == NULL) {
 		return E_ALLOC_FAILED;
 	}
@@ -71,7 +49,7 @@ error_t make_docker_volume_item(docker_volume_item** volume, time_t created_at,
 	return E_SUCCESS;
 }
 
-void free_docker_volume_item(docker_volume_item* volume) {
+void free_docker_volume(docker_volume* volume) {
 	free(volume->name);
 	free(volume->driver);
 	free(volume->driver);
@@ -83,23 +61,23 @@ void free_docker_volume_item(docker_volume_item* volume) {
 	free(volume);
 }
 
-DOCKER_VOLUME_GETTER_IMPL(item, time_t, created_at)
-DOCKER_VOLUME_GETTER_IMPL(item, char*, name)
-DOCKER_VOLUME_GETTER_IMPL(item, char*, driver)
-DOCKER_VOLUME_GETTER_IMPL(item, char*, mountpoint)
-DOCKER_VOLUME_GETTER_IMPL(item, char*, scope)
+DOCKER_GETTER_IMPL(volume, time_t, created_at)
+DOCKER_GETTER_IMPL(volume, char*, name)
+DOCKER_GETTER_IMPL(volume, char*, driver)
+DOCKER_GETTER_IMPL(volume, char*, mountpoint)
+DOCKER_GETTER_IMPL(volume, char*, scope)
 
-DOCKER_VOLUME_GETTER_ARR_ADD_IMPL(item, pair*, labels)
-DOCKER_VOLUME_GETTER_ARR_LEN_IMPL(item, labels)
-DOCKER_VOLUME_GETTER_ARR_GET_IDX_IMPL(item, pair*, labels)
+DOCKER_GETTER_ARR_ADD_IMPL(volume, pair*, labels)
+DOCKER_GETTER_ARR_LEN_IMPL(volume, labels)
+DOCKER_GETTER_ARR_GET_IDX_IMPL(volume, pair*, labels)
 
-DOCKER_VOLUME_GETTER_ARR_ADD_IMPL(item, pair*, options)
-DOCKER_VOLUME_GETTER_ARR_LEN_IMPL(item, options)
-DOCKER_VOLUME_GETTER_ARR_GET_IDX_IMPL(item, pair*, options)
+DOCKER_GETTER_ARR_ADD_IMPL(volume, pair*, options)
+DOCKER_GETTER_ARR_LEN_IMPL(volume, options)
+DOCKER_GETTER_ARR_GET_IDX_IMPL(volume, pair*, options)
 
-DOCKER_VOLUME_GETTER_ARR_ADD_IMPL(item, pair*, status)
-DOCKER_VOLUME_GETTER_ARR_LEN_IMPL(item, status)
-DOCKER_VOLUME_GETTER_ARR_GET_IDX_IMPL(item, pair*, status)
+DOCKER_GETTER_ARR_ADD_IMPL(volume, pair*, status)
+DOCKER_GETTER_ARR_LEN_IMPL(volume, status)
+DOCKER_GETTER_ARR_GET_IDX_IMPL(volume, pair*, status)
 
 /**
  * Get the list of volumes, matching the filters provided.
@@ -145,7 +123,7 @@ error_t docker_volumes_list(docker_context* ctx, docker_result** result,
 	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
 
-	(*volumes) = array_list_new((void (*)(void *)) &free_docker_volume_item);
+	(*volumes) = array_list_new((void (*)(void *)) &free_docker_volume);
 	(*warnings) = array_list_new(&free);
 
 	json_object* volumes_obj;
@@ -155,13 +133,13 @@ error_t docker_volumes_list(docker_context* ctx, docker_result** result,
 		for (int i = 0; i < num_vols; i++) {
 			json_object* current_obj = json_object_array_get_idx(volumes_obj,
 					i);
-			docker_volume_item* vi;
+			docker_volume* vi;
 			struct tm ctime;
 			memset(&ctime, 0, sizeof(struct tm));
 			parse_iso_datetime(get_attr_str(current_obj, "CreatedAt"), &ctime);
 			time_t created_time = mktime(&ctime);
 
-			make_docker_volume_item(&vi, created_time,
+			make_docker_volume(&vi, created_time,
 					get_attr_str(current_obj, "Name"),
 					get_attr_str(current_obj, "Driver"),
 					get_attr_str(current_obj, "Mountpoint"),
@@ -174,7 +152,7 @@ error_t docker_volumes_list(docker_context* ctx, docker_result** result,
 				{
 					pair* p;
 					make_pair(&p, key, (char*) json_object_get_string(val));
-					docker_volume_item_labels_add(vi, p);
+					docker_volume_labels_add(vi, p);
 				}
 			}
 			json_object* options_obj;
@@ -184,7 +162,7 @@ error_t docker_volumes_list(docker_context* ctx, docker_result** result,
 				{
 					pair* p;
 					make_pair(&p, key1, (char*) json_object_get_string(val1));
-					docker_volume_item_options_add(vi, p);
+					docker_volume_options_add(vi, p);
 				}
 			}
 			array_list_add((*volumes), vi);
@@ -220,7 +198,7 @@ error_t docker_volumes_list(docker_context* ctx, docker_result** result,
  * \return error code
  */
 error_t docker_volume_create(docker_context* ctx, docker_result** result,
-		docker_volume_item** volume, char* name, char* driver, int num_labels,
+		docker_volume** volume, char* name, char* driver, int num_labels,
 		...) {
 	va_list kvargs;
 	va_start(kvargs, num_labels);
@@ -246,12 +224,12 @@ error_t docker_volume_create(docker_context* ctx, docker_result** result,
 
 	//If volume was created parse the response and return the details.
 	if ((*result)->http_error_code == 201) {
-		docker_volume_item* vi;
+		docker_volume* vi;
 		struct tm ctime;
 		memset(&ctime, 0, sizeof(struct tm));
 		parse_iso_datetime(get_attr_str(response_obj, "CreatedAt"), &ctime);
 		time_t created_time = mktime(&ctime);
-		make_docker_volume_item(&vi, created_time,
+		make_docker_volume(&vi, created_time,
 				get_attr_str(response_obj, "Name"),
 				get_attr_str(response_obj, "Driver"),
 				get_attr_str(response_obj, "Mountpoint"),
@@ -264,7 +242,7 @@ error_t docker_volume_create(docker_context* ctx, docker_result** result,
 			{
 				pair* p;
 				make_pair(&p, key, (char*) json_object_get_string(val));
-				docker_volume_item_labels_add(vi, p);
+				docker_volume_labels_add(vi, p);
 			}
 		}
 
@@ -275,7 +253,7 @@ error_t docker_volume_create(docker_context* ctx, docker_result** result,
 			{
 				pair* p;
 				make_pair(&p, key1, (char*) json_object_get_string(val1));
-				docker_volume_item_status_add(vi, p);
+				docker_volume_status_add(vi, p);
 			}
 		}
 		(*volume) = vi;
@@ -294,7 +272,7 @@ error_t docker_volume_create(docker_context* ctx, docker_result** result,
  * \return error code
  */
 error_t docker_volume_inspect(docker_context* ctx, docker_result** result,
-		docker_volume_item** volume, char* name) {
+		docker_volume** volume, char* name) {
 	if (name == NULL) {
 		return E_INVALID_INPUT;
 	}
@@ -305,12 +283,12 @@ error_t docker_volume_inspect(docker_context* ctx, docker_result** result,
 
 	//If volume was returned parse the response and return the details.
 	if ((*result)->http_error_code == 200) {
-		docker_volume_item* vi;
+		docker_volume* vi;
 		struct tm ctime;
 		memset(&ctime, 0, sizeof(struct tm));
 		parse_iso_datetime(get_attr_str(response_obj, "CreatedAt"), &ctime);
 		time_t created_time = mktime(&ctime);
-		make_docker_volume_item(&vi, created_time,
+		make_docker_volume(&vi, created_time,
 				get_attr_str(response_obj, "Name"),
 				get_attr_str(response_obj, "Driver"),
 				get_attr_str(response_obj, "Mountpoint"),
@@ -323,7 +301,7 @@ error_t docker_volume_inspect(docker_context* ctx, docker_result** result,
 			{
 				pair* p;
 				make_pair(&p, key, (char*) json_object_get_string(val));
-				docker_volume_item_labels_add(vi, p);
+				docker_volume_labels_add(vi, p);
 			}
 		}
 
@@ -334,7 +312,7 @@ error_t docker_volume_inspect(docker_context* ctx, docker_result** result,
 			{
 				pair* p;
 				make_pair(&p, key1, (char*) json_object_get_string(val1));
-				docker_volume_item_status_add(vi, p);
+				docker_volume_status_add(vi, p);
 			}
 		}
 		(*volume) = vi;

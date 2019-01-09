@@ -31,19 +31,7 @@ extern "C" {
 #include "docker_connection_util.h"
 #include "docker_util.h"
 
-#define DOCKER_VOLUME_GETTER(object, type, name) \
-		type docker_volume_ ## object ## _get_ ## name(docker_volume_ ## object* object);
-
-#define DOCKER_VOLUME_GETTER_ARR_ADD(object, type, name) \
-		int docker_volume_ ## object ## _ ## name ## _add(docker_volume_ ## object* object, type data);
-
-#define DOCKER_VOLUME_GETTER_ARR_LEN(object, name) \
-		int docker_volume_ ## object ## _ ## name ## _length(docker_volume_ ## object* object);
-
-#define DOCKER_VOLUME_GETTER_ARR_GET_IDX(object, type, name) \
-		type docker_volume_ ## object ## _ ## name ## _get_idx(docker_volume_ ## object* object, int i);
-
-typedef struct docker_volume_item_t {
+typedef struct docker_volume_t {
 	time_t created_at;
 	char* name;
 	char* driver;
@@ -52,30 +40,30 @@ typedef struct docker_volume_item_t {
 	char* scope;
 	struct array_list* options; //of pair
 	struct array_list* status; //of pair
-} docker_volume_item;
+} docker_volume;
 
-error_t make_docker_volume_item(docker_volume_item** volume, time_t created_at,
+error_t make_docker_volume(docker_volume** volume, time_t created_at,
 		char* name, char* driver, char* mountpoint, char* scope);
 
-void free_docker_volume_item(docker_volume_item* volume);
+void free_docker_volume(docker_volume* volume);
 
-DOCKER_VOLUME_GETTER(item, time_t, created_at)
-DOCKER_VOLUME_GETTER(item, char*, name)
-DOCKER_VOLUME_GETTER(item, char*, driver)
-DOCKER_VOLUME_GETTER(item, char*, mountpoint)
-DOCKER_VOLUME_GETTER(item, char*, scope)
+DOCKER_GETTER(volume, time_t, created_at)
+DOCKER_GETTER(volume, char*, name)
+DOCKER_GETTER(volume, char*, driver)
+DOCKER_GETTER(volume, char*, mountpoint)
+DOCKER_GETTER(volume, char*, scope)
 
-DOCKER_VOLUME_GETTER_ARR_ADD(item, pair*, labels)
-DOCKER_VOLUME_GETTER_ARR_LEN(item, labels)
-DOCKER_VOLUME_GETTER_ARR_GET_IDX(item, pair*, labels)
+DOCKER_GETTER_ARR_ADD(volume, pair*, labels)
+DOCKER_GETTER_ARR_LEN(volume, labels)
+DOCKER_GETTER_ARR_GET_IDX(volume, pair*, labels)
 
-DOCKER_VOLUME_GETTER_ARR_ADD(item, pair*, options)
-DOCKER_VOLUME_GETTER_ARR_LEN(item, options)
-DOCKER_VOLUME_GETTER_ARR_GET_IDX(item, pair*, options)
+DOCKER_GETTER_ARR_ADD(volume, pair*, options)
+DOCKER_GETTER_ARR_LEN(volume, options)
+DOCKER_GETTER_ARR_GET_IDX(volume, pair*, options)
 
-DOCKER_VOLUME_GETTER_ARR_ADD(item, pair*, status)
-DOCKER_VOLUME_GETTER_ARR_LEN(item, status)
-DOCKER_VOLUME_GETTER_ARR_GET_IDX(item, pair*, status)
+DOCKER_GETTER_ARR_ADD(volume, pair*, status)
+DOCKER_GETTER_ARR_LEN(volume, status)
+DOCKER_GETTER_ARR_GET_IDX(volume, pair*, status)
 
 /**
  * Get the list of volumes, matching the filters provided.
@@ -109,7 +97,7 @@ error_t docker_volumes_list(docker_context* ctx, docker_result** result,
  * \return error code
  */
 error_t docker_volume_create(docker_context* ctx, docker_result** result,
-		docker_volume_item** volume, char* name, char* driver, int num_labels,
+		docker_volume** volume, char* name, char* driver, int num_labels,
 		...);
 
 /**
@@ -122,7 +110,7 @@ error_t docker_volume_create(docker_context* ctx, docker_result** result,
  * \return error code
  */
 error_t docker_volume_inspect(docker_context* ctx, docker_result** result,
-		docker_volume_item** volume, char* name);
+		docker_volume** volume, char* name);
 
 /**
  * Delete the given volume (identified by name).

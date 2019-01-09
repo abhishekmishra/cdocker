@@ -49,7 +49,7 @@ static int group_teardown(void **state) {
 }
 
 static void test_create_volumes(void **state) {
-	docker_volume_item* vi = NULL;
+	docker_volume* vi = NULL;
 	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol01", "local", 1,
 			"clibdocker_test_label", "clibdocker_test_value");
 	handle_error(res);
@@ -67,7 +67,7 @@ static void test_create_volumes(void **state) {
 	assert_string_equal(vi->name, "clibdocker_test_vol02");
 }
 static void test_inspect_volume(void **state) {
-	docker_volume_item* vi = NULL;
+	docker_volume* vi = NULL;
 	docker_volume_inspect(ctx, &res, &vi, "clibdocker_test_vol01");
 	handle_error(res);
 	assert_int_equal(res->http_error_code, 200);

@@ -24,6 +24,59 @@
 #include "docker_images.h"
 #include "log.h"
 
+error_t make_docker_image(docker_image** image, char* id, char* parent_id,
+		time_t created, unsigned long size, unsigned long virtual_size,
+		unsigned long shared_size, unsigned long containers) {
+	(*image) = (docker_image*) malloc(sizeof(docker_image));
+	if ((*image) == NULL) {
+		return E_ALLOC_FAILED;
+	}
+
+	(*image)->id = make_defensive_copy(id);
+	(*image)->parent_id = make_defensive_copy(parent_id);
+	(*image)->created = created;
+	(*image)->size = size;
+	(*image)->virtual_size = virtual_size;
+	(*image)->shared_size = shared_size;
+	(*image)->containers = containers;
+
+	(*image)->repo_tags = array_list_new(&free);
+	(*image)->repo_digests = array_list_new(&free);
+	(*image)->labels = array_list_new((void (*)(void *)) &free_pair);
+
+	return E_SUCCESS;
+}
+
+void free_docker_image(docker_image* image) {
+	if (image) {
+		free(image->id);
+		free(image->parent_id);
+		array_list_free(image->repo_tags);
+		array_list_free(image->repo_digests);
+		array_list_free(image->labels);
+	}
+}
+
+DOCKER_GETTER_IMPL(image, char*, id)
+DOCKER_GETTER_IMPL(image, char*, parent_id)
+DOCKER_GETTER_IMPL(image, time_t, created)
+DOCKER_GETTER_IMPL(image, unsigned long, size)
+DOCKER_GETTER_IMPL(image, unsigned long, virtual_size)
+DOCKER_GETTER_IMPL(image, unsigned long, shared_size)
+DOCKER_GETTER_IMPL(image, unsigned long, containers)
+
+DOCKER_GETTER_ARR_ADD_IMPL(image, char*, repo_tags)
+DOCKER_GETTER_ARR_LEN_IMPL(image, repo_tags)
+DOCKER_GETTER_ARR_GET_IDX_IMPL(image, char*, repo_tags)
+
+DOCKER_GETTER_ARR_ADD_IMPL(image, char*, repo_digests)
+DOCKER_GETTER_ARR_LEN_IMPL(image, repo_digests)
+DOCKER_GETTER_ARR_GET_IDX_IMPL(image, char*, repo_digests)
+
+DOCKER_GETTER_ARR_ADD_IMPL(image, pair*, labels)
+DOCKER_GETTER_ARR_LEN_IMPL(image, labels)
+DOCKER_GETTER_ARR_GET_IDX_IMPL(image, pair*, labels)
+
 void parse_status_cb(char* msg, void* cb, void* cbargs) {
 	void (*status_cb)(docker_image_create_status*,
 			void*) = (void (*)(docker_image_create_status*, void*))cb;

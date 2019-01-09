@@ -54,14 +54,14 @@ static void test_list_networks(void **state) {
 	handle_error(res);
 	int len_nets = array_list_length(networks);
 	for(int i = 0; i < len_nets; i++) {
-		docker_network_item* ni = (docker_network_item*)array_list_get_idx(networks, i);
+		docker_network* ni = (docker_network*)array_list_get_idx(networks, i);
 		assert_non_null(ni->name);
 	}
 	assert_int_equal(res->http_error_code, 200);
 }
 
 static void test_inspect_network(void **state) {
-	docker_network_item* net;
+	docker_network* net;
 	docker_network_inspect(ctx, &res, &net, "host", 0, NULL);
 	handle_error(res);
 	assert_int_equal(res->http_error_code, 200);

@@ -37,27 +37,6 @@
 		filter->num_ ## name += 1; \
 	}
 
-#define DOCKER_CONTAINER_GETTER_IMPL(object, type, name) \
-	type docker_container_ ## object ## _get_ ## name(docker_container_ ## object* object) { \
-		return object->name; \
-	} \
-
-
-#define DOCKER_CONTAINER_GETTER_ARR_ADD_IMPL(object, type, name) \
-	int docker_container_ ## object ## _ ## name ## _add(docker_container_ ## object* object, type data) { \
-		return array_list_add(object->name, (void*) data); \
-	} \
-
-#define DOCKER_CONTAINER_GETTER_ARR_LEN_IMPL(object, name) \
-	int docker_container_ ## object ## _ ## name ##_length(docker_container_ ## object* object) { \
-		return array_list_length(object->name); \
-	} \
-
-#define DOCKER_CONTAINER_GETTER_ARR_GET_IDX_IMPL(object, type, name) \
-	type docker_container_ ## object ## _ ## name ## _get_idx(docker_container_ ## object* object, int i) { \
-		return (type) array_list_get_idx(object->name, i); \
-	} \
-
 /**
  * Create a docker_container_ports instance.
  *
@@ -85,9 +64,9 @@ void free_docker_container_ports(docker_container_ports* ports) {
 	free(ports);
 }
 
-DOCKER_CONTAINER_GETTER_IMPL(ports, long, public_port)
-DOCKER_CONTAINER_GETTER_IMPL(ports, long, private_port)
-DOCKER_CONTAINER_GETTER_IMPL(ports, docker_container_port_type, type)
+DOCKER_GETTER_IMPL(container_ports, long, public_port)
+DOCKER_GETTER_IMPL(container_ports, long, private_port)
+DOCKER_GETTER_IMPL(container_ports, docker_container_port_type, type)
 
 /**
  * Create a new label.
@@ -118,8 +97,8 @@ void free_docker_container_label(docker_container_label* label) {
 	free(label);
 }
 
-DOCKER_CONTAINER_GETTER_IMPL(label, char*, key)
-DOCKER_CONTAINER_GETTER_IMPL(label, char*, value)
+DOCKER_GETTER_IMPL(container_label, char*, key)
+DOCKER_GETTER_IMPL(container_label, char*, value)
 
 /**
  * Create a new host config
@@ -145,7 +124,7 @@ void free_docker_container_host_config(
 	free(host_config);
 }
 
-DOCKER_CONTAINER_GETTER_IMPL(host_config, char*, network_mode)
+DOCKER_GETTER_IMPL(container_host_config, char*, network_mode)
 
 /**
  * Create a new network settings item
@@ -185,16 +164,16 @@ void free_docker_container_network_settings_item(
 	free(settings_item);
 }
 
-DOCKER_CONTAINER_GETTER_IMPL(network_settings_item, char*, name)
-DOCKER_CONTAINER_GETTER_IMPL(network_settings_item, char*, network_id)
-DOCKER_CONTAINER_GETTER_IMPL(network_settings_item, char*, endpoint_id)
-DOCKER_CONTAINER_GETTER_IMPL(network_settings_item, char*, gateway)
-DOCKER_CONTAINER_GETTER_IMPL(network_settings_item, char*, ip_address)
-DOCKER_CONTAINER_GETTER_IMPL(network_settings_item, int, ip_prefix_len)
-DOCKER_CONTAINER_GETTER_IMPL(network_settings_item, char*, ipv6_gateway)
-DOCKER_CONTAINER_GETTER_IMPL(network_settings_item, char*, global_ipv6_address)
-DOCKER_CONTAINER_GETTER_IMPL(network_settings_item, int, global_ipv6_prefix_len)
-DOCKER_CONTAINER_GETTER_IMPL(network_settings_item, char*, mac_address)
+DOCKER_GETTER_IMPL(container_network_settings_item, char*, name)
+DOCKER_GETTER_IMPL(container_network_settings_item, char*, network_id)
+DOCKER_GETTER_IMPL(container_network_settings_item, char*, endpoint_id)
+DOCKER_GETTER_IMPL(container_network_settings_item, char*, gateway)
+DOCKER_GETTER_IMPL(container_network_settings_item, char*, ip_address)
+DOCKER_GETTER_IMPL(container_network_settings_item, int, ip_prefix_len)
+DOCKER_GETTER_IMPL(container_network_settings_item, char*, ipv6_gateway)
+DOCKER_GETTER_IMPL(container_network_settings_item, char*, global_ipv6_address)
+DOCKER_GETTER_IMPL(container_network_settings_item, int, global_ipv6_prefix_len)
+DOCKER_GETTER_IMPL(container_network_settings_item, char*, mac_address)
 
 /**
  * Create a new mount object
@@ -227,14 +206,14 @@ void free_docker_container_mount(docker_container_mount* mount) {
 	free(mount);
 }
 
-DOCKER_CONTAINER_GETTER_IMPL(mount, char*, name)
-DOCKER_CONTAINER_GETTER_IMPL(mount, char*, type)
-DOCKER_CONTAINER_GETTER_IMPL(mount, char*, source)
-DOCKER_CONTAINER_GETTER_IMPL(mount, char*, destination)
-DOCKER_CONTAINER_GETTER_IMPL(mount, char*, driver)
-DOCKER_CONTAINER_GETTER_IMPL(mount, char*, mode)
-DOCKER_CONTAINER_GETTER_IMPL(mount, int, rw)
-DOCKER_CONTAINER_GETTER_IMPL(mount, char*, propagation)
+DOCKER_GETTER_IMPL(container_mount, char*, name)
+DOCKER_GETTER_IMPL(container_mount, char*, type)
+DOCKER_GETTER_IMPL(container_mount, char*, source)
+DOCKER_GETTER_IMPL(container_mount, char*, destination)
+DOCKER_GETTER_IMPL(container_mount, char*, driver)
+DOCKER_GETTER_IMPL(container_mount, char*, mode)
+DOCKER_GETTER_IMPL(container_mount, int, rw)
+DOCKER_GETTER_IMPL(container_mount, char*, propagation)
 
 /**
  * Create a new containers list item.
@@ -285,39 +264,39 @@ void free_docker_container_list_item(docker_container_list_item* item) {
 	array_list_free(item->mounts);
 }
 
-DOCKER_CONTAINER_GETTER_IMPL(list_item, char*, id)
-DOCKER_CONTAINER_GETTER_IMPL(list_item, char*, image)
-DOCKER_CONTAINER_GETTER_IMPL(list_item, char*, image_id)
-DOCKER_CONTAINER_GETTER_IMPL(list_item, char*, command)
-DOCKER_CONTAINER_GETTER_IMPL(list_item, long long, created)
-DOCKER_CONTAINER_GETTER_IMPL(list_item, char*, state)
-DOCKER_CONTAINER_GETTER_IMPL(list_item, char*, status)
-DOCKER_CONTAINER_GETTER_IMPL(list_item, long long, size_rw)
-DOCKER_CONTAINER_GETTER_IMPL(list_item, long long, size_root_fs)
+DOCKER_GETTER_IMPL(container_list_item, char*, id)
+DOCKER_GETTER_IMPL(container_list_item, char*, image)
+DOCKER_GETTER_IMPL(container_list_item, char*, image_id)
+DOCKER_GETTER_IMPL(container_list_item, char*, command)
+DOCKER_GETTER_IMPL(container_list_item, long long, created)
+DOCKER_GETTER_IMPL(container_list_item, char*, state)
+DOCKER_GETTER_IMPL(container_list_item, char*, status)
+DOCKER_GETTER_IMPL(container_list_item, long long, size_rw)
+DOCKER_GETTER_IMPL(container_list_item, long long, size_root_fs)
 
-DOCKER_CONTAINER_GETTER_ARR_ADD_IMPL(list_item, char*, names)
-DOCKER_CONTAINER_GETTER_ARR_LEN_IMPL(list_item, names)
-DOCKER_CONTAINER_GETTER_ARR_GET_IDX_IMPL(list_item, char*, names)
+DOCKER_GETTER_ARR_ADD_IMPL(container_list_item, char*, names)
+DOCKER_GETTER_ARR_LEN_IMPL(container_list_item, names)
+DOCKER_GETTER_ARR_GET_IDX_IMPL(container_list_item, char*, names)
 
-DOCKER_CONTAINER_GETTER_ARR_ADD_IMPL(list_item, docker_container_ports*, ports)
-DOCKER_CONTAINER_GETTER_ARR_LEN_IMPL(list_item, ports)
-DOCKER_CONTAINER_GETTER_ARR_GET_IDX_IMPL(list_item, docker_container_ports*,
+DOCKER_GETTER_ARR_ADD_IMPL(container_list_item, docker_container_ports*, ports)
+DOCKER_GETTER_ARR_LEN_IMPL(container_list_item, ports)
+DOCKER_GETTER_ARR_GET_IDX_IMPL(container_list_item, docker_container_ports*,
 		ports)
 
-DOCKER_CONTAINER_GETTER_ARR_ADD_IMPL(list_item, docker_container_label*, labels)
-DOCKER_CONTAINER_GETTER_ARR_LEN_IMPL(list_item, labels)
-DOCKER_CONTAINER_GETTER_ARR_GET_IDX_IMPL(list_item, docker_container_label*,
+DOCKER_GETTER_ARR_ADD_IMPL(container_list_item, docker_container_label*, labels)
+DOCKER_GETTER_ARR_LEN_IMPL(container_list_item, labels)
+DOCKER_GETTER_ARR_GET_IDX_IMPL(container_list_item, docker_container_label*,
 		labels)
 
-DOCKER_CONTAINER_GETTER_ARR_ADD_IMPL(list_item,
+DOCKER_GETTER_ARR_ADD_IMPL(container_list_item,
 		docker_container_network_settings_item*, network_settings)
-DOCKER_CONTAINER_GETTER_ARR_LEN_IMPL(list_item, network_settings)
-DOCKER_CONTAINER_GETTER_ARR_GET_IDX_IMPL(list_item,
+DOCKER_GETTER_ARR_LEN_IMPL(container_list_item, network_settings)
+DOCKER_GETTER_ARR_GET_IDX_IMPL(container_list_item,
 		docker_container_network_settings_item*, network_settings)
 
-DOCKER_CONTAINER_GETTER_ARR_ADD_IMPL(list_item, docker_container_mount*, mounts)
-DOCKER_CONTAINER_GETTER_ARR_LEN_IMPL(list_item, mounts)
-DOCKER_CONTAINER_GETTER_ARR_GET_IDX_IMPL(list_item, docker_container_mount*,
+DOCKER_GETTER_ARR_ADD_IMPL(container_list_item, docker_container_mount*, mounts)
+DOCKER_GETTER_ARR_LEN_IMPL(container_list_item, mounts)
+DOCKER_GETTER_ARR_GET_IDX_IMPL(container_list_item, docker_container_mount*,
 		mounts)
 
 error_t make_docker_containers_list_filter(docker_containers_list_filter** f) {
@@ -852,8 +831,8 @@ void free_docker_container_change(docker_container_change* item) {
 	}
 }
 
-DOCKER_CONTAINER_GETTER_IMPL(change, char*, path)
-DOCKER_CONTAINER_GETTER_IMPL(change, change_kind, kind)
+DOCKER_GETTER_IMPL(container_change, char*, path)
+DOCKER_GETTER_IMPL(container_change, change_kind, kind)
 
 error_t make_docker_changes_list(docker_changes_list** changes_list) {
 	(*changes_list) = array_list_new(

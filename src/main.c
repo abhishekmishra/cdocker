@@ -108,19 +108,19 @@ int main(int argc, char* argv[]) {
 	handle_error(res);
 	int len_nets = array_list_length(networks);
 	for (int i = 0; i < len_nets; i++) {
-		docker_network_item* ni = (docker_network_item*) array_list_get_idx(
+		docker_network* ni = (docker_network*) array_list_get_idx(
 				networks, i);
 		docker_log_info("Found network %s %s", ni->name, ni->id);
 	}
 
-	docker_network_item* net;
+	docker_network* net;
 	docker_network_inspect(ctx, &res, &net, "host", 0, NULL);
 	handle_error(res);
 
 	//Volume API
 
 	//create two test volumes
-	docker_volume_item* vi = NULL;
+	docker_volume* vi = NULL;
 	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol01", "local", 1,
 			"clibdocker_test_label", "clibdocker_test_value");
 	handle_error(res);
@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
 	handle_error(res);
 	int len_vols = array_list_length(volumes);
 	for (int i = 0; i < len_vols; i++) {
-		docker_volume_item* vi = (docker_volume_item*) array_list_get_idx(
+		docker_volume* vi = (docker_volume*) array_list_get_idx(
 				volumes, i);
 		docker_log_info("Found volume %s at %s", vi->name, vi->mountpoint);
 	}

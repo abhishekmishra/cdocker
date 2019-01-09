@@ -30,6 +30,45 @@ extern "C" {
 #include "docker_result.h"
 #include "docker_util.h"
 
+typedef struct docker_image_t {
+	char* id;
+	char* parent_id;
+	struct array_list* repo_tags;
+	struct array_list* repo_digests;
+	time_t created;
+	unsigned long size;
+	unsigned long virtual_size;
+	unsigned long shared_size;
+	struct array_list* labels; //of pair
+	unsigned long containers;
+} docker_image;
+
+error_t make_docker_image(docker_image** image, char* id, char* parent_id,
+		time_t created, unsigned long size, unsigned long virtual_size,
+		unsigned long shared_size, unsigned long containers);
+
+void free_docker_image(docker_image* image);
+
+DOCKER_GETTER(image, char*, id)
+DOCKER_GETTER(image, char*, parent_id)
+DOCKER_GETTER(image, time_t, created)
+DOCKER_GETTER(image, unsigned long, size)
+DOCKER_GETTER(image, unsigned long, virtual_size)
+DOCKER_GETTER(image, unsigned long, shared_size)
+DOCKER_GETTER(image, unsigned long, containers)
+
+DOCKER_GETTER_ARR_ADD(image, char*, repo_tags)
+DOCKER_GETTER_ARR_LEN(image, repo_tags)
+DOCKER_GETTER_ARR_GET_IDX(image, char*, repo_tags)
+
+DOCKER_GETTER_ARR_ADD(image, char*, repo_digests)
+DOCKER_GETTER_ARR_LEN(image, repo_digests)
+DOCKER_GETTER_ARR_GET_IDX(image, char*, repo_digests)
+
+DOCKER_GETTER_ARR_ADD(image, pair*, labels)
+DOCKER_GETTER_ARR_LEN(image, labels)
+DOCKER_GETTER_ARR_GET_IDX(image, pair*, labels)
+
 typedef struct docker_image_create_status_t {
 	char* status;
 	char* id;

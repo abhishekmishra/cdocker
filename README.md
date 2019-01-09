@@ -59,7 +59,7 @@ At some point I will write corresponding asynchronous API endpoints (but not pla
 
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
 |---------------------|-----------------|---------------|-------|--------------------------|
-|List Images          |             :x: |           :x: |   :x: |                          |
+|List Images          |            :ok: |          :ok: |  :ok: |                          |
 |Build Image          |             :x: |           :x: |   :x: |                          |
 |Delete builder cache |             :x: |           :x: |   :x: |                          |
 |Create Image         |            :ok: |          :ok: |  :ok: | Create from source is pending                         |

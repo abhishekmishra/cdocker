@@ -77,6 +77,115 @@ DOCKER_GETTER_ARR_ADD_IMPL(image, pair*, labels)
 DOCKER_GETTER_ARR_LEN_IMPL(image, labels)
 DOCKER_GETTER_ARR_GET_IDX_IMPL(image, pair*, labels)
 
+/**
+ * List images matching the filters.
+ *
+ * \param ctx docker context
+ * \param result the docker result object to return
+ * \param images array list of images to be returned
+ * \param all (0 indicates false, true otherwise)
+ * \param digests add repo digests in return object (0 is false, true otherwise)
+ * \param filter_before <image-name>[:<tag>], <image id> or <image@digest>
+ * \param filter_dangling 0 is false, true otherwise.
+ * \param filter_label label=key or label="key=value" of an image label
+ * \param filter_reference <image-name>[:<tag>]
+ * \param filter_since <image-name>[:<tag>], <image id> or <image@digest>
+ * \return error code
+ */
+error_t docker_images_list(docker_context* ctx, docker_result** result,
+		struct array_list** images, int all, int digests, char* filter_before,
+		int filter_dangling, char* filter_label, char* filter_reference,
+		char* filter_since) {
+	char* url = create_service_url_id_method(IMAGE, NULL, "json");
+
+	struct array_list* params = array_list_new(
+			(void (*)(void *)) &free_url_param);
+	url_param* p;
+	json_object* filters = make_filters();
+	if (filter_before != NULL) {
+		add_filter_str(filters, "before", make_defensive_copy(filter_before));
+	}
+	if (filter_dangling != 0) {
+		add_filter_str(filters, "dangling", make_defensive_copy("true"));
+	}
+	if (filter_label != NULL) {
+		add_filter_str(filters, "label", make_defensive_copy(filter_label));
+	}
+	if (filter_reference != NULL) {
+		add_filter_str(filters, "reference",
+				make_defensive_copy(filter_reference));
+	}
+	if (filter_since != NULL) {
+		add_filter_str(filters, "since", make_defensive_copy(filter_since));
+	}
+	make_url_param(&p, "filters", (char *) filters_to_str(filters));
+	array_list_add(params, p);
+
+	if (all != 0) {
+		make_url_param(&p, "all", "true");
+		array_list_add(params, p);
+	}
+
+	if (digests != 0) {
+		make_url_param(&p, "digests", "true");
+		array_list_add(params, p);
+	}
+
+	json_object *response_obj = NULL;
+	struct http_response_memory chunk;
+	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
+
+	(*images) = array_list_new((void (*)(void *)) &free_docker_image);
+	int num_imgs = json_object_array_length(response_obj);
+
+	for (int i = 0; i < num_imgs; i++) {
+		json_object* current_obj = json_object_array_get_idx(response_obj, i);
+		docker_image* img;
+
+		make_docker_image(&img, get_attr_str(current_obj, "Id"),
+				get_attr_str(current_obj, "ParentId"),
+				get_attr_unsigned_long(current_obj, "Created"),
+				get_attr_unsigned_long(current_obj, "Size"),
+				get_attr_unsigned_long(current_obj, "VirtualSize"),
+				get_attr_unsigned_long(current_obj, "SharedSize"),
+				get_attr_unsigned_long(current_obj, "Containers"));
+
+		json_object* labels_obj;
+		json_object_object_get_ex(current_obj, "Labels", &labels_obj);
+		if (labels_obj != NULL) {
+			json_object_object_foreach(labels_obj, key, val)
+			{
+				pair* p;
+				make_pair(&p, key, (char*) json_object_get_string(val));
+				docker_image_labels_add(img, p);
+			}
+		}
+		json_object* repo_tags_obj;
+		json_object_object_get_ex(current_obj, "RepoTags", &repo_tags_obj);
+		if (repo_tags_obj != NULL) {
+			int num_repo_tags = json_object_array_length(repo_tags_obj);
+			for (int j = 0; j < num_repo_tags; j++) {
+				docker_image_repo_tags_add(img,
+						(char*) json_object_get_string(
+								json_object_array_get_idx(repo_tags_obj, j)));
+			}
+		}
+		json_object* repo_digests_obj;
+		json_object_object_get_ex(current_obj, "RepoDigests", &repo_digests_obj);
+		if (repo_digests_obj != NULL) {
+			int num_repo_digests = json_object_array_length(repo_digests_obj);
+			for (int j = 0; j < num_repo_digests; j++) {
+				docker_image_repo_digests_add(img,
+						(char*) json_object_get_string(
+								json_object_array_get_idx(repo_digests_obj, j)));
+			}
+		}
+		array_list_add((*images), img);
+	}
+
+	return E_SUCCESS;
+}
+
 void parse_status_cb(char* msg, void* cb, void* cbargs) {
 	void (*status_cb)(docker_image_create_status*,
 			void*) = (void (*)(docker_image_create_status*, void*))cb;

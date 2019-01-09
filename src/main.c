@@ -96,10 +96,24 @@ int main(int argc, char* argv[]) {
 //	docker_system_version(ctx, &res, &version);
 //	handle_error(res);
 //
-//	//Images API
-//	docker_image_create_from_image_cb(ctx, &res, &log_pull_message, NULL,
-//			"alpine", "latest", NULL);
-//	handle_error(res);
+	//Images API
+	docker_image_create_from_image_cb(ctx, &res, &log_pull_message, NULL,
+			"alpine", "latest", NULL);
+	handle_error(res);
+
+	struct array_list* images;
+	docker_images_list(ctx, &res, &images, 0, 1, NULL, 0, NULL, NULL, NULL);
+	handle_error(res);
+	int len_images = array_list_length(images);
+	for (int i = 0; i < len_images; i++) {
+		docker_image* img = (docker_image*) array_list_get_idx(images, i);
+		docker_log_info("Found image %s", img->id);
+		int len_repo_tags = array_list_length(img->repo_tags);
+		for (int j = 0; j < len_repo_tags; j++) {
+			docker_log_info("With tag %s",
+					(char* ) array_list_get_idx(img->repo_tags, j));
+		}
+	}
 
 //Network API
 	struct array_list* networks;
@@ -108,8 +122,7 @@ int main(int argc, char* argv[]) {
 	handle_error(res);
 	int len_nets = array_list_length(networks);
 	for (int i = 0; i < len_nets; i++) {
-		docker_network* ni = (docker_network*) array_list_get_idx(
-				networks, i);
+		docker_network* ni = (docker_network*) array_list_get_idx(networks, i);
 		docker_log_info("Found network %s %s", ni->name, ni->id);
 	}
 
@@ -142,8 +155,7 @@ int main(int argc, char* argv[]) {
 	handle_error(res);
 	int len_vols = array_list_length(volumes);
 	for (int i = 0; i < len_vols; i++) {
-		docker_volume* vi = (docker_volume*) array_list_get_idx(
-				volumes, i);
+		docker_volume* vi = (docker_volume*) array_list_get_idx(volumes, i);
 		docker_log_info("Found volume %s at %s", vi->name, vi->mountpoint);
 	}
 

@@ -69,6 +69,26 @@ DOCKER_GETTER_ARR_ADD(image, pair*, labels)
 DOCKER_GETTER_ARR_LEN(image, labels)
 DOCKER_GETTER_ARR_GET_IDX(image, pair*, labels)
 
+/**
+ * List images matching the filters.
+ *
+ * \param ctx docker context
+ * \param result the docker result object to return
+ * \param images array list of images to be returned
+ * \param all (0 indicates false, true otherwise)
+ * \param digests add repo digests in return object (0 is false, true otherwise)
+ * \param filter_before <image-name>[:<tag>], <image id> or <image@digest>
+ * \param filter_dangling 0 is false, true otherwise.
+ * \param filter_label label=key or label="key=value" of an image label
+ * \param filter_reference <image-name>[:<tag>]
+ * \param filter_since <image-name>[:<tag>], <image id> or <image@digest>
+ * \return error code
+ */
+error_t docker_images_list(docker_context* ctx, docker_result** result,
+		struct array_list** images, int all, int digests, char* filter_before,
+		int filter_dangling, char* filter_label, char* filter_reference,
+		char* filter_since);
+
 typedef struct docker_image_create_status_t {
 	char* status;
 	char* id;

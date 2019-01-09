@@ -227,11 +227,9 @@ error_t docker_networks_list(docker_context* ctx, docker_result** result,
 
 		json_object* ipam_config_obj;
 		json_object_object_get_ex(ipam_obj, "Config", &ipam_config_obj);
-		int num_configs = json_object_array_length(ipam_config_obj);
 		if (ipam_config_obj != NULL) {
 			int num_configs = json_object_array_length(ipam_config_obj);
 			for (int j = 0; j < num_configs; j++) {
-
 				json_object* current_config_obj = json_object_array_get_idx(ipam_config_obj, j);
 				docker_network_ipam_config* config;
 				make_docker_network_ipam_config(&config,

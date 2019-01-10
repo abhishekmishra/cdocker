@@ -893,6 +893,170 @@ error_t docker_container_changes(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
+/////// Docker container stats
+
+error_t make_docker_container_pids_stats(
+		docker_container_pids_stats** pids_stats, int current) {
+	(*pids_stats) = (docker_container_pids_stats*) malloc(
+			sizeof(docker_container_pids_stats));
+	if (!(*pids_stats)) {
+		return E_ALLOC_FAILED;
+	}
+	(*pids_stats)->current = current;
+	return E_SUCCESS;
+}
+
+void free_docker_container_pids_stats(docker_container_pids_stats* pids) {
+	free(pids);
+}
+
+DOCKER_GETTER_IMPL(container_pids_stats, int, current)
+
+
+error_t make_docker_container_net_stats(docker_container_net_stats** net_stats,
+		char* name, unsigned long rx_bytes, unsigned long rx_dropped,
+		unsigned long rx_errors, unsigned long rx_packets,
+		unsigned long tx_bytes, unsigned long tx_dropped,
+		unsigned long tx_errors, unsigned long tx_packets) {
+	(*net_stats) = (docker_container_net_stats*) malloc(
+			sizeof(docker_container_net_stats));
+	if (!(*net_stats)) {
+		return E_ALLOC_FAILED;
+	}
+	(*net_stats)->name = make_defensive_copy(name);
+	(*net_stats)->rx_bytes = rx_bytes;
+	(*net_stats)->rx_dropped = rx_dropped;
+	(*net_stats)->rx_errors = rx_errors;
+	(*net_stats)->rx_packets = rx_packets;
+	(*net_stats)->tx_bytes = tx_bytes;
+	(*net_stats)->tx_dropped = tx_dropped;
+	(*net_stats)->tx_errors = tx_errors;
+	(*net_stats)->tx_packets = tx_packets;
+	return E_SUCCESS;
+}
+
+void free_docker_container_net_stats(docker_container_net_stats* net_stats) {
+	free(net_stats->name);
+	free(net_stats);
+}
+
+DOCKER_GETTER_IMPL(container_net_stats, char*, name)
+DOCKER_GETTER_IMPL(container_net_stats, unsigned long, rx_bytes)
+DOCKER_GETTER_IMPL(container_net_stats, unsigned long, rx_dropped)
+DOCKER_GETTER_IMPL(container_net_stats, unsigned long, rx_errors)
+DOCKER_GETTER_IMPL(container_net_stats, unsigned long, rx_packets)
+DOCKER_GETTER_IMPL(container_net_stats, unsigned long, tx_bytes)
+DOCKER_GETTER_IMPL(container_net_stats, unsigned long, tx_dropped)
+DOCKER_GETTER_IMPL(container_net_stats, unsigned long, tx_errors)
+DOCKER_GETTER_IMPL(container_net_stats, unsigned long, tx_packets)
+
+error_t make_docker_container_mem_stats(docker_container_mem_stats** mem_stats,
+		unsigned long max_usage, unsigned long usage, unsigned long failcnt,
+		unsigned long limit) {
+	(*mem_stats) = (docker_container_mem_stats*)malloc(sizeof(docker_container_mem_stats));
+	if(!(*mem_stats)) {
+		return E_ALLOC_FAILED;
+	}
+	(*mem_stats)->max_usage = max_usage;
+	(*mem_stats)->usage = usage;
+	(*mem_stats)->failcnt = failcnt;
+	(*mem_stats)->limit = limit;
+	return E_SUCCESS;
+}
+
+void free_docker_container_mem_stats(docker_container_mem_stats* mem_stats) {
+	free(mem_stats);
+}
+
+DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, max_usage)
+DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, usage)
+DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, failcnt)
+DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, limit)
+
+
+error_t make_docker_container_cpu_stats(docker_container_cpu_stats** cpu_stats,
+		unsigned long total_usage, unsigned long usage_in_usermode,
+		unsigned long usage_in_kernelmode, unsigned long system_cpu_usage) {
+	(*cpu_stats) = (docker_container_cpu_stats*)malloc(sizeof(docker_container_cpu_stats));
+	if(!(*cpu_stats)) {
+		return E_ALLOC_FAILED;
+	}
+	(*cpu_stats)->total_usage = total_usage;
+	(*cpu_stats)->usage_in_usermode = usage_in_usermode;
+	(*cpu_stats)->usage_in_kernelmode = usage_in_kernelmode;
+	(*cpu_stats)->system_cpu_usage = system_cpu_usage;
+	(*cpu_stats)->percpu_usage = array_list_new(NULL);
+	return E_SUCCESS;
+}
+
+void free_docker_container_cpu_stats(docker_container_cpu_stats* cpu_stats) {
+	free(cpu_stats->percpu_usage);
+	free(cpu_stats);
+}
+
+DOCKER_GETTER_IMPL(container_cpu_stats, unsigned long, total_usage)
+DOCKER_GETTER_IMPL(container_cpu_stats, unsigned long, usage_in_usermode)
+DOCKER_GETTER_IMPL(container_cpu_stats, unsigned long, usage_in_kernelmode)
+DOCKER_GETTER_IMPL(container_cpu_stats, unsigned long, system_cpu_usage)
+
+DOCKER_GETTER_ARR_ADD_IMPL(container_cpu_stats, unsigned long, percpu_usage)
+DOCKER_GETTER_ARR_LEN_IMPL(container_cpu_stats, percpu_usage)
+DOCKER_GETTER_ARR_GET_IDX_IMPL(container_cpu_stats, unsigned long, percpu_usage)
+
+error_t make_docker_container_stats(docker_container_stats** stats,
+		struct tm* read, docker_container_pids_stats* pid_stats,
+		docker_container_mem_stats* mem_stats,
+		docker_container_cpu_stats* cpu_stats,
+		docker_container_cpu_stats* precpu_stats) {
+	(*stats) = (docker_container_stats*) malloc(sizeof(docker_container_stats));
+	if (!(*stats)) {
+		return E_ALLOC_FAILED;
+	}
+	(*stats)->read = read;
+	(*stats)->pid_stats = pid_stats;
+	(*stats)->mem_stats = mem_stats;
+	(*stats)->cpu_stats = cpu_stats;
+	(*stats)->precpu_stats = precpu_stats;
+	(*stats)->net_stats_list = array_list_new((void (*)(void *))&free_docker_container_net_stats);
+	return E_SUCCESS;
+}
+
+void free_docker_container_stats(docker_container_stats* stats) {
+	free(stats->read);
+	free(stats->pid_stats);
+	free(stats->mem_stats);
+	free(stats->cpu_stats);
+	free(stats->precpu_stats);
+	array_list_free(stats->net_stats_list);
+	free(stats);
+}
+
+DOCKER_GETTER_IMPL(container_stats, struct tm*, read)
+DOCKER_GETTER_IMPL(container_stats, docker_container_pids_stats*, pid_stats)
+DOCKER_GETTER_IMPL(container_stats, docker_container_mem_stats*, mem_stats)
+DOCKER_GETTER_IMPL(container_stats, docker_container_cpu_stats*, cpu_stats)
+DOCKER_GETTER_IMPL(container_stats, docker_container_cpu_stats*, precpu_stats)
+
+DOCKER_GETTER_ARR_ADD_IMPL(container_stats, docker_container_net_stats*,
+		net_stats_list)
+DOCKER_GETTER_ARR_LEN_IMPL(container_stats, net_stats_list)
+DOCKER_GETTER_ARR_GET_IDX_IMPL(container_stats, docker_container_net_stats*,
+		net_stats_list)
+
+/**
+ * Get stats from a running container. (the non-streaming version)
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param stats the stats object to return
+ * \param id container id
+ * \return error code
+ */
+error_t docker_container_get_stats(docker_context* ctx, docker_result** result,
+		docker_container_stats** stats, char* id) {
+	//TODO: implementation
+	return E_SUCCESS;
+}
 /**
  * Start a container
  *

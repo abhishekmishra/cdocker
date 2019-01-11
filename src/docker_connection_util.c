@@ -63,7 +63,7 @@ bool is_unix_socket(char* url) {
 	return false;
 }
 
-error_t make_url_param(url_param** p, char* key, char* value) {
+d_err_t make_url_param(url_param** p, char* key, char* value) {
 	(*p) = (url_param*) malloc(sizeof(url_param));
 	if (!(*p)) {
 		return E_ALLOC_FAILED;
@@ -87,7 +87,7 @@ void free_url_param(url_param* p) {
 	free(p);
 }
 
-error_t make_docker_context_url(docker_context** ctx, const char* url) {
+d_err_t make_docker_context_url(docker_context** ctx, const char* url) {
 	(*ctx) = (docker_context*) malloc(sizeof(docker_context));
 	if (!(*ctx)) {
 		return E_ALLOC_FAILED;
@@ -103,7 +103,7 @@ error_t make_docker_context_url(docker_context** ctx, const char* url) {
 	return E_SUCCESS;
 }
 
-error_t make_docker_context_socket(docker_context** ctx, const char* socket) {
+d_err_t make_docker_context_socket(docker_context** ctx, const char* socket) {
 	(*ctx) = (docker_context*) malloc(sizeof(docker_context));
 	if (!(*ctx)) {
 		return E_ALLOC_FAILED;
@@ -122,7 +122,7 @@ error_t make_docker_context_socket(docker_context** ctx, const char* socket) {
 /**
  * Free docker context memory.
  */
-error_t free_docker_context(docker_context** ctx) {
+d_err_t free_docker_context(docker_context** ctx) {
 	if ((*ctx)) {
 		if ((*ctx)->socket) {
 			free((*ctx)->socket);
@@ -210,7 +210,7 @@ static size_t write_memory_callback(void *contents, size_t size, size_t nmemb,
 	return realsize;
 }
 
-error_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
+d_err_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 		struct array_list* url_params) {
 	if (ctx->socket != NULL) {
 		curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, ctx->socket);
@@ -276,14 +276,14 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 	}
 }
 
-error_t docker_api_post(docker_context* ctx, docker_result** result,
+d_err_t docker_api_post(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params, const char* post_data,
 		struct http_response_memory *chunk, json_object** response) {
 	return docker_api_post_cb(ctx, result, api_url, url_params, post_data,
 			chunk, response, NULL, NULL, NULL);
 }
 
-error_t docker_api_post_cb(docker_context* ctx, docker_result** result,
+d_err_t docker_api_post_cb(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params, const char* post_data,
 		struct http_response_memory *chunk, json_object** response,
 		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
@@ -355,14 +355,14 @@ error_t docker_api_post_cb(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
-error_t docker_api_get(docker_context* ctx, docker_result** result,
+d_err_t docker_api_get(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params,
 		struct http_response_memory *chunk, json_object** response) {
 	return docker_api_get_cb(ctx, result, api_url, url_params, chunk, response,
 	NULL, NULL, NULL);
 }
 
-error_t docker_api_get_cb(docker_context* ctx, docker_result** result,
+d_err_t docker_api_get_cb(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params,
 		struct http_response_memory *chunk, json_object** response,
 		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
@@ -425,7 +425,7 @@ error_t docker_api_get_cb(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
-error_t docker_api_delete(docker_context* ctx, docker_result** result,
+d_err_t docker_api_delete(docker_context* ctx, docker_result** result,
 		char* api_url, struct array_list* url_params,
 		struct http_response_memory *chunk, json_object** response) {
 	CURL *curl;

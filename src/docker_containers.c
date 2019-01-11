@@ -46,7 +46,7 @@
  * \param type port type
  * \return error code
  */
-error_t make_docker_container_ports(docker_container_ports** ports, long priv,
+d_err_t make_docker_container_ports(docker_container_ports** ports, long priv,
 		long pub, char* type) {
 	(*ports) = (docker_container_ports*) malloc(sizeof(docker_container_ports));
 	if (!(*ports)) {
@@ -76,7 +76,7 @@ DOCKER_GETTER_IMPL(container_ports, docker_container_port_type, type)
  * \param value
  * \return error code
  */
-error_t make_docker_container_label(docker_container_label** label,
+d_err_t make_docker_container_label(docker_container_label** label,
 		const char* key, const char* value) {
 	(*label) = (docker_container_label*) malloc(sizeof(docker_container_label));
 	if (!(*label)) {
@@ -107,7 +107,7 @@ DOCKER_GETTER_IMPL(container_label, char*, value)
  * \param network_mode
  * \return error_code
  */
-error_t make_docker_container_host_config(
+d_err_t make_docker_container_host_config(
 		docker_container_host_config** host_config, const char* network_mode) {
 	(*host_config) = (docker_container_host_config*) malloc(
 			sizeof(docker_container_host_config));
@@ -129,7 +129,7 @@ DOCKER_GETTER_IMPL(container_host_config, char*, network_mode)
 /**
  * Create a new network settings item
  */
-error_t make_docker_container_network_settings_item(
+d_err_t make_docker_container_network_settings_item(
 		docker_container_network_settings_item** item, const char* name,
 		const char* network_id, const char* endpoint_id, const char* gateway,
 		const char* ip_address, int ip_prefix_len, const char* ipv6_gateway,
@@ -178,7 +178,7 @@ DOCKER_GETTER_IMPL(container_network_settings_item, char*, mac_address)
 /**
  * Create a new mount object
  */
-error_t make_docker_container_mount(docker_container_mount** mount,
+d_err_t make_docker_container_mount(docker_container_mount** mount,
 		const char* name, const char* type, const char* source,
 		const char* destination, const char* driver, const char* mode,
 		const int rw, const char* propagation) {
@@ -218,7 +218,7 @@ DOCKER_GETTER_IMPL(container_mount, char*, propagation)
 /**
  * Create a new containers list item.
  */
-error_t make_docker_containers_list_item(docker_container_list_item** item,
+d_err_t make_docker_containers_list_item(docker_container_list_item** item,
 		const char* id, const char* image, const char* image_id,
 		const char* command, const long long created, const char* state,
 		const char* status, const long long size_rw,
@@ -299,7 +299,7 @@ DOCKER_GETTER_ARR_LEN_IMPL(container_list_item, mounts)
 DOCKER_GETTER_ARR_GET_IDX_IMPL(container_list_item, docker_container_mount*,
 		mounts)
 
-error_t make_docker_containers_list_filter(docker_containers_list_filter** f) {
+d_err_t make_docker_containers_list_filter(docker_containers_list_filter** f) {
 	(*f) = (docker_containers_list_filter*) malloc(
 			sizeof(docker_containers_list_filter));
 	(*f)->num_ancestor = 0;
@@ -358,7 +358,7 @@ void extract_filter_field_int(json_object* fobj, char* filter_name,
 	}
 }
 
-error_t make_docker_containers_list(docker_containers_list** container_list) {
+d_err_t make_docker_containers_list(docker_containers_list** container_list) {
 	(*container_list) = array_list_new(
 			(void (*)(void *)) &free_docker_container_list_item);
 	return E_SUCCESS;
@@ -378,7 +378,7 @@ int docker_containers_list_length(docker_containers_list* list) {
 	return array_list_length(list);
 }
 
-error_t docker_container_list(docker_context* ctx, docker_result** result,
+d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 		docker_containers_list** container_list, int all, int limit, int size,
 		docker_containers_list_filter* filters) {
 	char* method = "json";
@@ -583,7 +583,7 @@ error_t docker_container_list(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
-error_t make_docker_create_container_params(
+d_err_t make_docker_create_container_params(
 		docker_create_container_params** params) {
 	docker_create_container_params* p =
 			(docker_create_container_params*) malloc(
@@ -622,7 +622,7 @@ error_t make_docker_create_container_params(
 	return E_SUCCESS;
 }
 
-error_t docker_create_container(docker_context* ctx, docker_result** result,
+d_err_t docker_create_container(docker_context* ctx, docker_result** result,
 		char** id, docker_create_container_params* params) {
 	(*id) = NULL;
 	json_object *response_obj = NULL;
@@ -667,7 +667,7 @@ error_t docker_create_container(docker_context* ctx, docker_result** result,
  * \param ps_args is the command line args to be passed to the ps command (can be NULL).
  * \return the process details as docker_container_ps list.
  */
-error_t docker_process_list_container(docker_context* ctx,
+d_err_t docker_process_list_container(docker_context* ctx,
 		docker_result** result, docker_container_ps**ps, char* id,
 		char* process_args) {
 	char* url = create_service_url_id_method(CONTAINER, id, "top");
@@ -734,7 +734,7 @@ error_t docker_process_list_container(docker_context* ctx,
  * \param tail 0 means all, any positive number indicates the number of lines to fetch.
  * \return error code
  */
-error_t docker_container_logs(docker_context* ctx, docker_result** result,
+d_err_t docker_container_logs(docker_context* ctx, docker_result** result,
 		char** log, char* id, int follow, int std_out, int std_err, long since,
 		long until, int timestamps, int tail) {
 	char* method = "/logs";
@@ -800,7 +800,7 @@ error_t docker_container_logs(docker_context* ctx, docker_result** result,
 /**
  * Create a new container change item.
  */
-error_t make_docker_container_change(docker_container_change** item,
+d_err_t make_docker_container_change(docker_container_change** item,
 		const char* path, const char* kind) {
 	(*item) = (docker_container_change*) malloc(
 			sizeof(docker_container_change));
@@ -834,7 +834,7 @@ void free_docker_container_change(docker_container_change* item) {
 DOCKER_GETTER_IMPL(container_change, char*, path)
 DOCKER_GETTER_IMPL(container_change, change_kind, kind)
 
-error_t make_docker_changes_list(docker_changes_list** changes_list) {
+d_err_t make_docker_changes_list(docker_changes_list** changes_list) {
 	(*changes_list) = array_list_new(
 			(void (*)(void *)) &free_docker_container_change);
 	return E_SUCCESS;
@@ -862,7 +862,7 @@ int docker_changes_list_length(docker_changes_list* list) {
  * \param id container id
  * \return error code
  */
-error_t docker_container_changes(docker_context* ctx, docker_result** result,
+d_err_t docker_container_changes(docker_context* ctx, docker_result** result,
 		docker_changes_list** changes, char* id) {
 	char* url = create_service_url_id_method(CONTAINER, id, "changes");
 
@@ -895,7 +895,7 @@ error_t docker_container_changes(docker_context* ctx, docker_result** result,
 
 /////// Docker container stats
 
-error_t make_docker_container_pids_stats(
+d_err_t make_docker_container_pids_stats(
 		docker_container_pids_stats** pids_stats, int current) {
 	(*pids_stats) = (docker_container_pids_stats*) malloc(
 			sizeof(docker_container_pids_stats));
@@ -912,7 +912,7 @@ void free_docker_container_pids_stats(docker_container_pids_stats* pids) {
 
 DOCKER_GETTER_IMPL(container_pids_stats, int, current)
 
-error_t make_docker_container_net_stats(docker_container_net_stats** net_stats,
+d_err_t make_docker_container_net_stats(docker_container_net_stats** net_stats,
 		char* name, unsigned long rx_bytes, unsigned long rx_dropped,
 		unsigned long rx_errors, unsigned long rx_packets,
 		unsigned long tx_bytes, unsigned long tx_dropped,
@@ -949,7 +949,7 @@ DOCKER_GETTER_IMPL(container_net_stats, unsigned long, tx_dropped)
 DOCKER_GETTER_IMPL(container_net_stats, unsigned long, tx_errors)
 DOCKER_GETTER_IMPL(container_net_stats, unsigned long, tx_packets)
 
-error_t make_docker_container_mem_stats(docker_container_mem_stats** mem_stats,
+d_err_t make_docker_container_mem_stats(docker_container_mem_stats** mem_stats,
 		unsigned long max_usage, unsigned long usage, unsigned long failcnt,
 		unsigned long limit) {
 	(*mem_stats) = (docker_container_mem_stats*) malloc(
@@ -973,7 +973,7 @@ DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, usage)
 DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, failcnt)
 DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, limit)
 
-error_t make_docker_container_cpu_stats(docker_container_cpu_stats** cpu_stats,
+d_err_t make_docker_container_cpu_stats(docker_container_cpu_stats** cpu_stats,
 		unsigned long total_usage, unsigned long usage_in_usermode,
 		unsigned long usage_in_kernelmode, unsigned long system_cpu_usage,
 		int online_cpus) {
@@ -1006,7 +1006,7 @@ DOCKER_GETTER_ARR_ADD_IMPL(container_cpu_stats, unsigned long, percpu_usage)
 DOCKER_GETTER_ARR_LEN_IMPL(container_cpu_stats, percpu_usage)
 DOCKER_GETTER_ARR_GET_IDX_IMPL(container_cpu_stats, unsigned long, percpu_usage)
 
-error_t make_docker_container_stats(docker_container_stats** stats,
+d_err_t make_docker_container_stats(docker_container_stats** stats,
 		struct tm* read, docker_container_pids_stats* pid_stats,
 		docker_container_mem_stats* mem_stats,
 		docker_container_cpu_stats* cpu_stats,
@@ -1093,7 +1093,7 @@ void get_cpu_stats_for_name(json_object* response_obj, char* stats_obj_name,
  * \param id container id
  * \return error code
  */
-error_t docker_container_get_stats(docker_context* ctx, docker_result** result,
+d_err_t docker_container_get_stats(docker_context* ctx, docker_result** result,
 		docker_container_stats** stats, char* id) {
 	if (id == NULL || strlen(id) == 0) {
 		return E_INVALID_INPUT;
@@ -1258,7 +1258,7 @@ void parse_container_stats_cb(char* msg, void* cb, void* cbargs) {
  * \param id container id
  * \return error code
  */
-error_t docker_container_get_stats_cb(docker_context* ctx,
+d_err_t docker_container_get_stats_cb(docker_context* ctx,
 		docker_result** result,
 		void (*docker_container_stats_cb)(docker_container_stats* stats,
 				void* cbargs), void* cbargs, char* id) {
@@ -1311,7 +1311,7 @@ float docker_container_stats_get_cpu_usage_percent(
  * \param detachKeys (optional, pass NULL if not needed) key combination for detaching a container.
  * \return error code
  */
-error_t docker_start_container(docker_context* ctx, docker_result** result,
+d_err_t docker_start_container(docker_context* ctx, docker_result** result,
 		char* id, char* detachKeys) {
 	char* url = create_service_url_id_method(CONTAINER, id, "start");
 
@@ -1341,7 +1341,7 @@ error_t docker_start_container(docker_context* ctx, docker_result** result,
  * \param t number of seconds to wait before killing the container
  * \return error code
  */
-error_t docker_stop_container(docker_context* ctx, docker_result** result,
+d_err_t docker_stop_container(docker_context* ctx, docker_result** result,
 		char* id, int t) {
 	char* url = create_service_url_id_method(CONTAINER, id, "stop");
 
@@ -1382,7 +1382,7 @@ error_t docker_stop_container(docker_context* ctx, docker_result** result,
  * \param t number of seconds to wait before killing the container
  * \return error code
  */
-error_t docker_restart_container(docker_context* ctx, docker_result** result,
+d_err_t docker_restart_container(docker_context* ctx, docker_result** result,
 		char* id, int t) {
 	char* url = create_service_url_id_method(CONTAINER, id, "restart");
 
@@ -1418,7 +1418,7 @@ error_t docker_restart_container(docker_context* ctx, docker_result** result,
  * \param signal (optional - NULL for default i.e. SIGKILL) signal name to send
  * \return error code
  */
-error_t docker_kill_container(docker_context* ctx, docker_result** result,
+d_err_t docker_kill_container(docker_context* ctx, docker_result** result,
 		char* id, char* signal) {
 	char* url = create_service_url_id_method(CONTAINER, id, "kill");
 
@@ -1456,7 +1456,7 @@ error_t docker_kill_container(docker_context* ctx, docker_result** result,
  * \param name new name for the container
  * \return error code
  */
-error_t docker_rename_container(docker_context* ctx, docker_result** result,
+d_err_t docker_rename_container(docker_context* ctx, docker_result** result,
 		char* id, char* name) {
 	char* url = create_service_url_id_method(CONTAINER, id, "rename");
 
@@ -1493,7 +1493,7 @@ error_t docker_rename_container(docker_context* ctx, docker_result** result,
  * \param id container id
  * \return error code
  */
-error_t docker_pause_container(docker_context* ctx, docker_result** result,
+d_err_t docker_pause_container(docker_context* ctx, docker_result** result,
 		char* id) {
 	char* url = create_service_url_id_method(CONTAINER, id, "pause");
 
@@ -1515,7 +1515,7 @@ error_t docker_pause_container(docker_context* ctx, docker_result** result,
  * \param id container id
  * \return error code
  */
-error_t docker_unpause_container(docker_context* ctx, docker_result** result,
+d_err_t docker_unpause_container(docker_context* ctx, docker_result** result,
 		char* id) {
 	char* url = create_service_url_id_method(CONTAINER, id, "unpause");
 
@@ -1538,7 +1538,7 @@ error_t docker_unpause_container(docker_context* ctx, docker_result** result,
  * \param condition (optional - NULL for default "not-running") condition to wait for
  * \return error code
  */
-error_t docker_wait_container(docker_context* ctx, docker_result** result,
+d_err_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id, char* condition) {
 	char* url = create_service_url_id_method(CONTAINER, id, "wait");
 

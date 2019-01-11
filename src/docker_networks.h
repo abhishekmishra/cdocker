@@ -37,7 +37,7 @@ typedef struct docker_network_ipam_config_t {
 	char* gateway;
 } docker_network_ipam_config;
 
-error_t make_docker_network_ipam_config(docker_network_ipam_config** config, char* subnet, char* gateway);
+d_err_t make_docker_network_ipam_config(docker_network_ipam_config** config, char* subnet, char* gateway);
 void free_docker_network_ipam_config(docker_network_ipam_config* config);
 DOCKER_GETTER(network_ipam_config, char*, subnet)
 DOCKER_GETTER(network_ipam_config, char*, gateway)
@@ -48,7 +48,7 @@ typedef struct docker_network_ipam_t {
 	struct array_list* options;
 } docker_network_ipam;
 
-error_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver);
+d_err_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver);
 void free_docker_network_ipam(docker_network_ipam* ipam);
 DOCKER_GETTER(network_ipam, char*, driver)
 DOCKER_GETTER_ARR_ADD(network_ipam, docker_network_ipam_config*, config)
@@ -67,7 +67,7 @@ typedef struct docker_network_container_t {
 	char* ipv6_address;
 } docker_network_container;
 
-error_t make_docker_network_container(docker_network_container** container,
+d_err_t make_docker_network_container(docker_network_container** container,
 		char* id, char* name, char* endpoint_id, char* mac_address,
 		char* ipv4_address, char* ipv6_address);
 void free_docker_network_container(docker_network_container* container);
@@ -94,7 +94,7 @@ typedef struct docker_network_t {
 	struct array_list* labels; //of pair
 } docker_network;
 
-error_t make_docker_network(docker_network** network, char* name,
+d_err_t make_docker_network(docker_network** network, char* name,
 		char* id, time_t created, char* scope, char* driver, int enableIPv6,
 		docker_network_ipam* ipam, int internal, int attachable, int ingress);
 void free_docker_network(docker_network* network);
@@ -133,7 +133,7 @@ DOCKER_GETTER_ARR_GET_IDX(network, pair*, labels)
  * \param filter_type
  * \return error code
  */
-error_t docker_networks_list(docker_context* ctx, docker_result** result,
+d_err_t docker_networks_list(docker_context* ctx, docker_result** result,
 		struct array_list** networks, char* filter_driver, char* filter_id,
 		char* filter_label, char* filter_name, char* filter_scope,
 		char* filter_type);
@@ -149,7 +149,7 @@ error_t docker_networks_list(docker_context* ctx, docker_result** result,
  * \param scope filter by one of swarm, global, or local
  * \return error code
  */
-error_t docker_network_inspect(docker_context* ctx, docker_result** result,
+d_err_t docker_network_inspect(docker_context* ctx, docker_result** result,
 		docker_network** net, char* id_or_name, int verbose, char* scope);
 
 #ifdef __cplusplus 

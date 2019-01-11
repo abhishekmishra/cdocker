@@ -43,7 +43,7 @@ typedef struct docker_image_t {
 	unsigned long containers;
 } docker_image;
 
-error_t make_docker_image(docker_image** image, char* id, char* parent_id,
+d_err_t make_docker_image(docker_image** image, char* id, char* parent_id,
 		time_t created, unsigned long size, unsigned long virtual_size,
 		unsigned long shared_size, unsigned long containers);
 
@@ -84,7 +84,7 @@ DOCKER_GETTER_ARR_GET_IDX(image, pair*, labels)
  * \param filter_since <image-name>[:<tag>], <image id> or <image@digest>
  * \return error code
  */
-error_t docker_images_list(docker_context* ctx, docker_result** result,
+d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 		struct array_list** images, int all, int digests, char* filter_before,
 		int filter_dangling, char* filter_label, char* filter_reference,
 		char* filter_since);
@@ -107,7 +107,7 @@ typedef struct docker_image_create_status_t {
  * 			default is ""
  * \return error code.
  */
-error_t docker_image_create_from_image(docker_context* ctx,
+d_err_t docker_image_create_from_image(docker_context* ctx,
 		docker_result** result, char* from_image, char* tag, char* platform);
 
 /**
@@ -124,7 +124,7 @@ error_t docker_image_create_from_image(docker_context* ctx,
  * 			default is ""
  * \return error code.
  */
-error_t docker_image_create_from_image_cb(docker_context* ctx,
+d_err_t docker_image_create_from_image_cb(docker_context* ctx,
 		docker_result** result,
 		void (*status_cb)(docker_image_create_status*, void* cbargs),
 		void* cbargs, char* from_image, char* tag, char* platform);

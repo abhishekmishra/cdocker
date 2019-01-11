@@ -39,7 +39,7 @@
  * Makes a defensive copy of all provided data so that they can be
  * freed after creation of the result.
  */
-error_t make_docker_result(docker_result** result, error_t error_code,
+d_err_t make_docker_result(docker_result** result, d_err_t error_code,
 		long http_error_code, const char* url, const char* message) {
 	(*result) = (docker_result*) malloc(sizeof(docker_result));
 	if ((*result) == NULL) {
@@ -95,7 +95,7 @@ void free_docker_result(docker_result** result) {
  * Use this method instead of direct attribute access to the struct to ensure
  * future changes to the struct will not break your code.
  */
-error_t get_docker_result_error(docker_result* result) {
+d_err_t get_docker_result_error(docker_result* result) {
 	return result->error_code;
 }
 

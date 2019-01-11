@@ -23,7 +23,7 @@
 #include "docker_networks.h"
 #include "docker_util.h"
 
-error_t make_docker_network_ipam_config(docker_network_ipam_config** config,
+d_err_t make_docker_network_ipam_config(docker_network_ipam_config** config,
 		char* subnet, char* gateway) {
 	(*config) = (docker_network_ipam_config*) malloc(
 			sizeof(docker_network_ipam_config*));
@@ -44,7 +44,7 @@ void free_docker_network_ipam_config(docker_network_ipam_config* config) {
 DOCKER_GETTER_IMPL(network_ipam_config, char*, subnet)
 DOCKER_GETTER_IMPL(network_ipam_config, char*, gateway)
 
-error_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver) {
+d_err_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver) {
 	(*ipam) = (docker_network_ipam*) malloc(sizeof(docker_network_ipam));
 	if ((*ipam) == NULL) {
 		return E_ALLOC_FAILED;
@@ -72,7 +72,7 @@ DOCKER_GETTER_ARR_ADD_IMPL(network_ipam, pair*, options)
 DOCKER_GETTER_ARR_LEN_IMPL(network_ipam, options)
 DOCKER_GETTER_ARR_GET_IDX_IMPL(network_ipam, pair*, options)
 
-error_t make_docker_network_container(docker_network_container** container,
+d_err_t make_docker_network_container(docker_network_container** container,
 		char* id, char* name, char* endpoint_id, char* mac_address,
 		char* ipv4_address, char* ipv6_address) {
 	(*container) = (docker_network_container*) malloc(
@@ -106,7 +106,7 @@ DOCKER_GETTER_IMPL(network_container, char*, mac_address)
 DOCKER_GETTER_IMPL(network_container, char*, ipv4_address)
 DOCKER_GETTER_IMPL(network_container, char*, ipv6_address)
 
-error_t make_docker_network(docker_network** network, char* name,
+d_err_t make_docker_network(docker_network** network, char* name,
 		char* id, time_t created, char* scope, char* driver, int enableIPv6,
 		docker_network_ipam* ipam, int internal, int attachable, int ingress) {
 	(*network) = (docker_network*) malloc(sizeof(docker_network));
@@ -168,7 +168,7 @@ DOCKER_GETTER_ARR_GET_IDX_IMPL(network, pair*, labels)
  * \param filter_type
  * \return error code
  */
-error_t docker_networks_list(docker_context* ctx, docker_result** result,
+d_err_t docker_networks_list(docker_context* ctx, docker_result** result,
 		struct array_list** networks, char* filter_driver, char* filter_id,
 		char* filter_label, char* filter_name, char* filter_scope,
 		char* filter_type) {
@@ -301,7 +301,7 @@ error_t docker_networks_list(docker_context* ctx, docker_result** result,
  * \param scope filter by one of swarm, global, or local
  * \return error code
  */
-error_t docker_network_inspect(docker_context* ctx, docker_result** result,
+d_err_t docker_network_inspect(docker_context* ctx, docker_result** result,
 		docker_network** net, char* id_or_name, int verbose, char* scope) {
 	if (id_or_name == NULL) {
 		return E_INVALID_INPUT;

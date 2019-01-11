@@ -110,7 +110,7 @@ long long get_attr_long_long(json_object* obj, char* name) {
 	return attr;
 }
 
-error_t make_pair(pair** p, char* key, char* value) {
+d_err_t make_pair(pair** p, char* key, char* value) {
 	pair* p1 = (pair*) calloc(1, sizeof(pair));
 	if (p1 == NULL) {
 		return E_ALLOC_FAILED;

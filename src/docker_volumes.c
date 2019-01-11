@@ -32,7 +32,7 @@
 #include "docker_util.h"
 #include "log.h"
 
-error_t make_docker_volume(docker_volume** volume, time_t created_at,
+d_err_t make_docker_volume(docker_volume** volume, time_t created_at,
 		char* name, char* driver, char* mountpoint, char* scope) {
 	(*volume) = (docker_volume*) malloc(sizeof(docker_volume));
 	if ((*volume) == NULL) {
@@ -93,7 +93,7 @@ DOCKER_GETTER_ARR_GET_IDX_IMPL(volume, pair*, status)
  * \param filter_name
  * \return error code.
  */
-error_t docker_volumes_list(docker_context* ctx, docker_result** result,
+d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
 		struct array_list** volumes, struct array_list** warnings,
 		int filter_dangling, char* filter_driver, char* filter_label,
 		char* filter_name) {
@@ -197,7 +197,7 @@ error_t docker_volumes_list(docker_context* ctx, docker_result** result,
  * \param key/values char* key, char* value args pair for each label
  * \return error code
  */
-error_t docker_volume_create(docker_context* ctx, docker_result** result,
+d_err_t docker_volume_create(docker_context* ctx, docker_result** result,
 		docker_volume** volume, char* name, char* driver, int num_labels,
 		...) {
 	va_list kvargs;
@@ -271,7 +271,7 @@ error_t docker_volume_create(docker_context* ctx, docker_result** result,
  * \param name name of the volume to inspect (cannot be NULL)
  * \return error code
  */
-error_t docker_volume_inspect(docker_context* ctx, docker_result** result,
+d_err_t docker_volume_inspect(docker_context* ctx, docker_result** result,
 		docker_volume** volume, char* name) {
 	if (name == NULL) {
 		return E_INVALID_INPUT;
@@ -330,7 +330,7 @@ error_t docker_volume_inspect(docker_context* ctx, docker_result** result,
  * \param force force delete if this value is 1
  * \return error code
  */
-error_t docker_volume_delete(docker_context* ctx, docker_result** result,
+d_err_t docker_volume_delete(docker_context* ctx, docker_result** result,
 		const char* name, int force) {
 	char* url = create_service_url_id_method(VOLUME, NULL, name);
 
@@ -360,7 +360,7 @@ error_t docker_volume_delete(docker_context* ctx, docker_result** result,
  * \param varargs triples (int filter_not, char* label_name, char* label_value)
  * \return error code
  */
-error_t docker_volumes_delete_unused(docker_context* ctx,
+d_err_t docker_volumes_delete_unused(docker_context* ctx,
 		docker_result** result, struct array_list** volumes_deleted,
 		unsigned long* space_reclaimed, int num_label_filters, ...) {
 	char* url = create_service_url_id_method(VOLUME, NULL, "prune");

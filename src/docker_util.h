@@ -84,7 +84,7 @@ typedef struct pair_t {
  * \param value
  * \return error code
  */
-error_t make_pair(pair** p, char* key, char* value);
+d_err_t make_pair(pair** p, char* key, char* value);
 
 char* get_value(pair*p);
 

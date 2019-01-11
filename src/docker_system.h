@@ -55,7 +55,7 @@ extern "C" {
  * \param result docker result object
  * \return error code
  */
-MODULE_API error_t docker_ping(docker_context* ctx, docker_result** result);
+MODULE_API d_err_t docker_ping(docker_context* ctx, docker_result** result);
 
 typedef struct docker_version_t {
 	char* version;
@@ -73,7 +73,7 @@ typedef struct docker_version_t {
 /**
  * Construct a new docker_version object.
  */
-error_t make_docker_version(docker_version** dv, char* version, char* os,
+d_err_t make_docker_version(docker_version** dv, char* version, char* os,
 		char* kernel_version, char* go_version, char* git_commit, char* arch,
 		char* api_version, char* min_api_version, char* build_time,
 		int experimental);
@@ -99,7 +99,7 @@ DOCKER_SYSTEM_GETTER(version, int, experimental)
  * \param version object to return
  * \return error code.
  */
-MODULE_API error_t docker_system_version(docker_context* ctx, docker_result** result,
+MODULE_API d_err_t docker_system_version(docker_context* ctx, docker_result** result,
 		docker_version** version);
 
 // Docker System Info
@@ -115,7 +115,7 @@ typedef struct docker_info_t {
 	unsigned long memtotal;
 } docker_info;
 
-error_t make_docker_info(docker_info** info, unsigned long containers,
+d_err_t make_docker_info(docker_info** info, unsigned long containers,
 		unsigned long containers_running, unsigned long containers_paused,
 		unsigned long containers_stopped, unsigned long images);
 
@@ -138,7 +138,7 @@ DOCKER_SYSTEM_GETTER(info, unsigned long, memtotal)
  * \param info object to return
  * \return error code.
  */
-error_t docker_system_info(docker_context* ctx, docker_result** result,
+d_err_t docker_system_info(docker_context* ctx, docker_result** result,
 		docker_info** info);
 
 // Docker System Events
@@ -172,7 +172,7 @@ typedef struct docker_event_t {
 	time_t time;
 } docker_event;
 
-error_t make_docker_event(docker_event** event, char* type, char* action,
+d_err_t make_docker_event(docker_event** event, char* type, char* action,
 		char* actor_id, json_object* actor_attributes, time_t time);
 
 void free_docker_event(docker_event* event);
@@ -193,7 +193,7 @@ DOCKER_SYSTEM_GETTER(event, time_t, time)
  * \param end_time
  * \return error code
  */
-error_t docker_system_events(docker_context* ctx, docker_result** result,
+d_err_t docker_system_events(docker_context* ctx, docker_result** result,
 		array_list** events, time_t start_time, time_t end_time);
 
 /**
@@ -208,7 +208,7 @@ error_t docker_system_events(docker_context* ctx, docker_result** result,
  * \param end_time
  * \return error code
  */
-error_t docker_system_events_cb(docker_context* ctx, docker_result** result,
+d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 		void (*docker_events_cb)(docker_event* evt, void* cbargs), void* cbargs,
 		array_list** events, time_t start_time, time_t end_time);
 

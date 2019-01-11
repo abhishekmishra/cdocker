@@ -38,7 +38,7 @@ typedef struct docker_container_ports_t {
  * \param type port type
  * \return error code
  */
-error_t make_docker_container_ports(docker_container_ports** ports, long priv,
+d_err_t make_docker_container_ports(docker_container_ports** ports, long priv,
 		long pub, char* type);
 
 void free_docker_container_ports(docker_container_ports* ports);
@@ -63,7 +63,7 @@ typedef struct docker_container_label_t {
  * \param value
  * \return error code
  */
-error_t make_docker_container_label(docker_container_label** label,
+d_err_t make_docker_container_label(docker_container_label** label,
 		const char* key, const char* value);
 
 void free_docker_container_label(docker_container_label* label);
@@ -85,7 +85,7 @@ typedef struct docker_container_host_config_t {
  * \param network_mode
  * \return error_code
  */
-error_t make_docker_container_host_config(
+d_err_t make_docker_container_host_config(
 		docker_container_host_config** host_config, const char* network_mode);
 
 void free_docker_container_host_config(
@@ -112,7 +112,7 @@ typedef struct docker_container_network_settings_item_t {
 /**
  * Create a new network settings item
  */
-error_t make_docker_container_network_settings_item(
+d_err_t make_docker_container_network_settings_item(
 		docker_container_network_settings_item** item, const char* name,
 		const char* network_id, const char* endpoint_id, const char* gateway,
 		const char* ip_address, int ip_prefix_len, const char* ipv6_gateway,
@@ -147,7 +147,7 @@ typedef struct docker_container_mount_t {
 /**
  * Create a new mount object
  */
-error_t make_docker_container_mount(docker_container_mount** mount,
+d_err_t make_docker_container_mount(docker_container_mount** mount,
 		const char* name, const char* type, const char* source,
 		const char* destination, const char* driver, const char* mode,
 		const int rw, const char* propagation);
@@ -184,7 +184,7 @@ typedef struct docker_container_list_item_t {
 /**
  * Create a new containers list item.
  */
-error_t make_docker_containers_list_item(docker_container_list_item** item,
+d_err_t make_docker_containers_list_item(docker_container_list_item** item,
 		const char* id, const char* image, const char* image_id,
 		const char* command, const long long created, const char* state,
 		const char* status, const long long size_rw,
@@ -261,7 +261,7 @@ typedef struct docker_containers_list_filter_t {
 /**
  * Create filter object and create filter items.
  */
-error_t make_docker_containers_list_filter(
+d_err_t make_docker_containers_list_filter(
 		docker_containers_list_filter** filter);
 
 void containers_filter_add_ancestor(docker_containers_list_filter* filter,
@@ -296,11 +296,11 @@ void containers_filter_add_volume(docker_containers_list_filter* filter,
 
 typedef struct array_list docker_containers_list;
 
-error_t docker_container_list(docker_context* ctx, docker_result** result,
+d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 		docker_containers_list** container_list, int all, int limit, int size,
 		docker_containers_list_filter* filters);
 
-error_t make_docker_containers_list(docker_containers_list** container_list);
+d_err_t make_docker_containers_list(docker_containers_list** container_list);
 int docker_containers_list_add(docker_containers_list* list,
 		docker_container_list_item* item);
 docker_container_list_item* docker_containers_list_get_idx(
@@ -353,10 +353,10 @@ typedef struct docker_create_container_params_t {
 	char* network_config;
 } docker_create_container_params;
 
-error_t make_docker_create_container_params(
+d_err_t make_docker_create_container_params(
 		docker_create_container_params** params);
 
-error_t docker_create_container(docker_context* ctx, docker_result** result,
+d_err_t docker_create_container(docker_context* ctx, docker_result** result,
 		char** id, docker_create_container_params* params);
 
 //docker_container_details* docker_inspect_container(docker_context* ctx, char* id, int size);
@@ -383,7 +383,7 @@ typedef struct docker_container_ps_t {
  * \return the process details as docker_container_ps list.
  * \return error code of the result
  */
-error_t docker_process_list_container(docker_context* ctx,
+d_err_t docker_process_list_container(docker_context* ctx,
 		docker_result** result, docker_container_ps** ps, char* id,
 		char* process_args);
 
@@ -404,7 +404,7 @@ error_t docker_process_list_container(docker_context* ctx,
  * \param tail 0 means all, any positive number indicates the number of lines to fetch.
  * \return error code
  */
-error_t docker_container_logs(docker_context* ctx, docker_result** result,
+d_err_t docker_container_logs(docker_context* ctx, docker_result** result,
 		char** log, char* id, int follow, int std_out, int std_err, long since,
 		long until, int timestamps, int tail);
 
@@ -422,7 +422,7 @@ typedef struct docker_container_change_t {
 /**
  * Create a new container change item.
  */
-error_t make_docker_container_change(docker_container_change** item,
+d_err_t make_docker_container_change(docker_container_change** item,
 		const char* path, const char* kind);
 
 void free_docker_container_change(docker_container_change* item);
@@ -432,7 +432,7 @@ DOCKER_GETTER(container_change, change_kind, kind)
 
 typedef struct array_list docker_changes_list;
 
-error_t make_docker_changes_list(docker_changes_list** changes_list);
+d_err_t make_docker_changes_list(docker_changes_list** changes_list);
 int docker_changes_list_add(docker_changes_list* list,
 		docker_container_change* item);
 docker_container_change* docker_changes_list_get_idx(docker_changes_list* list,
@@ -448,7 +448,7 @@ int docker_changes_list_length(docker_changes_list* list);
  * \param id container id
  * \return error code
  */
-error_t docker_container_changes(docker_context* ctx, docker_result** result,
+d_err_t docker_container_changes(docker_context* ctx, docker_result** result,
 		docker_changes_list** changes, char* id);
 
 /////// Docker container stats
@@ -457,7 +457,7 @@ typedef struct docker_container_pids_stats_t {
 	int current;
 } docker_container_pids_stats;
 
-error_t make_docker_container_pids_stats(
+d_err_t make_docker_container_pids_stats(
 		docker_container_pids_stats** pids_stats, int current);
 void free_docker_container_pids_stats(docker_container_pids_stats* pids);
 DOCKER_GETTER(container_pids_stats, int, current)
@@ -474,7 +474,7 @@ typedef struct docker_container_net_stats_t {
 	unsigned long tx_packets;
 } docker_container_net_stats;
 
-error_t make_docker_container_net_stats(docker_container_net_stats** net_stats,
+d_err_t make_docker_container_net_stats(docker_container_net_stats** net_stats,
 		char* name, unsigned long rx_bytes, unsigned long rx_dropped,
 		unsigned long rx_errors, unsigned long rx_packets,
 		unsigned long tx_bytes, unsigned long tx_dropped,
@@ -497,7 +497,7 @@ typedef struct docker_container_mem_stats_t {
 	unsigned long limit;
 } docker_container_mem_stats;
 
-error_t make_docker_container_mem_stats(docker_container_mem_stats** mem_stats,
+d_err_t make_docker_container_mem_stats(docker_container_mem_stats** mem_stats,
 		unsigned long max_usage, unsigned long usage, unsigned long failcnt,
 		unsigned long limit);
 void free_docker_container_mem_stats(docker_container_mem_stats* mem_stats);
@@ -516,7 +516,7 @@ typedef struct docker_container_cpu_stats_t {
 	int online_cpus;
 } docker_container_cpu_stats;
 
-error_t make_docker_container_cpu_stats(docker_container_cpu_stats** cpu_stats,
+d_err_t make_docker_container_cpu_stats(docker_container_cpu_stats** cpu_stats,
 		unsigned long total_usage, unsigned long usage_in_usermode,
 		unsigned long usage_in_kernelmode, unsigned long system_cpu_usage,
 		int online_cpus);
@@ -541,7 +541,7 @@ typedef struct docker_container_stats_t {
 	docker_container_cpu_stats* precpu_stats;
 } docker_container_stats;
 
-error_t make_docker_container_stats(docker_container_stats** stats,
+d_err_t make_docker_container_stats(docker_container_stats** stats,
 		struct tm* read, docker_container_pids_stats* pid_stats,
 		docker_container_mem_stats* mem_stats,
 		docker_container_cpu_stats* cpu_stats,
@@ -572,7 +572,7 @@ float docker_container_stats_get_cpu_usage_percent(docker_container_stats* stats
  * \param id container id
  * \return error code
  */
-error_t docker_container_get_stats(docker_context* ctx, docker_result** result,
+d_err_t docker_container_get_stats(docker_context* ctx, docker_result** result,
 		docker_container_stats** stats, char* id);
 
 /**
@@ -585,7 +585,7 @@ error_t docker_container_get_stats(docker_context* ctx, docker_result** result,
  * \param id container id
  * \return error code
  */
-error_t docker_container_get_stats_cb(docker_context* ctx,
+d_err_t docker_container_get_stats_cb(docker_context* ctx,
 		docker_result** result,
 		void (*docker_container_stats_cb)(docker_container_stats* stats,
 				void* cbargs), void* cbargs, char* id);
@@ -601,7 +601,7 @@ error_t docker_container_get_stats_cb(docker_context* ctx,
  * \param detachKeys (optional) key combination for detaching a container.
  * \return error code
  */
-error_t docker_start_container(docker_context* ctx, docker_result** result,
+d_err_t docker_start_container(docker_context* ctx, docker_result** result,
 		char* id, char* detachKeys);
 
 /**
@@ -613,7 +613,7 @@ error_t docker_start_container(docker_context* ctx, docker_result** result,
  * \param t number of seconds to wait before killing the container
  * \return error code
  */
-error_t docker_stop_container(docker_context* ctx, docker_result** result,
+d_err_t docker_stop_container(docker_context* ctx, docker_result** result,
 		char* id, int t);
 
 /**
@@ -625,7 +625,7 @@ error_t docker_stop_container(docker_context* ctx, docker_result** result,
  * \param t number of seconds to wait before killing the container
  * \return error code
  */
-error_t docker_restart_container(docker_context* ctx, docker_result** result,
+d_err_t docker_restart_container(docker_context* ctx, docker_result** result,
 		char* id, int t);
 
 /**
@@ -637,7 +637,7 @@ error_t docker_restart_container(docker_context* ctx, docker_result** result,
  * \param signal (optional - NULL for default i.e. SIGKILL) signal name to send
  * \return error code
  */
-error_t docker_kill_container(docker_context* ctx, docker_result** result,
+d_err_t docker_kill_container(docker_context* ctx, docker_result** result,
 		char* id, char* signal);
 
 /**
@@ -649,7 +649,7 @@ error_t docker_kill_container(docker_context* ctx, docker_result** result,
  * \param name new name for the container
  * \return error code
  */
-error_t docker_rename_container(docker_context* ctx, docker_result** result,
+d_err_t docker_rename_container(docker_context* ctx, docker_result** result,
 		char* id, char* name);
 
 /**
@@ -660,7 +660,7 @@ error_t docker_rename_container(docker_context* ctx, docker_result** result,
  * \param id container id
  * \return error code
  */
-error_t docker_pause_container(docker_context* ctx, docker_result** result,
+d_err_t docker_pause_container(docker_context* ctx, docker_result** result,
 		char* id);
 
 /**
@@ -671,7 +671,7 @@ error_t docker_pause_container(docker_context* ctx, docker_result** result,
  * \param id container id
  * \return error code
  */
-error_t docker_unpause_container(docker_context* ctx, docker_result** result,
+d_err_t docker_unpause_container(docker_context* ctx, docker_result** result,
 		char* id);
 
 //TODO: implement wait status code in API.
@@ -684,7 +684,7 @@ error_t docker_unpause_container(docker_context* ctx, docker_result** result,
  * \param condition (optional - NULL for default "not-running") condition to wait for
  * \return error code
  */
-error_t docker_wait_container(docker_context* ctx, docker_result** result,
+d_err_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id, char* condition);
 
 #ifdef __cplusplus 

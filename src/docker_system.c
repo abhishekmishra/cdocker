@@ -64,7 +64,7 @@
  * \param result docker result object
  * \return error code
  */
-error_t docker_ping(docker_context* ctx, docker_result** result) {
+d_err_t docker_ping(docker_context* ctx, docker_result** result) {
 	char* url = create_service_url_id_method(SYSTEM, NULL, "_ping");
 
 	json_object *response_obj = NULL;
@@ -82,7 +82,7 @@ error_t docker_ping(docker_context* ctx, docker_result** result) {
 /**
  * Construct a new docker_version object.
  */
-error_t make_docker_version(docker_version** dv, char* version, char* os,
+d_err_t make_docker_version(docker_version** dv, char* version, char* os,
 		char* kernel_version, char* go_version, char* git_commit, char* arch,
 		char* api_version, char* min_api_version, char* build_time,
 		int experimental) {
@@ -135,7 +135,7 @@ DOCKER_SYSTEM_GETTER_IMPL(version, int, experimental)
  * \param version object to return
  * \return error code.
  */
-error_t docker_system_version(docker_context* ctx, docker_result** result,
+d_err_t docker_system_version(docker_context* ctx, docker_result** result,
 		docker_version** version) {
 	char* url = create_service_url_id_method(SYSTEM, NULL, "version");
 
@@ -160,7 +160,7 @@ error_t docker_system_version(docker_context* ctx, docker_result** result,
 
 }
 
-error_t make_docker_info(docker_info** info, unsigned long containers,
+d_err_t make_docker_info(docker_info** info, unsigned long containers,
 		unsigned long containers_running, unsigned long containers_paused,
 		unsigned long containers_stopped, unsigned long images) {
 	(*info) = (docker_info*) malloc(sizeof(docker_info));
@@ -197,7 +197,7 @@ DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, memtotal)
  * \param info object to return
  * \return error code.
  */
-error_t docker_system_info(docker_context* ctx, docker_result** result,
+d_err_t docker_system_info(docker_context* ctx, docker_result** result,
 		docker_info** info) {
 	char* url = create_service_url_id_method(SYSTEM, NULL, "info");
 
@@ -221,7 +221,7 @@ error_t docker_system_info(docker_context* ctx, docker_result** result,
 
 }
 
-error_t make_docker_event(docker_event** event, char* type, char* action,
+d_err_t make_docker_event(docker_event** event, char* type, char* action,
 		char* actor_id, json_object* actor_attributes, time_t time) {
 	(*event) = (docker_event*) malloc(sizeof(docker_event));
 	if (!(*event)) {
@@ -284,7 +284,7 @@ void parse_events_cb(char* msg, void* cb, void* cbargs) {
  * \param end_time
  * \return error code
  */
-error_t docker_system_events(docker_context* ctx, docker_result** result,
+d_err_t docker_system_events(docker_context* ctx, docker_result** result,
 		array_list** events, time_t start_time, time_t end_time) {
 	if (end_time <= 0) {
 		docker_log_warn(
@@ -309,7 +309,7 @@ error_t docker_system_events(docker_context* ctx, docker_result** result,
  * \param end_time
  * \return error code
  */
-error_t docker_system_events_cb(docker_context* ctx, docker_result** result,
+d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 		void (*docker_events_cb)(docker_event* evt, void* cbargs), void* cbargs,
 		array_list** events, time_t start_time, time_t end_time) {
 	char* url = create_service_url_id_method(SYSTEM, NULL, "events");

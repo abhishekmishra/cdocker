@@ -36,7 +36,7 @@ At some point I will write corresponding asynchronous API endpoints (but not pla
 |Container Logs       |            :ok: |          :ok: |  :ok: | Socket based follow not implemented |
 |Container FS Changes |            :ok: |          :ok: |  :ok: |                          |
 |Export Container     |             :x: |           :x: |   :x: |                          |
-|Resource Usage Stats |             :x: |           :x: |   :x: |                          |
+|Resource Usage Stats |            :ok: |          :ok: |  :ok: | mem stats summary only, details missing, and blkio tbd. |
 |Resize TTY           |             :x: |           :x: |   :x: |                          |
 |Start                |            :ok: |          :ok: |  :ok: | test detachKeys                         |
 |Stop                 |            :ok: |          :ok: |  :ok: |                          |

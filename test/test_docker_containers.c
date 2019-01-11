@@ -14,12 +14,34 @@
 #include <curl/curl.h>
 #include "test_docker_containers.h"
 #include "docker_containers.h"
+#include "docker_images.h"
 #include "docker_connection_util.h"
 #include "test_util.h"
 #include "log.h"
 
 static docker_context* ctx = NULL;
 static docker_result* res;
+
+void log_pull_message(docker_image_create_status* status, void* client_cbargs) {
+	if (status) {
+		if (status->id) {
+			docker_log_debug("message is %s, id is %s", status->status,
+					status->id);
+		} else {
+			docker_log_debug("message is %s", status->status);
+		}
+	}
+}
+
+void log_stats(docker_container_stats* stats, void* client_cbargs) {
+	if (stats) {
+		docker_container_cpu_stats* cpu_stats =
+				docker_container_stats_get_cpu_stats(stats);
+		docker_log_info("Cpu usage is %lu, num cpus is %d, usage%% is %f",
+				cpu_stats->system_cpu_usage, cpu_stats->online_cpus,
+				docker_container_stats_get_cpu_usage_percent(stats));
+	}
+}
 
 static int group_setup(void **state) {
 	char* id = NULL;
@@ -132,17 +154,50 @@ static void test_restart_container(void **state) {
 	assert_int_equal(res->http_error_code, 200);
 }
 
+static void test_stats_container(void **state) {
+	char* id = NULL;
+	docker_image_create_from_image_cb(ctx, &res, &log_pull_message, NULL,
+			"bfirsh/reticulate-splines", "latest", NULL);
+	handle_error(res);
+
+	docker_create_container_params* p;
+	make_docker_create_container_params(&p);
+	p->image = "bfirsh/reticulate-splines";
+	docker_create_container(ctx, &res, &id, p);
+	handle_error(res);
+
+	docker_log_info("Started docker container id is %s\n", id);
+
+	docker_start_container(ctx, &res, id, NULL);
+	handle_error(res);
+
+	docker_container_stats* stats;
+	docker_container_get_stats(ctx, &res, &stats, id);
+	handle_error(res);
+	docker_container_cpu_stats* cpu_stats =
+			docker_container_stats_get_cpu_stats(stats);
+	docker_log_info("Cpu usage is %lu, num cpus is %d, usage%% is %f",
+			cpu_stats->system_cpu_usage, cpu_stats->online_cpus,
+			docker_container_stats_get_cpu_usage_percent(stats));
+
+	assert_int_equal(res->http_error_code, 200);
+
+	docker_stop_container(ctx, &res, id, 0);
+	handle_error(res);
+}
+
 int docker_container_tests() {
 	const struct CMUnitTest tests[] = {
-	cmocka_unit_test(test_start),
-	cmocka_unit_test(test_list),
-	cmocka_unit_test(test_changes),
-	cmocka_unit_test(test_stopping_stopped_container),
-	cmocka_unit_test(test_killing_stopped_container),
-//	cmocka_unit_test(test_rename_stopped_container),
-	cmocka_unit_test(test_pause_stopped_container),
-	cmocka_unit_test(test_unpause_stopped_container),
-	cmocka_unit_test(test_restart_container) };
+	//	cmocka_unit_test(test_rename_stopped_container),
+			cmocka_unit_test(test_start),
+			cmocka_unit_test(test_list),
+			cmocka_unit_test(test_changes),
+			cmocka_unit_test(test_stopping_stopped_container),
+			cmocka_unit_test(test_killing_stopped_container),
+			cmocka_unit_test(test_pause_stopped_container),
+			cmocka_unit_test(test_unpause_stopped_container),
+			cmocka_unit_test(test_restart_container),
+			cmocka_unit_test(test_stats_container) };
 	return cmocka_run_group_tests_name("docker container tests", tests,
 			group_setup, group_teardown);
 }

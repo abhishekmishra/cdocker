@@ -18,10 +18,10 @@ At some point I will write corresponding asynchronous API endpoints (but not pla
 ### Docker Context
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
 |---------------------|-----------------|---------------|-------|--------------------------|
-|Docker Result        |            :ok: |           :ok:|   :x: |                          |
-|Docker Context       |            :ok: |           :x: |   :x: |                          |
-|HTTP Support         |            :ok: |           :x: |   :x: |                          |
-|Unix Socket Support  |            :ok: |           :x: |   :x: |                          |
+|Docker Result        |            :ok: |           :ok:|   :ok:|                          |
+|Docker Context       |            :ok: |           :ok:|   :ok:|                          |
+|HTTP Support         |            :ok: |           :ok:|   :ok:|                          |
+|Unix Socket Support  |            :ok: |           :ok:|   :ok:|                          |
 |Authentication       |             :x: |           :x: |   :x: |                          |
 
 

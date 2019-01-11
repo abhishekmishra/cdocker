@@ -912,7 +912,6 @@ void free_docker_container_pids_stats(docker_container_pids_stats* pids) {
 
 DOCKER_GETTER_IMPL(container_pids_stats, int, current)
 
-
 error_t make_docker_container_net_stats(docker_container_net_stats** net_stats,
 		char* name, unsigned long rx_bytes, unsigned long rx_dropped,
 		unsigned long rx_errors, unsigned long rx_packets,
@@ -953,8 +952,9 @@ DOCKER_GETTER_IMPL(container_net_stats, unsigned long, tx_packets)
 error_t make_docker_container_mem_stats(docker_container_mem_stats** mem_stats,
 		unsigned long max_usage, unsigned long usage, unsigned long failcnt,
 		unsigned long limit) {
-	(*mem_stats) = (docker_container_mem_stats*)malloc(sizeof(docker_container_mem_stats));
-	if(!(*mem_stats)) {
+	(*mem_stats) = (docker_container_mem_stats*) malloc(
+			sizeof(docker_container_mem_stats));
+	if (!(*mem_stats)) {
 		return E_ALLOC_FAILED;
 	}
 	(*mem_stats)->max_usage = max_usage;
@@ -973,12 +973,13 @@ DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, usage)
 DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, failcnt)
 DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, limit)
 
-
 error_t make_docker_container_cpu_stats(docker_container_cpu_stats** cpu_stats,
 		unsigned long total_usage, unsigned long usage_in_usermode,
-		unsigned long usage_in_kernelmode, unsigned long system_cpu_usage) {
-	(*cpu_stats) = (docker_container_cpu_stats*)malloc(sizeof(docker_container_cpu_stats));
-	if(!(*cpu_stats)) {
+		unsigned long usage_in_kernelmode, unsigned long system_cpu_usage,
+		int online_cpus) {
+	(*cpu_stats) = (docker_container_cpu_stats*) malloc(
+			sizeof(docker_container_cpu_stats));
+	if (!(*cpu_stats)) {
 		return E_ALLOC_FAILED;
 	}
 	(*cpu_stats)->total_usage = total_usage;
@@ -986,6 +987,7 @@ error_t make_docker_container_cpu_stats(docker_container_cpu_stats** cpu_stats,
 	(*cpu_stats)->usage_in_kernelmode = usage_in_kernelmode;
 	(*cpu_stats)->system_cpu_usage = system_cpu_usage;
 	(*cpu_stats)->percpu_usage = array_list_new(NULL);
+	(*cpu_stats)->online_cpus = online_cpus;
 	return E_SUCCESS;
 }
 
@@ -998,6 +1000,7 @@ DOCKER_GETTER_IMPL(container_cpu_stats, unsigned long, total_usage)
 DOCKER_GETTER_IMPL(container_cpu_stats, unsigned long, usage_in_usermode)
 DOCKER_GETTER_IMPL(container_cpu_stats, unsigned long, usage_in_kernelmode)
 DOCKER_GETTER_IMPL(container_cpu_stats, unsigned long, system_cpu_usage)
+DOCKER_GETTER_IMPL(container_cpu_stats, int, online_cpus)
 
 DOCKER_GETTER_ARR_ADD_IMPL(container_cpu_stats, unsigned long, percpu_usage)
 DOCKER_GETTER_ARR_LEN_IMPL(container_cpu_stats, percpu_usage)
@@ -1017,7 +1020,8 @@ error_t make_docker_container_stats(docker_container_stats** stats,
 	(*stats)->mem_stats = mem_stats;
 	(*stats)->cpu_stats = cpu_stats;
 	(*stats)->precpu_stats = precpu_stats;
-	(*stats)->net_stats_list = array_list_new((void (*)(void *))&free_docker_container_net_stats);
+	(*stats)->net_stats_list = array_list_new(
+			(void (*)(void *)) &free_docker_container_net_stats);
 	return E_SUCCESS;
 }
 
@@ -1043,6 +1047,43 @@ DOCKER_GETTER_ARR_LEN_IMPL(container_stats, net_stats_list)
 DOCKER_GETTER_ARR_GET_IDX_IMPL(container_stats, docker_container_net_stats*,
 		net_stats_list)
 
+void get_cpu_stats_for_name(json_object* response_obj, char* stats_obj_name,
+		docker_container_cpu_stats** cpu_stats_ret) {
+	docker_container_cpu_stats* cpu_stats;
+	json_object* cpu_stats_obj = NULL;
+	json_object_object_get_ex(response_obj, stats_obj_name, &cpu_stats_obj);
+	if (cpu_stats_obj) {
+		json_object* cpu_stats_cpu_usage_obj = NULL;
+		json_object_object_get_ex(cpu_stats_obj, "cpu_usage",
+				&cpu_stats_cpu_usage_obj);
+		if (cpu_stats_cpu_usage_obj) {
+			make_docker_container_cpu_stats(&cpu_stats,
+					get_attr_unsigned_long(cpu_stats_cpu_usage_obj,
+							"total_usage"),
+					get_attr_unsigned_long(cpu_stats_cpu_usage_obj,
+							"usage_in_usermode"),
+					get_attr_unsigned_long(cpu_stats_cpu_usage_obj,
+							"usage_in_kernelmode"),
+					get_attr_unsigned_long(cpu_stats_obj, "system_cpu_usage"),
+					get_attr_int(cpu_stats_obj, "online_cpus"));
+			json_object* percpu_usage_obj = NULL;
+			json_object_object_get_ex(cpu_stats_cpu_usage_obj, "percpu_usage",
+					&percpu_usage_obj);
+			if (percpu_usage_obj) {
+				int percpu_usage_len = json_object_array_length(
+						percpu_usage_obj);
+				for (int i = 0; i < percpu_usage_len; i++) {
+					docker_container_cpu_stats_percpu_usage_add(cpu_stats,
+							json_object_get_int64(
+									(json_object_array_get_idx(percpu_usage_obj,
+											i))));
+				}
+			}
+		}
+	}
+	(*cpu_stats_ret) = cpu_stats;
+}
+
 /**
  * Get stats from a running container. (the non-streaming version)
  *
@@ -1054,9 +1095,213 @@ DOCKER_GETTER_ARR_GET_IDX_IMPL(container_stats, docker_container_net_stats*,
  */
 error_t docker_container_get_stats(docker_context* ctx, docker_result** result,
 		docker_container_stats** stats, char* id) {
-	//TODO: implementation
+	if (id == NULL || strlen(id) == 0) {
+		return E_INVALID_INPUT;
+	}
+
+	char* url = create_service_url_id_method(CONTAINER, id, "stats");
+	struct array_list* params = array_list_new(
+			(void (*)(void *)) &free_url_param);
+	url_param* p;
+	make_url_param(&p, "stream", make_defensive_copy("false"));
+	array_list_add(params, p);
+
+	json_object *response_obj = NULL;
+	struct http_response_memory chunk;
+	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
+
+	if ((*result) && (*result)->http_error_code) {
+		if (response_obj) {
+			struct tm* read_time = (struct tm*) calloc(1, sizeof(struct tm));
+			if (!read_time) {
+				return E_ALLOC_FAILED;
+			}
+			parse_docker_stats_readtime(get_attr_str(response_obj, "read"),
+					read_time);
+
+			json_object* pid_stats_obj = NULL;
+			docker_container_pids_stats* pid_stats = NULL;
+			json_object_object_get_ex(response_obj, "pid_stats",
+					&pid_stats_obj);
+			if (pid_stats_obj) {
+				make_docker_container_pids_stats(&pid_stats,
+						get_attr_int(pid_stats_obj, "current"));
+			}
+
+			json_object* mem_stats_obj = NULL;
+			docker_container_mem_stats* mem_stats = NULL;
+			json_object_object_get_ex(response_obj, "memory_stats",
+					&mem_stats_obj);
+			if (mem_stats_obj) {
+				make_docker_container_mem_stats(&mem_stats,
+						get_attr_unsigned_long(mem_stats_obj, "max_usage"),
+						get_attr_unsigned_long(mem_stats_obj, "usage"),
+						get_attr_unsigned_long(mem_stats_obj, "failcnt"),
+						get_attr_unsigned_long(mem_stats_obj, "limit"));
+			}
+
+			docker_container_cpu_stats* cpu_stats = NULL;
+			char* stats_obj_name = "cpu_stats";
+			get_cpu_stats_for_name(response_obj, stats_obj_name, &cpu_stats);
+
+			docker_container_cpu_stats* precpu_stats = NULL;
+			stats_obj_name = "precpu_stats";
+			get_cpu_stats_for_name(response_obj, stats_obj_name, &precpu_stats);
+
+			docker_container_stats* s = NULL;
+			make_docker_container_stats(&s, read_time, pid_stats, mem_stats,
+					cpu_stats, precpu_stats);
+			json_object* net_stats_group_obj = NULL;
+			json_object_object_get_ex(response_obj, "networks",
+					&net_stats_group_obj);
+			if (net_stats_group_obj) {
+				json_object_object_foreach(net_stats_group_obj, k, v)
+				{
+					docker_container_net_stats* net_stats;
+					make_docker_container_net_stats(&net_stats, k,
+							get_attr_unsigned_long(v, "rx_bytes"),
+							get_attr_unsigned_long(v, "rx_dropped"),
+							get_attr_unsigned_long(v, "rx_errors"),
+							get_attr_unsigned_long(v, "rx_packets"),
+							get_attr_unsigned_long(v, "tx_bytes"),
+							get_attr_unsigned_long(v, "tx_dropped"),
+							get_attr_unsigned_long(v, "tx_errors"),
+							get_attr_unsigned_long(v, "tx_packets"));
+					docker_container_stats_net_stats_list_add(s, net_stats);
+				}
+			}
+			(*stats) = s;
+		}
+	}
+
 	return E_SUCCESS;
 }
+
+void parse_container_stats_cb(char* msg, void* cb, void* cbargs) {
+	void (*docker_container_stats_cb)(docker_container_stats*,
+			void*) = (void (*)(docker_container_stats*, void*))cb;
+	if (msg) {
+		if(docker_container_stats_cb) {
+			json_object* response_obj = json_tokener_parse(msg);
+			if (response_obj) {
+				struct tm* read_time = (struct tm*) calloc(1, sizeof(struct tm));
+				if (!read_time) {
+					return;
+				}
+				parse_docker_stats_readtime(get_attr_str(response_obj, "read"),
+						read_time);
+
+				json_object* pid_stats_obj = NULL;
+				docker_container_pids_stats* pid_stats = NULL;
+				json_object_object_get_ex(response_obj, "pid_stats",
+						&pid_stats_obj);
+				if (pid_stats_obj) {
+					make_docker_container_pids_stats(&pid_stats,
+							get_attr_int(pid_stats_obj, "current"));
+				}
+
+				json_object* mem_stats_obj = NULL;
+				docker_container_mem_stats* mem_stats = NULL;
+				json_object_object_get_ex(response_obj, "memory_stats",
+						&mem_stats_obj);
+				if (mem_stats_obj) {
+					make_docker_container_mem_stats(&mem_stats,
+							get_attr_unsigned_long(mem_stats_obj, "max_usage"),
+							get_attr_unsigned_long(mem_stats_obj, "usage"),
+							get_attr_unsigned_long(mem_stats_obj, "failcnt"),
+							get_attr_unsigned_long(mem_stats_obj, "limit"));
+				}
+
+				docker_container_cpu_stats* cpu_stats = NULL;
+				char* stats_obj_name = "cpu_stats";
+				get_cpu_stats_for_name(response_obj, stats_obj_name, &cpu_stats);
+
+				docker_container_cpu_stats* precpu_stats = NULL;
+				stats_obj_name = "precpu_stats";
+				get_cpu_stats_for_name(response_obj, stats_obj_name, &precpu_stats);
+
+				docker_container_stats* s = NULL;
+				make_docker_container_stats(&s, read_time, pid_stats, mem_stats,
+						cpu_stats, precpu_stats);
+
+				json_object* net_stats_group_obj = NULL;
+				json_object_object_get_ex(response_obj, "networks",
+						&net_stats_group_obj);
+				if (net_stats_group_obj) {
+					json_object_object_foreach(net_stats_group_obj, k, v)
+					{
+						docker_container_net_stats* net_stats;
+						make_docker_container_net_stats(&net_stats, k,
+								get_attr_unsigned_long(v, "rx_bytes"),
+								get_attr_unsigned_long(v, "rx_dropped"),
+								get_attr_unsigned_long(v, "rx_errors"),
+								get_attr_unsigned_long(v, "rx_packets"),
+								get_attr_unsigned_long(v, "tx_bytes"),
+								get_attr_unsigned_long(v, "tx_dropped"),
+								get_attr_unsigned_long(v, "tx_errors"),
+								get_attr_unsigned_long(v, "tx_packets"));
+						docker_container_stats_net_stats_list_add(s, net_stats);
+					}
+				}
+				docker_container_stats_cb(s, cbargs);
+			}
+		}
+	}
+}
+/**
+ * Get stats from a running container. (the streaming version)
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param docker_container_stats_cb the callback which receives the stats object, and any client args
+ * \param cbargs client args to be passed on to the callback (closure)
+ * \param id container id
+ * \return error code
+ */
+error_t docker_container_get_stats_cb(docker_context* ctx,
+		docker_result** result,
+		void (*docker_container_stats_cb)(docker_container_stats* stats,
+				void* cbargs), void* cbargs, char* id) {
+	if (id == NULL || strlen(id) == 0) {
+		return E_INVALID_INPUT;
+	}
+
+	char* url = create_service_url_id_method(CONTAINER, id, "stats");
+	struct array_list* params = array_list_new(
+			(void (*)(void *)) &free_url_param);
+	url_param* p;
+	make_url_param(&p, "stream", make_defensive_copy("true"));
+	array_list_add(params, p);
+
+	json_object *response_obj = NULL;
+	struct http_response_memory chunk;
+	docker_api_get_cb(ctx, result, url, params, &chunk, &response_obj,
+			&parse_container_stats_cb, docker_container_stats_cb, cbargs);
+
+	return E_SUCCESS;
+}
+
+float docker_container_stats_get_cpu_usage_percent(
+		docker_container_stats* stats) {
+	float cpu_percent = 0.0;
+	docker_container_cpu_stats* cpu_stats =
+			docker_container_stats_get_cpu_stats(stats);
+	docker_container_cpu_stats* precpu_stats =
+			docker_container_stats_get_precpu_stats(stats);
+	int cpu_count = docker_container_cpu_stats_get_online_cpus(cpu_stats);
+
+	unsigned long cpu_delta = docker_container_cpu_stats_get_total_usage(
+			cpu_stats)
+			- docker_container_cpu_stats_get_total_usage(precpu_stats);
+	unsigned long sys_delta = docker_container_cpu_stats_get_system_cpu_usage(
+				cpu_stats)
+				- docker_container_cpu_stats_get_system_cpu_usage(precpu_stats);
+	if (sys_delta > 0) {
+		cpu_percent = (100.0 * cpu_delta * cpu_count)/sys_delta;
+	}
+	return cpu_percent;
+}
+
 /**
  * Start a container
  *

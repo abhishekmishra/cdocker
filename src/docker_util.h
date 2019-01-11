@@ -114,6 +114,8 @@ long long get_attr_long_long(json_object* obj, char* name);
 
 void parse_iso_datetime(char* date_str, struct tm* tm);
 
+void parse_docker_stats_readtime(char* date_str, struct tm* tm);
+
 #ifdef __cplusplus 
 }
 #endif

@@ -184,3 +184,19 @@ void parse_iso_datetime(char* date_str, struct tm* tm) {
 	tm->tm_min = m;         // 0-59
 	tm->tm_sec = (int) s;    // 0-61 (0-60 in C++11)
 }
+
+void parse_docker_stats_readtime(char* date_str, struct tm* tm) {
+	int y, M, d, h, m;
+	float s;
+	unsigned long nanos; //currently unused
+	if (6
+			< sscanf(date_str, "%d-%d-%dT%d:%d:%f.%luZ", &y, &M, &d, &h, &m, &s,
+					&nanos)) {
+	}
+	tm->tm_year = y - 1900; // Year since 1900
+	tm->tm_mon = M - 1;     // 0-11
+	tm->tm_mday = d;        // 1-31
+	tm->tm_hour = h;        // 0-23
+	tm->tm_min = m;         // 0-59
+	tm->tm_sec = (int) s;    // 0-61 (0-60 in C++11)
+}

@@ -518,12 +518,14 @@ typedef struct docker_container_cpu_stats_t {
 
 error_t make_docker_container_cpu_stats(docker_container_cpu_stats** cpu_stats,
 		unsigned long total_usage, unsigned long usage_in_usermode,
-		unsigned long usage_in_kernelmode, unsigned long system_cpu_usage);
+		unsigned long usage_in_kernelmode, unsigned long system_cpu_usage,
+		int online_cpus);
 void free_docker_container_cpu_stats(docker_container_cpu_stats* cpu_stats);
 DOCKER_GETTER(container_cpu_stats, unsigned long, total_usage)
 DOCKER_GETTER(container_cpu_stats, unsigned long, usage_in_usermode)
 DOCKER_GETTER(container_cpu_stats, unsigned long, usage_in_kernelmode)
 DOCKER_GETTER(container_cpu_stats, unsigned long, system_cpu_usage)
+DOCKER_GETTER(container_cpu_stats, int, online_cpus)
 
 DOCKER_GETTER_ARR_ADD(container_cpu_stats, unsigned long, percpu_usage)
 DOCKER_GETTER_ARR_LEN(container_cpu_stats, percpu_usage)
@@ -559,6 +561,8 @@ DOCKER_GETTER_ARR_LEN(container_stats, net_stats_list)
 DOCKER_GETTER_ARR_GET_IDX(container_stats, docker_container_net_stats*,
 		net_stats_list)
 
+float docker_container_stats_get_cpu_usage_percent(docker_container_stats* stats);
+
 /**
  * Get stats from a running container. (the non-streaming version)
  *
@@ -570,6 +574,21 @@ DOCKER_GETTER_ARR_GET_IDX(container_stats, docker_container_net_stats*,
  */
 error_t docker_container_get_stats(docker_context* ctx, docker_result** result,
 		docker_container_stats** stats, char* id);
+
+/**
+ * Get stats from a running container. (the streaming version)
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param docker_container_stats_cb the callback which receives the stats object, and any client args
+ * \param cbargs client args to be passed on to the callback (closure)
+ * \param id container id
+ * \return error code
+ */
+error_t docker_container_get_stats_cb(docker_context* ctx,
+		docker_result** result,
+		void (*docker_container_stats_cb)(docker_container_stats* stats,
+				void* cbargs), void* cbargs, char* id);
 
 ///////////// Get Container Start, Stop, Restart, Kill, Rename, Pause, Unpause, Wait
 

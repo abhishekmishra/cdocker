@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include <curl/curl.h>
 #include <json-c/json.h>
@@ -32,6 +33,16 @@ void log_events(docker_event* evt, void* client_cbargs) {
 	if (evt) {
 		docker_log_debug("%d: %s: %s: %s", evt->time, evt->type, evt->action,
 				evt->actor_id);
+	}
+}
+
+void log_stats(docker_container_stats* stats, void* client_cbargs) {
+	if (stats) {
+		docker_container_cpu_stats* cpu_stats =
+				docker_container_stats_get_cpu_stats(stats);
+		docker_log_info("Cpu usage is %lu, num cpus is %d, usage%% is %f",
+				cpu_stats->system_cpu_usage, cpu_stats->online_cpus,
+				docker_container_stats_get_cpu_usage_percent(stats));
 	}
 }
 
@@ -96,94 +107,124 @@ int main(int argc, char* argv[]) {
 //	docker_system_version(ctx, &res, &version);
 //	handle_error(res);
 //
-	//Images API
+//	//Images API
+//	docker_image_create_from_image_cb(ctx, &res, &log_pull_message, NULL,
+//			"alpine", "latest", NULL);
+//	handle_error(res);
+//
+//	struct array_list* images;
+//	docker_images_list(ctx, &res, &images, 0, 1, NULL, 0, NULL, NULL, NULL);
+//	handle_error(res);
+//	int len_images = array_list_length(images);
+//	for (int i = 0; i < len_images; i++) {
+//		docker_image* img = (docker_image*) array_list_get_idx(images, i);
+//		docker_log_info("Found image %s", img->id);
+//		int len_repo_tags = array_list_length(img->repo_tags);
+//		for (int j = 0; j < len_repo_tags; j++) {
+//			docker_log_info("With tag %s",
+//					(char* ) array_list_get_idx(img->repo_tags, j));
+//		}
+//	}
+//
+////Network API
+//	struct array_list* networks;
+//	docker_networks_list(ctx, &res, &networks, NULL, NULL, NULL, NULL, NULL,
+//	NULL);
+//	handle_error(res);
+//	int len_nets = array_list_length(networks);
+//	for (int i = 0; i < len_nets; i++) {
+//		docker_network* ni = (docker_network*) array_list_get_idx(networks, i);
+//		docker_log_info("Found network %s %s", ni->name, ni->id);
+//	}
+//
+//	docker_network* net;
+//	docker_network_inspect(ctx, &res, &net, "host", 0, NULL);
+//	handle_error(res);
+//
+//	//Volume API
+//
+//	//create two test volumes
+//	docker_volume* vi = NULL;
+//	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol01", "local", 1,
+//			"clibdocker_test_label", "clibdocker_test_value");
+//	handle_error(res);
+//	if (vi != NULL) {
+//		docker_log_info("Created volume with name %s at %lu", vi->name,
+//				vi->created_at);
+//	}
+//	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol02", "local", 1,
+//			"clibdocker_test_label", "clibdocker_test_value");
+//	handle_error(res);
+//	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol03", "local", 1,
+//			"clibdocker_test_label", "no_delete");
+//	handle_error(res);
+//
+//	//list volumes
+//	struct array_list* volumes;
+//	struct array_list* warnings;
+//	docker_volumes_list(ctx, &res, &volumes, &warnings, 1, NULL, NULL, NULL);
+//	handle_error(res);
+//	int len_vols = array_list_length(volumes);
+//	for (int i = 0; i < len_vols; i++) {
+//		docker_volume* vi = (docker_volume*) array_list_get_idx(volumes, i);
+//		docker_log_info("Found volume %s at %s", vi->name, vi->mountpoint);
+//	}
+//
+//	//inspect volume
+//	vi = NULL;
+//	docker_volume_inspect(ctx, &res, &vi, "clibdocker_test_vol01");
+//	handle_error(res);
+//	if (vi != NULL) {
+//		docker_log_info("Inspect found volume with name %s at %lu", vi->name,
+//				vi->created_at);
+//	}
+//
+//	//delete volumes
+//	docker_volume_delete(ctx, &res, "clibdocker_test_vol01", 0);
+//	handle_error(res);
+//
+//	//delete unused volumes
+//	struct array_list* volumes_deleted;
+//	long space_reclaimed;
+//	docker_volumes_delete_unused(ctx, &res, &volumes_deleted, &space_reclaimed,
+//			1, 0, "clibdocker_test_label", "clibdocker_test_value");
+//	handle_error(res);
+//	for (int i = 0; i < array_list_length(volumes_deleted); i++) {
+//		docker_log_info("Deleted unused volume %s",
+//				(char* )array_list_get_idx(volumes_deleted, i));
+//	}
+
+//Containers API
 	docker_image_create_from_image_cb(ctx, &res, &log_pull_message, NULL,
-			"alpine", "latest", NULL);
+			"bfirsh/reticulate-splines", "latest", NULL);
 	handle_error(res);
 
-	struct array_list* images;
-	docker_images_list(ctx, &res, &images, 0, 1, NULL, 0, NULL, NULL, NULL);
-	handle_error(res);
-	int len_images = array_list_length(images);
-	for (int i = 0; i < len_images; i++) {
-		docker_image* img = (docker_image*) array_list_get_idx(images, i);
-		docker_log_info("Found image %s", img->id);
-		int len_repo_tags = array_list_length(img->repo_tags);
-		for (int j = 0; j < len_repo_tags; j++) {
-			docker_log_info("With tag %s",
-					(char* ) array_list_get_idx(img->repo_tags, j));
-		}
-	}
-
-//Network API
-	struct array_list* networks;
-	docker_networks_list(ctx, &res, &networks, NULL, NULL, NULL, NULL, NULL,
-	NULL);
-	handle_error(res);
-	int len_nets = array_list_length(networks);
-	for (int i = 0; i < len_nets; i++) {
-		docker_network* ni = (docker_network*) array_list_get_idx(networks, i);
-		docker_log_info("Found network %s %s", ni->name, ni->id);
-	}
-
-	docker_network* net;
-	docker_network_inspect(ctx, &res, &net, "host", 0, NULL);
+	docker_create_container_params* p;
+	make_docker_create_container_params(&p);
+	p->image = "bfirsh/reticulate-splines";
+	docker_create_container(ctx, &res, &id, p);
 	handle_error(res);
 
-	//Volume API
+	docker_log_info("Started docker container id is %s\n", id);
 
-	//create two test volumes
-	docker_volume* vi = NULL;
-	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol01", "local", 1,
-			"clibdocker_test_label", "clibdocker_test_value");
-	handle_error(res);
-	if (vi != NULL) {
-		docker_log_info("Created volume with name %s at %lu", vi->name,
-				vi->created_at);
-	}
-	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol02", "local", 1,
-			"clibdocker_test_label", "clibdocker_test_value");
-	handle_error(res);
-	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol03", "local", 1,
-			"clibdocker_test_label", "no_delete");
+	docker_start_container(ctx, &res, id, NULL);
 	handle_error(res);
 
-	//list volumes
-	struct array_list* volumes;
-	struct array_list* warnings;
-	docker_volumes_list(ctx, &res, &volumes, &warnings, 1, NULL, NULL, NULL);
+	docker_container_stats* stats;
+	docker_container_get_stats(ctx, &res, &stats, id);
 	handle_error(res);
-	int len_vols = array_list_length(volumes);
-	for (int i = 0; i < len_vols; i++) {
-		docker_volume* vi = (docker_volume*) array_list_get_idx(volumes, i);
-		docker_log_info("Found volume %s at %s", vi->name, vi->mountpoint);
-	}
+	docker_container_cpu_stats* cpu_stats =
+			docker_container_stats_get_cpu_stats(stats);
+	docker_log_info("Cpu usage is %lu, num cpus is %d, usage%% is %f",
+			cpu_stats->system_cpu_usage, cpu_stats->online_cpus,
+			docker_container_stats_get_cpu_usage_percent(stats));
 
-	//inspect volume
-	vi = NULL;
-	docker_volume_inspect(ctx, &res, &vi, "clibdocker_test_vol01");
-	handle_error(res);
-	if (vi != NULL) {
-		docker_log_info("Inspect found volume with name %s at %lu", vi->name,
-				vi->created_at);
-	}
+//	docker_container_get_stats_cb(ctx, &res, &log_stats, NULL, id);
+//	handle_error(res);
 
-	//delete volumes
-	docker_volume_delete(ctx, &res, "clibdocker_test_vol01", 0);
+	docker_stop_container(ctx, &res, id, 0);
 	handle_error(res);
 
-	//delete unused volumes
-	struct array_list* volumes_deleted;
-	long space_reclaimed;
-	docker_volumes_delete_unused(ctx, &res, &volumes_deleted, &space_reclaimed,
-			1, 0, "clibdocker_test_label", "clibdocker_test_value");
-	handle_error(res);
-	for (int i = 0; i < array_list_length(volumes_deleted); i++) {
-		docker_log_info("Deleted unused volume %s",
-				(char* )array_list_get_idx(volumes_deleted, i));
-	}
-
-	//Containers API
 //	docker_create_container_params* p;
 //	make_docker_create_container_params(&p);
 //	p->image = "alpine";

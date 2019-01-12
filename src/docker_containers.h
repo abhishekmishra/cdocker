@@ -395,6 +395,7 @@ d_err_t docker_process_list_container(docker_context* ctx,
  * \param ctx docker context
  * \param result pointer to docker_result
  * \param log pointer to string to be returned.
+ * \param id container id
  * \param follow - this param has no effect for now, as socket support is not implemented.
  * \param stdout whether to get stdout (>0 means yes)
  * \param stderr whether to get stdin (>0 means yes)

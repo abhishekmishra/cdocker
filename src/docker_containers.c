@@ -1025,6 +1025,7 @@ d_err_t make_docker_container_stats(docker_container_stats** stats,
 	return E_SUCCESS;
 }
 
+//TODO: Bug, in free'ing the structs in this function, fix this.
 void free_docker_container_stats(docker_container_stats* stats) {
 	free(stats->read);
 	free(stats->pid_stats);

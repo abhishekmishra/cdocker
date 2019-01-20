@@ -63,3 +63,8 @@ obj/
 x64/
 Debug/
 Release/
+
+# Eclipse files ignored
+.project
+.cproject
+.settings

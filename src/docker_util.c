@@ -26,10 +26,10 @@
  *
  */
 
+#include <docker_log.h>
 #include <stdlib.h>
 #include <string.h>
 #include <json-c/json_object.h>
-#include "log.h"
 #include "docker_util.h"
 
 char* make_defensive_copy(const char* from) {

@@ -10,12 +10,13 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <stdio.h>
+
+#include "../src/docker_log.h"
 #include "test_docker_containers.h"
 #include "test_docker_system.h"
 #include "test_docker_images.h"
 #include "test_docker_networks.h"
 #include "test_docker_volumes.h"
-#include "log.h"
 
 int main(int argc, char **argv) {
 	int res;

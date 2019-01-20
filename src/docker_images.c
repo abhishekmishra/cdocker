@@ -19,10 +19,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <docker_log.h>
 #include <stdlib.h>
 #include "string.h"
 #include "docker_images.h"
-#include "log.h"
 
 d_err_t make_docker_image(docker_image** image, char* id, char* parent_id,
 		time_t created, unsigned long size, unsigned long virtual_size,

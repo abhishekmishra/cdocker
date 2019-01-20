@@ -25,12 +25,12 @@
  * SOFTWARE.
  *
  */
+#include <docker_log.h>
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
 #include "docker_volumes.h"
 #include "docker_util.h"
-#include "log.h"
 
 d_err_t make_docker_volume(docker_volume** volume, time_t created_at,
 		char* name, char* driver, char* mountpoint, char* scope) {

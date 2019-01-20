@@ -31,10 +31,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <curl/curl.h>
+#include <docker_log.h>
 #include "docker_result.h"
 #include "docker_connection_util.h"
 #include "docker_util.h"
-#include "log.h"
 #include <json-c/arraylist.h>
 #include <json-c/json_object.h>
 #include <json-c/json_tokener.h>

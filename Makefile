@@ -18,9 +18,10 @@ test: LIBS+= `pkg-config --libs cmocka`
 
 .PHONY: directories
 
-all: 		directories clibdocker
-debug: 		directories clibdocker
+all: 		directories clibdocker.so
+debug: 		directories clibdocker.so
 test:		debug test_clibdocker
+test_main:  debug clibdocker
 
 ## see https://stackoverflow.com/questions/1950926/create-directories-using-make-file
 ## for creating output directories
@@ -35,14 +36,17 @@ $(OBJ_DIR):
 # see https://www.gnu.org/software/make/manual/html_node/Wildcard-Function.html
 # Get list of object files, with paths
 OBJECTS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c))
-
-clibdocker:	$(OBJECTS) #$(OBJ_DIR)/main.o $(OBJ_DIR)/docker_connection_util.o $(OBJ_DIR)/docker_containers.o
-			$(CC) $(CFLAGS) -o $(OUT_DIR)/$@ $^ $(LIBS)
+			
+clibdocker.so:	$(OBJECTS) $(OBJ_DIR)/docker_connection_util.o $(OBJ_DIR)/docker_containers.o
+			$(CC) $(CFLAGS) -o $(OUT_DIR)/$@ $^ $(LIBS) $(LDFLAGS)
 			
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 	
 $(TEST_OBJ_DIR)/test_%.o: $(TEST_DIR)/test_%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(TEST_OBJ_DIR)/main.o: $(TEST_DIR)/main.c
 	$(CC) $(CFLAGS) -c $< -o $@
 	
 TEST_OBJECTS := $(patsubst $(TEST_DIR)/%.c,$(TEST_OBJ_DIR)/%.o,$(wildcard $(TEST_DIR)/*.c))
@@ -52,7 +56,10 @@ test_clibdocker: $(TEST_OBJECTS) $(filter-out %main.o, $(OBJECTS))
 			$(CC) $(CFLAGS) -o $(OUT_DIR)/$@ $^ $(LIBS)
 			./bin/debug/test_clibdocker
 
+clibdocker:	$(OBJECTS) $(TEST_OBJ_DIR)/main.o
+			$(CC) $(CFLAGS) -o $(OUT_DIR)/$@ $^ $(LIBS)
+
 clean:
-			rm -f ./obj/*.o ./bin/release/clibdocker ./bin/release/clibdocker.exe ./bin/release/test_clibdocker ./bin/release/test_clibdocker.exe
-			rm -f ./obj/*.o ./bin/debug/clibdocker ./bin/debug/clibdocker.exe ./bin/debug/test_clibdocker ./bin/debug/test_clibdocker.exe
+			rm -f ./obj/*.o ./bin/release/clibdocker ./bin/release/clibdocker.* ./bin/release/test_clibdocker ./bin/release/test_clibdocker.exe
+			rm -f ./obj/*.o ./bin/debug/clibdocker ./bin/debug/clibdocker.* ./bin/debug/test_clibdocker ./bin/debug/test_clibdocker.exe
 			

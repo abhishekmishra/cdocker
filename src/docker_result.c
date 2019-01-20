@@ -26,11 +26,11 @@
  *
  */
 
+#include <docker_log.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "docker_result.h"
-#include "log.h"
 
 /**
  * Utility method to create docker result, should be used by all API

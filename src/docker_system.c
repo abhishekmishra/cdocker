@@ -25,6 +25,7 @@
  * SOFTWARE.
  *
  */
+#include <docker_log.h>
 #include <stdlib.h>
 #include <string.h>
 #include <json-c/json_object.h>
@@ -33,7 +34,6 @@
 #include "docker_system.h"
 #include "docker_util.h"
 #include "docker_connection_util.h"
-#include "log.h"
 
 #define DOCKER_SYSTEM_GETTER_IMPL(object, type, name) \
 	type docker_ ## object ## _get_ ## name(docker_ ## object* object) { \

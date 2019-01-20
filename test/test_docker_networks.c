@@ -27,10 +27,11 @@
 #include <curl/curl.h>
 
 #include "test_docker_networks.h"
+
+#include "../src/docker_log.h"
 #include "docker_networks.h"
 #include "docker_connection_util.h"
 #include "test_util.h"
-#include "log.h"
 
 static docker_context* ctx = NULL;
 static docker_result* res;

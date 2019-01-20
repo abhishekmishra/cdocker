@@ -13,11 +13,12 @@
 #include <stdlib.h>
 #include <curl/curl.h>
 #include "test_docker_containers.h"
+
+#include "../src/docker_log.h"
 #include "docker_containers.h"
 #include "docker_images.h"
 #include "docker_connection_util.h"
 #include "test_util.h"
-#include "log.h"
 
 static docker_context* ctx = NULL;
 static docker_result* res;

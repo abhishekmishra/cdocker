@@ -5,6 +5,7 @@
  *      Author: abhishek
  */
 
+#include <docker_log.h>
 #include "docker_containers.h"
 
 #include <json-c/arraylist.h>
@@ -15,7 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 //#include <strings.h>
-#include "log.h"
 #include "docker_connection_util.h"
 #include "docker_util.h"
 

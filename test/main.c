@@ -4,6 +4,7 @@
 #include <pthread.h>
 
 #include <curl/curl.h>
+#include <docker_log.h>
 #include <json-c/json.h>
 #include "docker_result.h"
 #include "docker_connection_util.h"
@@ -12,7 +13,6 @@
 #include "docker_images.h"
 #include "docker_networks.h"
 #include "docker_volumes.h"
-#include "log.h"
 
 void handle_error(docker_result* res) {
 	docker_simple_error_handler_log(res);

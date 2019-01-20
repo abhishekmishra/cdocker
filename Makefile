@@ -1,4 +1,4 @@
-CC=gcc
+CC=tcc
 CFLAGS=-std=c11 `pkg-config --cflags json-c` `pkg-config --cflags libcurl` -I./src
 # To use colour logs...
 #CFLAGS+= -DLOG_USE_COLOR

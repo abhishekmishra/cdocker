@@ -5,7 +5,6 @@
  *      Author: abhishek
  */
 
-
 /**
  * \file docker_containers.h
  * \brief Docker Containers API
@@ -47,6 +46,11 @@ typedef struct docker_container_ports_t {
 d_err_t make_docker_container_ports(docker_container_ports** ports, long priv,
 		long pub, char* type);
 
+/**
+ * Free docker_container_ports instance.
+ *
+ * \param ports the ports struct to free.
+ */
 void free_docker_container_ports(docker_container_ports* ports);
 
 DOCKER_GETTER(container_ports, long, public_port)
@@ -72,6 +76,11 @@ typedef struct docker_container_label_t {
 d_err_t make_docker_container_label(docker_container_label** label,
 		const char* key, const char* value);
 
+/**
+ * Free docker_container_label.
+ *
+ * \param label the label instance.
+ */
 void free_docker_container_label(docker_container_label* label);
 
 DOCKER_GETTER(container_label, char*, key)
@@ -94,6 +103,10 @@ typedef struct docker_container_host_config_t {
 d_err_t make_docker_container_host_config(
 		docker_container_host_config** host_config, const char* network_mode);
 
+/**
+ * Free the docker_container_host_config
+ * \param host_config
+ */
 void free_docker_container_host_config(
 		docker_container_host_config* host_config);
 
@@ -568,7 +581,8 @@ DOCKER_GETTER_ARR_LEN(container_stats, net_stats_list)
 DOCKER_GETTER_ARR_GET_IDX(container_stats, docker_container_net_stats*,
 		net_stats_list)
 
-float docker_container_stats_get_cpu_usage_percent(docker_container_stats* stats);
+float docker_container_stats_get_cpu_usage_percent(
+		docker_container_stats* stats);
 
 /**
  * Get stats from a running container. (the non-streaming version)

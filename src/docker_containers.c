@@ -262,6 +262,7 @@ void free_docker_container_list_item(docker_container_list_item* item) {
 	array_list_free(item->labels);
 	array_list_free(item->network_settings);
 	array_list_free(item->mounts);
+	free(item);
 }
 
 DOCKER_GETTER_IMPL(container_list_item, char*, id)

@@ -53,7 +53,6 @@ extern "C" {
 #define DOCKER_GETTER_ARR_GET_IDX(object, type, name) \
 		type docker_ ## object ## _ ## name ## _get_idx(docker_ ## object* object, int i);
 
-
 #define DOCKER_GETTER_IMPL(object, type, name) \
 	type docker_ ## object ## _get_ ## name(docker_ ## object* object) { \
 		return object->name; \
@@ -75,11 +74,13 @@ extern "C" {
 		return (type) array_list_get_idx(object->name, i); \
 	} \
 
-// A simple pair of strings
-
+/**
+ * A simple pair of strings
+ *
+ */
 typedef struct pair_t {
-	char* key;
-	char* value;
+	char* key; /**<key part of the pair*/
+	char* value; /**<value part of the pair*/
 } pair;
 
 /**
@@ -92,10 +93,24 @@ typedef struct pair_t {
  */
 d_err_t make_pair(pair** p, char* key, char* value);
 
+/**
+ * Get the value part of the pair
+ * \param p pair
+ * \return string value
+ */
 char* get_value(pair*p);
 
+/**
+ * Get the key part of the pair
+ * \param p pair
+ * \return string key
+ */
 char* get_key(pair*p);
 
+/**
+ * Free the pair object
+ * \param p pair
+ */
 void free_pair(pair*p);
 
 // Filter utility functions
@@ -106,16 +121,59 @@ const char* filters_to_str(json_object* filters);
 
 char* make_defensive_copy(const char* from);
 
+/**
+ * Get a string object with the given key from a json_object
+ * (will return NULL if the attribute is not found).
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \return string value of attribute
+ */
 char* get_attr_str(json_object* obj, char* name);
 
+/**
+ * Get a int object with the given key from a json_object
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \return int value of attribute
+ */
 int get_attr_int(json_object* obj, char* name);
 
+/**
+ * Get a boolean object with the given key from a json_object
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \return boolean value of attribute
+ */
 int get_attr_boolean(json_object* obj, char* name);
 
+/**
+ * Get a long object with the given key from a json_object
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \return long value of attribute
+ */
 long get_attr_long(json_object* obj, char* name);
 
+/**
+ * Get a unsigned long object with the given key from a json_object
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \return unsigned long value of attribute
+ */
 unsigned long get_attr_unsigned_long(json_object* obj, char* name);
 
+/**
+ * Get a long long object with the given key from a json_object
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \return long long value of attribute
+ */
 long long get_attr_long_long(json_object* obj, char* name);
 
 void parse_iso_datetime(char* date_str, struct tm* tm);

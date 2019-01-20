@@ -19,6 +19,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * \file docker_networks.h
+ * \brief Docker Networks API
+ */
+
 #ifndef SRC_DOCKER_NETWORKS_H_
 #define SRC_DOCKER_NETWORKS_H_
 

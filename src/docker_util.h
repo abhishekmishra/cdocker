@@ -25,6 +25,12 @@
  * SOFTWARE.
  *
  */
+
+/**
+ * \file docker_util.h
+ * \brief Docker API utils
+ */
+
 #ifndef SRC_DOCKER_UTIL_H_
 #define SRC_DOCKER_UTIL_H_
 

@@ -26,6 +26,11 @@
  *
  */
 
+/**
+ * \file docker_result.h
+ * \brief Docker Results
+ */
+
 #ifndef SRC_DOCKER_RESULT_H_
 #define SRC_DOCKER_RESULT_H_
 

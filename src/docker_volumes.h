@@ -19,6 +19,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * \file docker_volumes.h
+ * \brief Docker volumes API
+ */
+
 #ifndef SRC_DOCKER_VOLUMES_H_
 #define SRC_DOCKER_VOLUMES_H_
 

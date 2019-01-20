@@ -19,6 +19,12 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+
+/**
+ * \file docker_common.h
+ * \brief Some common declarations
+ */
+
 #ifndef SRC_DOCKER_COMMON_H_
 #define SRC_DOCKER_COMMON_H_
 

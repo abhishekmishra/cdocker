@@ -17,7 +17,7 @@
 
 | Method              | Implementation  | Documentation | Tests | TODOs                    |
 |---------------------|-----------------|---------------|-------|--------------------------|
-|List Containers      |            :ok: |           :x: |  :ok: |                          |
+|List Containers      |            :ok: |          :ok: |  :ok: |                          |
 |Create Container     |            :ok: |           :x: |  :ok: | Only two params done.    |
 |Inspect Containers   |             :x: |           :x: |   :x: |                          |
 |List Processes       |            :ok: |           :x: |   :x: |                          |

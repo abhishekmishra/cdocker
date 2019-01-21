@@ -38,7 +38,7 @@
 static docker_context* ctx;
 
 void handle_docker_error(docker_result* res) {
-	printf("\nURL: %s\n", get_docker_result_url(res));
+//	printf("\nURL: %s\n", get_docker_result_url(res));
 	if (!is_ok(res)) {
 		printf("DOCKER RESULT: Response error_code = %d, http_response = %ld\n",
 				get_docker_result_error(res),
@@ -77,13 +77,11 @@ int cmd_arr_len(cld_cmd_t* cmd_arr[]) {
 cld_err_t match_and_run_cmd(int argc, char** argv, cld_cmd_t* cmds[]) {
 	if (argc > 0) {
 		char* cmd = argv[0];
-		argc -= 1;
-		argv = &argv[1];
 		int num_cmds = cmd_arr_len(cmds);
 		for (int i = 0; i < num_cmds; i++) {
 			if (strcmp(cmd, cmds[i]->long_name) == 0
 					|| strcmp(cmd, cmds[i]->short_name) == 0) {
-				printf("%s ", cmds[i]->long_name);
+//				printf("%s ", cmds[i]->long_name);
 				return cmds[i]->cmd(argc, argv);
 			}
 		}
@@ -135,6 +133,8 @@ cld_cmd_t* SYSTEM_COMMANDS[] = { &CLD_CMD_SYSTEM_VERSION,
 		&CLD_CMD_SYSTEM_CONNECTION, NULL };
 
 cld_err_t cmd_hdlr_system(int argc, char** argv) {
+	argc -= 1;
+	argv = &argv[1];
 	match_and_run_cmd(argc, argv, SYSTEM_COMMANDS);
 	return CLD_SUCCESS;
 }
@@ -144,55 +144,127 @@ cld_err_t cmd_hdlr_system(int argc, char** argv) {
 // START CONTAINER Commands
 
 cld_err_t cmd_hdlr_container_list(int argc, char** argv) {
+	int all = 0;
+	int quiet = 0;
+	int c;
+	optind = 0;
+
+	while (1) {
+		static struct option container_ls_options[] = { { "filter",
+		required_argument, 0, 'f' }, { "all", no_argument, 0, 'a' }, { "quiet",
+		no_argument, 0, 'q' }, { 0, 0, 0, 0 } };
+
+		/* getopt_long stores the option index here. */
+		int option_index = 0;
+
+		c = getopt_long(argc, argv, "f:aq", container_ls_options,
+				&option_index);
+
+		/* Detect the end of the options. */
+		if (c == -1)
+			break;
+
+		switch (c) {
+		case 0:
+			/* If this option set a flag, do nothing else now. */
+			if (container_ls_options[option_index].flag != 0)
+				break;
+			printf("option %s", container_ls_options[option_index].name);
+			if (optarg)
+				printf(" with arg %s", optarg);
+			printf("\n");
+			break;
+
+		case 'a':
+			all = 1;
+			break;
+
+		case 'q':
+			quiet = 1;
+			break;
+
+		case 'f':
+//			printf("option -f with value `%s'\n", optarg);
+			break;
+
+		case '?':
+			/* getopt_long already printed an error message. */
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	if (optind < argc) {
+		printf("non-option ARGV-elements: ");
+		while (optind < argc)
+			printf("%s ", argv[optind++]);
+		putchar('\n');
+	}
+
 	docker_result* res;
-	docker_containers_list_filter* filter;
-	make_docker_containers_list_filter(&filter);
 	docker_containers_list* containers;
-	docker_container_list(ctx, &res, &containers, 0, 0, 1, filter);
+	docker_container_list(ctx, &res, &containers, all, 0, 1, NULL);
 	handle_docker_error(res);
-	docker_log_info("Read %d containers.\n",
-			docker_containers_list_length(containers));
 
-	printf("%-20s\t%-40s\t%-20s\t%-20s\t%-20s\t%-20s\t%-20s\n", "CONTAINER ID",
-			"IMAGE", "COMMAND", "CREATED", "STATUS", "PORTS", "NAMES");
-	for (int i = 0; i < docker_containers_list_length(containers); i++) {
-		docker_container_list_item* ctr = docker_containers_list_get_idx(
-				containers, i);
-
-		//get ports
-		char ports_str[1024];
-		ports_str[0] = '\0';
-		for(int j =0; j<docker_container_list_item_ports_length(ctr); j++) {
-			char port_str[100];
-			docker_container_ports* ports = docker_container_list_item_ports_get_idx(ctr, 0);
-			sprintf(port_str,"%ld:%ld", ports->private_port, ports->public_port);
-			if(j == 0) {
-				strcpy(ports_str, port_str);
-			} else {
-				strcat(ports_str, ", ");
-				strcat(ports_str, port_str);
-			}
+	if (quiet) {
+		for (int i = 0; i < docker_containers_list_length(containers); i++) {
+			docker_container_list_item* ctr = docker_containers_list_get_idx(
+					containers, i);
+			printf("%.*s\n", 12, ctr->id);
 		}
+	} else {
 
-		//get created time
-		time_t t = (time_t)ctr->created;
-		struct tm* timeinfo = localtime(&t);
-		char evt_time_str[256];
-		strftime(evt_time_str, 255, "%d-%m-%Y:%H:%M:%S", timeinfo);
+		printf("%-20s\t%-40s\t%-20s\t%-20s\t%-20s\t%-20s\t%-20s\n",
+				"CONTAINER ID", "IMAGE", "COMMAND", "CREATED", "STATUS",
+				"PORTS", "NAMES");
+		for (int i = 0; i < docker_containers_list_length(containers); i++) {
+			docker_container_list_item* ctr = docker_containers_list_get_idx(
+					containers, i);
 
-		//get names
-		char names[1024];
-		names[0] = '\0';
-		for(int j =0; j<docker_container_list_item_names_length(ctr);j++) {
-			if(j == 0) {
-				strcpy(names, docker_container_list_item_names_get_idx(ctr, j));
-			} else {
-				strcat(names, ",");
-				strcat(names, docker_container_list_item_names_get_idx(ctr, j));
+			//get ports
+			char ports_str[1024];
+			ports_str[0] = '\0';
+			for (int j = 0; j < docker_container_list_item_ports_length(ctr);
+					j++) {
+				char port_str[100];
+				docker_container_ports* ports =
+						docker_container_list_item_ports_get_idx(ctr, 0);
+				sprintf(port_str, "%ld:%ld", ports->private_port,
+						ports->public_port);
+				if (j == 0) {
+					strcpy(ports_str, port_str);
+				} else {
+					strcat(ports_str, ", ");
+					strcat(ports_str, port_str);
+				}
 			}
+
+			//get created time
+			time_t t = (time_t) ctr->created;
+			struct tm* timeinfo = localtime(&t);
+			char evt_time_str[256];
+			strftime(evt_time_str, 255, "%d-%m-%Y:%H:%M:%S", timeinfo);
+
+			//get names
+			char names[1024];
+			names[0] = '\0';
+			for (int j = 0; j < docker_container_list_item_names_length(ctr);
+					j++) {
+				if (j == 0) {
+					strcpy(names,
+							docker_container_list_item_names_get_idx(ctr, j));
+				} else {
+					strcat(names, ",");
+					strcat(names,
+							docker_container_list_item_names_get_idx(ctr, j));
+				}
+			}
+			printf("%-20.*s\t%-40s\t\"%-20s\"\t%-20s\t%-20s\t%-20s\t%-20s\t\n",
+					12, ctr->id, ctr->image, ctr->command, evt_time_str,
+					ctr->status, ports_str, names);
 		}
-		printf("%-20.*s\t%-40s\t\"%-20s\"\t%-20s\t%-20s\t%-20s\t%-20s\t\n", 12, ctr->id, ctr->image,
-				ctr->command, evt_time_str, ctr->status, ports_str, names);
 	}
 	return CLD_SUCCESS;
 }
@@ -201,6 +273,8 @@ cld_cmd_t CLD_CMD_CTR_LS = { "list", "ls", &cmd_hdlr_container_list };
 cld_cmd_t* CTR_COMMANDS[] = { &CLD_CMD_CTR_LS, NULL };
 
 cld_err_t cmd_hdlr_container(int argc, char** argv) {
+	argc -= 1;
+	argv = &argv[1];
 	match_and_run_cmd(argc, argv, CTR_COMMANDS);
 	return CLD_SUCCESS;
 }
@@ -295,7 +369,7 @@ int main(int argc, char *argv[]) {
 			break;
 
 		case 'c':
-			printf("option -c with value `%s'\n", optarg);
+//			printf("option -c with value `%s'\n", optarg);
 			command = 1;
 			command_str = optarg;
 			break;
@@ -308,18 +382,18 @@ int main(int argc, char *argv[]) {
 			abort();
 		}
 	}
-	if (command) {
-		int tok_err = parse_line_run_command(tokenizer, command_str, &cmd_argc,
-				&cmd_argv);
-	}
 
-	/* Instead of reporting ‘--verbose’
-	 /* Print any remaining command line arguments (not options). */
+	/* Print any remaining command line arguments (not options). */
 	if (optind < argc) {
 		printf("non-option ARGV-elements: ");
 		while (optind < argc)
 			printf("%s ", argv[optind++]);
 		putchar('\n');
+	}
+
+	if (command) {
+		int tok_err = parse_line_run_command(tokenizer, command_str, &cmd_argc,
+				&cmd_argv);
 	}
 
 	if (interactive > command) {

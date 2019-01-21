@@ -19,24 +19,6 @@
 #include "docker_connection_util.h"
 #include "docker_util.h"
 
-#define ADD_FILTER_STR_ATTR(name) \
-	void containers_filter_add_ ## name(docker_containers_list_filter* filter, char* val) { \
-		if (filter->num_ ## name == 0) { \
-			filter->name = (char**) malloc(128 * sizeof(char*)); \
-		} \
-		filter->name[filter->num_ ## name] = val; \
-		filter->num_ ## name += 1; \
-	}
-
-#define ADD_FILTER_INT_ATTR(name) \
-	void containers_filter_add_ ## name(docker_containers_list_filter* filter, int val) { \
-		if (filter->num_ ## name == 0) { \
-			filter->name = (int*) malloc(128 * sizeof(int)); \
-		} \
-		filter->name[filter->num_ ## name] = val; \
-		filter->num_ ## name += 1; \
-	}
-
 /**
  * Create a docker_container_ports instance.
  *
@@ -300,43 +282,6 @@ DOCKER_GETTER_ARR_LEN_IMPL(container_list_item, mounts)
 DOCKER_GETTER_ARR_GET_IDX_IMPL(container_list_item, docker_container_mount*,
 		mounts)
 
-d_err_t make_docker_containers_list_filter(docker_containers_list_filter** f) {
-	(*f) = (docker_containers_list_filter*) malloc(
-			sizeof(docker_containers_list_filter));
-	(*f)->num_ancestor = 0;
-	(*f)->num_before = 0;
-	(*f)->num_expose = 0;
-	(*f)->num_exited = 0;
-	(*f)->num_health = 0;
-	(*f)->num_id = 0;
-	(*f)->num_isolation = 0;
-	(*f)->num_is_task = 0;
-	(*f)->num_label = 0;
-	(*f)->num_name = 0;
-	(*f)->num_network = 0;
-	(*f)->num_publish = 0;
-	(*f)->num_since = 0;
-	(*f)->num_status = 0;
-	(*f)->num_volume = 0;
-	return E_SUCCESS;
-}
-
-ADD_FILTER_STR_ATTR(ancestor)
-ADD_FILTER_STR_ATTR(before)
-ADD_FILTER_STR_ATTR(expose)
-ADD_FILTER_INT_ATTR(exited)
-ADD_FILTER_STR_ATTR(health)
-ADD_FILTER_STR_ATTR(id)
-ADD_FILTER_STR_ATTR(isolation)
-ADD_FILTER_INT_ATTR(is_task)
-ADD_FILTER_STR_ATTR(label)
-ADD_FILTER_STR_ATTR(name)
-ADD_FILTER_STR_ATTR(network)
-ADD_FILTER_STR_ATTR(publish)
-ADD_FILTER_STR_ATTR(since)
-ADD_FILTER_STR_ATTR(status)
-ADD_FILTER_STR_ATTR(volume)
-
 void extract_filter_field_char(json_object* fobj, char* filter_name,
 		int num_items, char** items) {
 	if (num_items > 0) {
@@ -379,9 +324,21 @@ int docker_containers_list_length(docker_containers_list* list) {
 	return array_list_length(list);
 }
 
+/**
+ * List docker containers
+ *
+ * \param ctx the docker context
+ * \param result the result object to return
+ * \param container_list array_list of containers to be returned
+ * \param all all or running only
+ * \param limit max containers to return
+ * \param size return the size of containers in response
+ * \param varargs pairs of filters char* filter_name, char* filter_value (terminated by a NULL)
+ * \return error code
+ */
 d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 		docker_containers_list** container_list, int all, int limit, int size,
-		docker_containers_list_filter* filters) {
+		...) {
 	char* method = "json";
 	char* containers = "containers/";
 	char* url = (char*) malloc(
@@ -410,45 +367,22 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 		array_list_add(params, p);
 	}
 
-	if (filters) {
-		json_object* fobj = json_object_new_object();
-
-		//set filter attributes
-		extract_filter_field_char(fobj, "ancestor", filters->num_ancestor,
-				filters->ancestor);
-		extract_filter_field_char(fobj, "before", filters->num_before,
-				filters->before);
-		extract_filter_field_char(fobj, "expose", filters->num_expose,
-				filters->expose);
-		extract_filter_field_int(fobj, "exited", filters->num_exited,
-				filters->exited);
-		extract_filter_field_char(fobj, "health", filters->num_health,
-				filters->health);
-		extract_filter_field_char(fobj, "id", filters->num_id, filters->id);
-		extract_filter_field_char(fobj, "isolation", filters->num_isolation,
-				filters->isolation);
-		extract_filter_field_int(fobj, "is_task", filters->num_is_task,
-				filters->is_task);
-		extract_filter_field_char(fobj, "label", filters->num_label,
-				filters->label);
-		extract_filter_field_char(fobj, "name", filters->num_name,
-				filters->name);
-		extract_filter_field_char(fobj, "network", filters->num_network,
-				filters->network);
-		extract_filter_field_char(fobj, "publish", filters->num_publish,
-				filters->publish);
-		extract_filter_field_char(fobj, "since", filters->num_since,
-				filters->since);
-		extract_filter_field_char(fobj, "status", filters->num_status,
-				filters->status);
-		extract_filter_field_char(fobj, "volume", filters->num_volume,
-				filters->volume);
-
-		char* filter_val = (char *) json_object_to_json_string(fobj);
-		docker_log_debug("Filter Value -> %s", filter_val);
-		make_url_param(&p, "filters", filter_val);
-		array_list_add(params, p);
+	va_list kvargs;
+	va_start(kvargs, size);
+	json_object* filters = make_filters();
+	while (true) {
+		char* filter_name = va_arg(kvargs, char*);
+		if(filter_name == NULL) {
+			break;
+		}
+		char* filter_value = va_arg(kvargs, char*);
+		if(filter_value == NULL) {
+			break;
+		}
+		add_filter_str(filters, filter_name, filter_value);
 	}
+	make_url_param(&p, "filters", (char*) filters_to_str(filters));
+	array_list_add(params, p);
 
 	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
@@ -1296,10 +1230,10 @@ float docker_container_stats_get_cpu_usage_percent(
 			cpu_stats)
 			- docker_container_cpu_stats_get_total_usage(precpu_stats);
 	unsigned long sys_delta = docker_container_cpu_stats_get_system_cpu_usage(
-				cpu_stats)
-				- docker_container_cpu_stats_get_system_cpu_usage(precpu_stats);
+			cpu_stats)
+			- docker_container_cpu_stats_get_system_cpu_usage(precpu_stats);
 	if (sys_delta > 0) {
-		cpu_percent = (100.0 * cpu_delta * cpu_count)/sys_delta;
+		cpu_percent = (100.0 * cpu_delta * cpu_count) / sys_delta;
 	}
 	return cpu_percent;
 }

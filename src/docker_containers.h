@@ -244,80 +244,23 @@ DOCKER_GETTER_ARR_ADD(container_list_item, docker_container_mount*, mounts)
 DOCKER_GETTER_ARR_LEN(container_list_item, mounts)
 DOCKER_GETTER_ARR_GET_IDX(container_list_item, docker_container_mount*, mounts)
 
-typedef struct docker_containers_list_filter_t {
-	char** ancestor;
-	int num_ancestor;
-	char** before;
-	int num_before;
-	char** expose;
-	int num_expose;
-	int* exited;
-	int num_exited;
-	char** health;
-	int num_health;
-	char** id;
-	int num_id;
-	char** isolation;
-	int num_isolation;
-	int* is_task;
-	int num_is_task;
-	char** label;
-	int num_label;
-	char** name;
-	int num_name;
-	char** network;
-	int num_network;
-	char** publish;
-	int num_publish;
-	char** since;
-	int num_since;
-	char** status;
-	int num_status;
-	char** volume;
-	int num_volume;
-} docker_containers_list_filter;
-
-/**
- * Create filter object and create filter items.
- */
-d_err_t make_docker_containers_list_filter(
-		docker_containers_list_filter** filter);
-
-void containers_filter_add_ancestor(docker_containers_list_filter* filter,
-		char* val);
-void containers_filter_add_before(docker_containers_list_filter* filter,
-		char* val);
-void containers_filter_add_expose(docker_containers_list_filter* filter,
-		char* val);
-void containers_filter_add_exited(docker_containers_list_filter* filter,
-		int val);
-void containers_filter_add_health(docker_containers_list_filter* filter,
-		char* val);
-void containers_filter_add_id(docker_containers_list_filter* filter, char* val);
-void containers_filter_add_isolation(docker_containers_list_filter* filter,
-		char* val);
-void containers_filter_add_is_task(docker_containers_list_filter* filter,
-		int val);
-void containers_filter_add_label(docker_containers_list_filter* filter,
-		char* val);
-void containers_filter_add_name(docker_containers_list_filter* filter,
-		char* val);
-void containers_filter_add_network(docker_containers_list_filter* filter,
-		char* val);
-void containers_filter_add_publish(docker_containers_list_filter* filter,
-		char* val);
-void containers_filter_add_since(docker_containers_list_filter* filter,
-		char* val);
-void containers_filter_add_status(docker_containers_list_filter* filter,
-		char* val);
-void containers_filter_add_volume(docker_containers_list_filter* filter,
-		char* val);
-
 typedef struct array_list docker_containers_list;
 
+/**
+ * List docker containers
+ *
+ * \param ctx the docker context
+ * \param result the result object to return
+ * \param container_list array_list of containers to be returned
+ * \param all all or running only
+ * \param limit max containers to return
+ * \param size return the size of containers in response
+ * \param varargs pairs of filters char* filter_name, char* filter_value (terminated by a NULL)
+ * \return error code
+ */
 d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 		docker_containers_list** container_list, int all, int limit, int size,
-		docker_containers_list_filter* filters);
+		...);
 
 d_err_t make_docker_containers_list(docker_containers_list** container_list);
 int docker_containers_list_add(docker_containers_list* list,

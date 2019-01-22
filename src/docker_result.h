@@ -111,41 +111,6 @@ MODULE_API d_err_t make_docker_result(docker_result** result, d_err_t error_code
 MODULE_API void free_docker_result(docker_result** result);
 
 /**
- * This method provides the error_code based on the standard error code enum.
- * Use this method instead of direct attribute access to the struct to ensure
- * future changes to the struct will not break your code.
- */
-MODULE_API d_err_t get_docker_result_error(docker_result* result);
-
-/**
- * This method provides the HTTP error code returned by the API call.
- * Use this method instead of direct attribute access to the struct to ensure
- * future changes to the struct will not break your code.
- */
-MODULE_API long get_docker_result_http_error(docker_result* result);
-
-/**
- * This method provides the URL used when calling the API.
- * Use this method instead of direct attribute access to the struct to ensure
- * future changes to the struct will not break your code.
- */
-MODULE_API char* get_docker_result_url(docker_result* result);
-
-/**
- * This method provides the error message returned by the API.
- * Use this method instead of direct attribute access to the struct to ensure
- * future changes to the struct will not break your code.
- */
-MODULE_API char* get_docker_result_message(docker_result* result);
-
-MODULE_API time_t get_docker_result_start_time(docker_result* result);
-MODULE_API time_t get_docker_result_end_time(docker_result* result);
-MODULE_API char* get_docker_result_request(docker_result* result);
-MODULE_API char* get_docker_result_response(docker_result* result);
-MODULE_API char* get_docker_result_http_method(docker_result* result);
-
-
-/**
  * Check if the error_code is E_SUCCESS
  */
 MODULE_API int is_ok(docker_result* result);

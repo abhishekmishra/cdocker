@@ -91,77 +91,22 @@ void free_docker_result(docker_result** result) {
 }
 
 /**
- * This method provides the error_code based on the standard error code enum.
- * Use this method instead of direct attribute access to the struct to ensure
- * future changes to the struct will not break your code.
- */
-d_err_t get_docker_result_error(docker_result* result) {
-	return result->error_code;
-}
-
-/**
- * This method provides the HTTP error code returned by the API call.
- * Use this method instead of direct attribute access to the struct to ensure
- * future changes to the struct will not break your code.
- */
-long get_docker_result_http_error(docker_result* result) {
-	return result->http_error_code;
-}
-
-/**
- * This method provides the URL used when calling the API.
- * Use this method instead of direct attribute access to the struct to ensure
- * future changes to the struct will not break your code.
- */
-char* get_docker_result_url(docker_result* result) {
-	return result->url;
-}
-
-/**
- * This method provides the error message returned by the API.
- * Use this method instead of direct attribute access to the struct to ensure
- * future changes to the struct will not break your code.
- */
-char* get_docker_result_message(docker_result* result) {
-	return result->message;
-}
-
-/**
  * Check if the error_code is E_SUCCESS
  */
 int is_ok(docker_result* result) {
-	return (get_docker_result_error(result) == E_SUCCESS);
+	return (result->error_code == E_SUCCESS);
 }
 
-time_t get_docker_result_start_time(docker_result* result) {
-	return result->start_time;
-}
-
-time_t get_docker_result_end_time(docker_result* result) {
-	return result->end_time;
-}
-
-char* get_docker_result_request(docker_result* result) {
-	return result->request_json_str;
-}
-
-char* get_docker_result_response(docker_result* result) {
-	return result->response_json_str;
-}
-
-char* get_docker_result_http_method(docker_result* result) {
-	return result->method;
-}
 /**
  * A simple error handler suitable for programs
  * which just want to log the error (if any).
  */
 void docker_simple_error_handler_print(docker_result* res) {
-	printf("DOCKER_RESULT: For URL: %s\n", get_docker_result_url(res));
+	printf("DOCKER_RESULT: For URL: %s\n", res->url);
 	printf("DOCKER RESULT: Response error_code = %d, http_response = %ld\n",
-			get_docker_result_error(res), get_docker_result_http_error(res));
+			res->error_code, res->http_error_code);
 	if (!is_ok(res)) {
-		printf("DOCKER RESULT: %s\n", get_docker_result_message(res));
+		printf("DOCKER RESULT: %s\n", res->message);
 	}
 	free_docker_result(&res);
 }
@@ -171,12 +116,12 @@ void docker_simple_error_handler_print(docker_result* res) {
  * which just want to log the error (if any).
  */
 void docker_simple_error_handler_log(docker_result* res) {
-	docker_log_debug("DOCKER_RESULT: For URL: %s", get_docker_result_url(res));
+	docker_log_debug("DOCKER_RESULT: For URL: %s", res->url);
 	docker_log_debug(
 			"DOCKER RESULT: Response error_code = %d, http_response = %ld",
-			get_docker_result_error(res), get_docker_result_http_error(res));
+			res->error_code, res->http_error_code);
 	if (!is_ok(res)) {
-		docker_log_error("DOCKER RESULT: %s", get_docker_result_message(res));
+		docker_log_error("DOCKER RESULT: %s", res->message);
 	}
 	free_docker_result(&res);
 }

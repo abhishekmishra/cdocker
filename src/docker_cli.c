@@ -41,9 +41,8 @@ void handle_docker_error(docker_result* res) {
 //	printf("\nURL: %s\n", get_docker_result_url(res));
 	if (!is_ok(res)) {
 		printf("DOCKER RESULT: Response error_code = %d, http_response = %ld\n",
-				get_docker_result_error(res),
-				get_docker_result_http_error(res));
-		printf("error: %s\n", get_docker_result_message(res));
+				res->error_code, res->http_error_code);
+		printf("error: %s\n", res->message);
 	}
 	free_docker_result(&res);
 }

@@ -39,10 +39,10 @@ d_err_t make_docker_volume(docker_volume** volume, time_t created_at,
 		return E_ALLOC_FAILED;
 	}
 	(*volume)->created_at = created_at;
-	(*volume)->name = make_defensive_copy(name);
-	(*volume)->driver = make_defensive_copy(driver);
-	(*volume)->mountpoint = make_defensive_copy(mountpoint);
-	(*volume)->scope = make_defensive_copy(scope);
+	(*volume)->name = str_clone(name);
+	(*volume)->driver = str_clone(driver);
+	(*volume)->mountpoint = str_clone(mountpoint);
+	(*volume)->scope = str_clone(scope);
 	(*volume)->labels = array_list_new((void (*)(void *)) &free_pair);
 	(*volume)->options = array_list_new((void (*)(void *)) &free_pair);
 	(*volume)->status = array_list_new((void (*)(void *)) &free_pair);
@@ -320,7 +320,7 @@ d_err_t docker_volume_delete(docker_context* ctx, docker_result** result,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 	if (force == 1) {
-		make_url_param(&p, "force", make_defensive_copy("true"));
+		make_url_param(&p, "force", str_clone("true"));
 		array_list_add(params, p);
 	}
 
@@ -394,7 +394,7 @@ d_err_t docker_volumes_delete_unused(docker_context* ctx,
 				int vols_len = json_object_array_length(vols_obj);
 				for (int i = 0; i < vols_len; i++) {
 					array_list_add(vols_del,
-							make_defensive_copy(
+							str_clone(
 									json_object_get_string(
 											json_object_array_get_idx(vols_obj,
 													i))));

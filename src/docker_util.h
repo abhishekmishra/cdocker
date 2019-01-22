@@ -86,7 +86,7 @@ void add_filter_str(json_object* filters, char* name, char* value);
 void add_filter_int(json_object* filters, char* name, int value);
 const char* filters_to_str(json_object* filters);
 
-char* make_defensive_copy(const char* from);
+char* str_clone(const char* from);
 
 /**
  * Get a string object with the given key from a json_object

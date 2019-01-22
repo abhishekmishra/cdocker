@@ -32,7 +32,7 @@
 #include <json-c/json_object.h>
 #include "docker_util.h"
 
-char* make_defensive_copy(const char* from) {
+char* str_clone(const char* from) {
 	char* to = NULL;
 	if ((from != NULL) && (strlen(from) > 0)) {
 		to = (char*) malloc((strlen(from) + 1) * sizeof(char));
@@ -115,8 +115,8 @@ d_err_t make_pair(pair** p, char* key, char* value) {
 	if (p1 == NULL) {
 		return E_ALLOC_FAILED;
 	}
-	p1->key = make_defensive_copy(key);
-	p1->value = make_defensive_copy(value);
+	p1->key = str_clone(key);
+	p1->value = str_clone(value);
 	(*p) = p1;
 	return E_SUCCESS;
 }

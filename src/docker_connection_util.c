@@ -202,7 +202,7 @@ static size_t write_memory_callback(void *contents, size_t size, size_t nmemb,
 	if (mem->status_callback != NULL && mem->memory) {
 		char* flush_str = mem->memory + (mem->flush_end * sizeof(char));
 		if (flush_str[strlen(flush_str) - 1] == '\n') {
-			char* msg = make_defensive_copy(flush_str);
+			char* msg = str_clone(flush_str);
 			mem->status_callback(msg, mem->cbargs, mem->client_cbargs);
 			mem->flush_end += strlen(flush_str);
 		}
@@ -339,10 +339,10 @@ d_err_t docker_api_post_cb(docker_context* ctx, docker_result** result,
 		if (result != NULL && (*result) != NULL) {
 			(*result)->method = HTTP_POST_STR;
 			if (post_data != NULL) {
-				(*result)->request_json_str = make_defensive_copy(post_data);
+				(*result)->request_json_str = str_clone(post_data);
 			}
 			if (chunk->memory != NULL) {
-				(*result)->response_json_str = make_defensive_copy(
+				(*result)->response_json_str = str_clone(
 						chunk->memory);
 			}
 			(*result)->start_time = start;
@@ -411,7 +411,7 @@ d_err_t docker_api_get_cb(docker_context* ctx, docker_result** result,
 			(*result)->method = HTTP_GET_STR;
 			(*result)->request_json_str = NULL;
 			if (chunk->memory != NULL) {
-				(*result)->response_json_str = make_defensive_copy(
+				(*result)->response_json_str = str_clone(
 						chunk->memory);
 			}
 			(*result)->start_time = start;
@@ -474,7 +474,7 @@ d_err_t docker_api_delete(docker_context* ctx, docker_result** result,
 			(*result)->method = HTTP_GET_STR;
 			(*result)->request_json_str = NULL;
 			if (chunk->memory != NULL) {
-				(*result)->response_json_str = make_defensive_copy(
+				(*result)->response_json_str = str_clone(
 						chunk->memory);
 			}
 			(*result)->start_time = start;

@@ -30,8 +30,8 @@ d_err_t make_docker_network_ipam_config(docker_network_ipam_config** config,
 	if ((*config) == NULL) {
 		return E_ALLOC_FAILED;
 	}
-	(*config)->gateway = make_defensive_copy(gateway);
-	(*config)->subnet = make_defensive_copy(subnet);
+	(*config)->gateway = str_clone(gateway);
+	(*config)->subnet = str_clone(subnet);
 	return E_SUCCESS;
 }
 
@@ -46,7 +46,7 @@ d_err_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver) {
 	if ((*ipam) == NULL) {
 		return E_ALLOC_FAILED;
 	}
-	(*ipam)->driver = make_defensive_copy(driver);
+	(*ipam)->driver = str_clone(driver);
 	(*ipam)->config = array_list_new(
 			(void (*)(void *)) &free_docker_network_ipam_config);
 	(*ipam)->options = array_list_new((void (*)(void *)) &free_pair);
@@ -68,12 +68,12 @@ d_err_t make_docker_network_container(docker_network_container** container,
 	if ((*container) == NULL) {
 		return E_ALLOC_FAILED;
 	}
-	(*container)->id = make_defensive_copy(id);
-	(*container)->name = make_defensive_copy(name);
-	(*container)->endpoint_id = make_defensive_copy(endpoint_id);
-	(*container)->mac_address = make_defensive_copy(mac_address);
-	(*container)->ipv4_address = make_defensive_copy(ipv4_address);
-	(*container)->ipv6_address = make_defensive_copy(ipv6_address);
+	(*container)->id = str_clone(id);
+	(*container)->name = str_clone(name);
+	(*container)->endpoint_id = str_clone(endpoint_id);
+	(*container)->mac_address = str_clone(mac_address);
+	(*container)->ipv4_address = str_clone(ipv4_address);
+	(*container)->ipv6_address = str_clone(ipv6_address);
 	return E_SUCCESS;
 }
 
@@ -94,11 +94,11 @@ d_err_t make_docker_network(docker_network** network, char* name, char* id,
 	if ((*network) == NULL) {
 		return E_ALLOC_FAILED;
 	}
-	(*network)->name = make_defensive_copy(name);
-	(*network)->id = make_defensive_copy(id);
+	(*network)->name = str_clone(name);
+	(*network)->id = str_clone(id);
 	(*network)->created = created;
-	(*network)->scope = make_defensive_copy(scope);
-	(*network)->driver = make_defensive_copy(driver);
+	(*network)->scope = str_clone(scope);
+	(*network)->driver = str_clone(driver);
 	(*network)->enableIPv6 = enableIPv6;
 	(*network)->ipam = ipam;
 	(*network)->internal = internal;
@@ -140,22 +140,22 @@ d_err_t docker_networks_list(docker_context* ctx, docker_result** result,
 	url_param* p;
 	json_object* filters = make_filters();
 	if (filter_driver != NULL) {
-		add_filter_str(filters, "driver", make_defensive_copy(filter_driver));
+		add_filter_str(filters, "driver", str_clone(filter_driver));
 	}
 	if (filter_id != NULL) {
-		add_filter_str(filters, "id", make_defensive_copy(filter_id));
+		add_filter_str(filters, "id", str_clone(filter_id));
 	}
 	if (filter_label != NULL) {
-		add_filter_str(filters, "label", make_defensive_copy(filter_label));
+		add_filter_str(filters, "label", str_clone(filter_label));
 	}
 	if (filter_name != NULL) {
-		add_filter_str(filters, "name", make_defensive_copy(filter_name));
+		add_filter_str(filters, "name", str_clone(filter_name));
 	}
 	if (filter_scope != NULL) {
-		add_filter_str(filters, "scope", make_defensive_copy(filter_scope));
+		add_filter_str(filters, "scope", str_clone(filter_scope));
 	}
 	if (filter_type != NULL) {
-		add_filter_str(filters, "type", make_defensive_copy(filter_type));
+		add_filter_str(filters, "type", str_clone(filter_type));
 	}
 	make_url_param(&p, "filters", (char *) filters_to_str(filters));
 	array_list_add(params, p);
@@ -274,11 +274,11 @@ d_err_t docker_network_inspect(docker_context* ctx, docker_result** result,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 	if (verbose != 0) {
-		make_url_param(&p, "verbose", make_defensive_copy("true"));
+		make_url_param(&p, "verbose", str_clone("true"));
 		array_list_add(params, p);
 	}
 	if (scope != NULL) {
-		make_url_param(&p, "scope", make_defensive_copy(scope));
+		make_url_param(&p, "scope", str_clone(scope));
 		array_list_add(params, p);
 	}
 

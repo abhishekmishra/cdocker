@@ -60,8 +60,8 @@ d_err_t make_docker_container_label(docker_container_label** label,
 	if (!(*label)) {
 		return E_ALLOC_FAILED;
 	}
-	(*label)->key = make_defensive_copy(key);
-	(*label)->value = make_defensive_copy(value);
+	(*label)->key = str_clone(key);
+	(*label)->value = str_clone(value);
 	if ((*label)->key && (*label)->value) {
 		return E_SUCCESS;
 	} else {
@@ -89,7 +89,7 @@ d_err_t make_docker_container_host_config(
 	if (!(*host_config)) {
 		return E_ALLOC_FAILED;
 	}
-	(*host_config)->network_mode = make_defensive_copy(network_mode);
+	(*host_config)->network_mode = str_clone(network_mode);
 	return E_SUCCESS;
 }
 
@@ -111,16 +111,16 @@ d_err_t make_docker_container_network_settings_item(
 	(*item) = (docker_container_network_settings_item*) malloc(
 			sizeof(docker_container_network_settings_item));
 	docker_container_network_settings_item* si = (*item);
-	si->name = make_defensive_copy(name);
-	si->network_id = make_defensive_copy(network_id);
-	si->endpoint_id = make_defensive_copy(endpoint_id);
-	si->gateway = make_defensive_copy(gateway);
-	si->ip_address = make_defensive_copy(ip_address);
+	si->name = str_clone(name);
+	si->network_id = str_clone(network_id);
+	si->endpoint_id = str_clone(endpoint_id);
+	si->gateway = str_clone(gateway);
+	si->ip_address = str_clone(ip_address);
 	si->ip_prefix_len = ip_prefix_len;
-	si->ipv6_gateway = make_defensive_copy(ipv6_gateway);
-	si->global_ipv6_address = make_defensive_copy(global_ipv6_address);
+	si->ipv6_gateway = str_clone(ipv6_gateway);
+	si->global_ipv6_address = str_clone(global_ipv6_address);
 	si->global_ipv6_prefix_len = global_ipv6_prefix_len;
-	si->mac_address = make_defensive_copy(mac_address);
+	si->mac_address = str_clone(mac_address);
 	return E_SUCCESS;
 }
 
@@ -146,14 +146,14 @@ d_err_t make_docker_container_mount(docker_container_mount** mount,
 		const int rw, const char* propagation) {
 	(*mount) = (docker_container_mount*) malloc(sizeof(docker_container_mount));
 	docker_container_mount* m = (*mount);
-	m->name = make_defensive_copy(name);
-	m->type = make_defensive_copy(type);
-	m->source = make_defensive_copy(source);
-	m->destination = make_defensive_copy(destination);
-	m->driver = make_defensive_copy(driver);
-	m->mode = make_defensive_copy(mode);
+	m->name = str_clone(name);
+	m->type = str_clone(type);
+	m->source = str_clone(source);
+	m->destination = str_clone(destination);
+	m->driver = str_clone(driver);
+	m->mode = str_clone(mode);
 	m->rw = rw;
-	m->propagation = make_defensive_copy(propagation);
+	m->propagation = str_clone(propagation);
 	return E_SUCCESS;
 }
 
@@ -181,13 +181,13 @@ d_err_t make_docker_containers_list_item(docker_container_list_item** item,
 			sizeof(docker_container_list_item));
 	docker_container_list_item* li = (*item);
 
-	li->id = make_defensive_copy(id);
-	li->image = make_defensive_copy(image);
-	li->image_id = make_defensive_copy(image_id);
-	li->command = make_defensive_copy(command);
+	li->id = str_clone(id);
+	li->image = str_clone(image);
+	li->image_id = str_clone(image_id);
+	li->command = str_clone(command);
 	li->created = created;
-	li->state = make_defensive_copy(state);
-	li->status = make_defensive_copy(status);
+	li->state = str_clone(state);
+	li->status = str_clone(status);
 	li->size_rw = size_rw;
 	li->size_root_fs = size_root_fs;
 
@@ -675,7 +675,7 @@ d_err_t make_docker_container_change(docker_container_change** item,
 	if (!(*item)) {
 		return E_ALLOC_FAILED;
 	}
-	(*item)->path = make_defensive_copy(path);
+	(*item)->path = str_clone(path);
 	if (kind != NULL) {
 		if (strcmp(kind, "0") == 0) {
 			(*item)->kind = DOCKER_FS_MODIFIED;
@@ -785,7 +785,7 @@ d_err_t make_docker_container_net_stats(docker_container_net_stats** net_stats,
 	if (!(*net_stats)) {
 		return E_ALLOC_FAILED;
 	}
-	(*net_stats)->name = make_defensive_copy(name);
+	(*net_stats)->name = str_clone(name);
 	(*net_stats)->rx_bytes = rx_bytes;
 	(*net_stats)->rx_dropped = rx_dropped;
 	(*net_stats)->rx_errors = rx_errors;
@@ -930,7 +930,7 @@ d_err_t docker_container_get_stats(docker_context* ctx, docker_result** result,
 	struct array_list* params = array_list_new(
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
-	make_url_param(&p, "stream", make_defensive_copy("false"));
+	make_url_param(&p, "stream", str_clone("false"));
 	array_list_add(params, p);
 
 	json_object *response_obj = NULL;
@@ -1097,7 +1097,7 @@ d_err_t docker_container_get_stats_cb(docker_context* ctx,
 	struct array_list* params = array_list_new(
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
-	make_url_param(&p, "stream", make_defensive_copy("true"));
+	make_url_param(&p, "stream", str_clone("true"));
 	array_list_add(params, p);
 
 	json_object *response_obj = NULL;
@@ -1184,12 +1184,12 @@ d_err_t docker_stop_container(docker_context* ctx, docker_result** result,
 	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 304) {
-		(*result)->message = make_defensive_copy(
+		(*result)->message = str_clone(
 				"container is already stopped.");
 	}
 
 	if ((*result)->http_error_code == 404) {
-		(*result)->message = make_defensive_copy("container not found.");
+		(*result)->message = str_clone("container not found.");
 	}
 
 	free(params);
@@ -1225,7 +1225,7 @@ d_err_t docker_restart_container(docker_context* ctx, docker_result** result,
 	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
-		(*result)->message = make_defensive_copy("container not found.");
+		(*result)->message = str_clone("container not found.");
 	}
 
 	free(params);
@@ -1250,7 +1250,7 @@ d_err_t docker_kill_container(docker_context* ctx, docker_result** result,
 	url_param* p;
 
 	if (signal != NULL) {
-		make_url_param(&p, "signal", make_defensive_copy(signal));
+		make_url_param(&p, "signal", str_clone(signal));
 		array_list_add(params, p);
 	}
 
@@ -1259,11 +1259,11 @@ d_err_t docker_kill_container(docker_context* ctx, docker_result** result,
 	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
-		(*result)->message = make_defensive_copy("container not found.");
+		(*result)->message = str_clone("container not found.");
 	}
 
 	if ((*result)->http_error_code == 409) {
-		(*result)->message = make_defensive_copy("container is not running.");
+		(*result)->message = str_clone("container is not running.");
 	}
 
 	free(params);
@@ -1288,7 +1288,7 @@ d_err_t docker_rename_container(docker_context* ctx, docker_result** result,
 	url_param* p;
 
 	if (name != NULL) {
-		make_url_param(&p, "name", make_defensive_copy(name));
+		make_url_param(&p, "name", str_clone(name));
 		array_list_add(params, p);
 	}
 
@@ -1297,11 +1297,11 @@ d_err_t docker_rename_container(docker_context* ctx, docker_result** result,
 	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
-		(*result)->message = make_defensive_copy("container not found.");
+		(*result)->message = str_clone("container not found.");
 	}
 
 	if ((*result)->http_error_code == 409) {
-		(*result)->message = make_defensive_copy("name is already in use");
+		(*result)->message = str_clone("name is already in use");
 	}
 
 	free(params);
@@ -1325,7 +1325,7 @@ d_err_t docker_pause_container(docker_context* ctx, docker_result** result,
 	docker_api_post(ctx, result, url, NULL, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
-		(*result)->message = make_defensive_copy("container not found.");
+		(*result)->message = str_clone("container not found.");
 	}
 	return E_SUCCESS;
 }
@@ -1347,7 +1347,7 @@ d_err_t docker_unpause_container(docker_context* ctx, docker_result** result,
 	docker_api_post(ctx, result, url, NULL, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
-		(*result)->message = make_defensive_copy("container not found.");
+		(*result)->message = str_clone("container not found.");
 	}
 	return E_SUCCESS;
 }
@@ -1370,7 +1370,7 @@ d_err_t docker_wait_container(docker_context* ctx, docker_result** result,
 	url_param* p;
 
 	if (condition != NULL) {
-		make_url_param(&p, "condition", make_defensive_copy(condition));
+		make_url_param(&p, "condition", str_clone(condition));
 		array_list_add(params, p);
 	}
 

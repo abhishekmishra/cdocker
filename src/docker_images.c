@@ -32,8 +32,8 @@ d_err_t make_docker_image(docker_image** image, char* id, char* parent_id,
 		return E_ALLOC_FAILED;
 	}
 
-	(*image)->id = make_defensive_copy(id);
-	(*image)->parent_id = make_defensive_copy(parent_id);
+	(*image)->id = str_clone(id);
+	(*image)->parent_id = str_clone(parent_id);
 	(*image)->created = created;
 	(*image)->size = size;
 	(*image)->virtual_size = virtual_size;
@@ -83,20 +83,20 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 	url_param* p;
 	json_object* filters = make_filters();
 	if (filter_before != NULL) {
-		add_filter_str(filters, "before", make_defensive_copy(filter_before));
+		add_filter_str(filters, "before", str_clone(filter_before));
 	}
 	if (filter_dangling != 0) {
-		add_filter_str(filters, "dangling", make_defensive_copy("true"));
+		add_filter_str(filters, "dangling", str_clone("true"));
 	}
 	if (filter_label != NULL) {
-		add_filter_str(filters, "label", make_defensive_copy(filter_label));
+		add_filter_str(filters, "label", str_clone(filter_label));
 	}
 	if (filter_reference != NULL) {
 		add_filter_str(filters, "reference",
-				make_defensive_copy(filter_reference));
+				str_clone(filter_reference));
 	}
 	if (filter_since != NULL) {
-		add_filter_str(filters, "since", make_defensive_copy(filter_since));
+		add_filter_str(filters, "since", str_clone(filter_since));
 	}
 	make_url_param(&p, "filters", (char *) filters_to_str(filters));
 	array_list_add(params, p);

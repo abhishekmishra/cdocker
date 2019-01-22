@@ -72,7 +72,7 @@ d_err_t docker_ping(docker_context* ctx, docker_result** result) {
 	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
 
 	if ((*result)->http_error_code != 200) {
-		(*result)->message = make_defensive_copy("Docker Server not OK.");
+		(*result)->message = str_clone("Docker Server not OK.");
 		return E_PING_FAILED;
 	}
 
@@ -90,15 +90,15 @@ d_err_t make_docker_version(docker_version** dv, char* version, char* os,
 	if (!(*dv)) {
 		return E_ALLOC_FAILED;
 	}
-	(*dv)->version = make_defensive_copy(version);
-	(*dv)->os = make_defensive_copy(os);
-	(*dv)->kernel_version = make_defensive_copy(kernel_version);
-	(*dv)->go_version = make_defensive_copy(go_version);
-	(*dv)->git_commit = make_defensive_copy(git_commit);
-	(*dv)->arch = make_defensive_copy(arch);
-	(*dv)->api_version = make_defensive_copy(api_version);
-	(*dv)->min_api_version = make_defensive_copy(min_api_version);
-	(*dv)->build_time = make_defensive_copy(build_time);
+	(*dv)->version = str_clone(version);
+	(*dv)->os = str_clone(os);
+	(*dv)->kernel_version = str_clone(kernel_version);
+	(*dv)->go_version = str_clone(go_version);
+	(*dv)->git_commit = str_clone(git_commit);
+	(*dv)->arch = str_clone(arch);
+	(*dv)->api_version = str_clone(api_version);
+	(*dv)->min_api_version = str_clone(min_api_version);
+	(*dv)->build_time = str_clone(build_time);
 	(*dv)->experimental = experimental;
 	return E_SUCCESS;
 }
@@ -227,9 +227,9 @@ d_err_t make_docker_event(docker_event** event, char* type, char* action,
 	if (!(*event)) {
 		return E_ALLOC_FAILED;
 	}
-	(*event)->type = make_defensive_copy(type);
-	(*event)->action = make_defensive_copy(action);
-	(*event)->actor_id = make_defensive_copy(actor_id);
+	(*event)->type = str_clone(type);
+	(*event)->action = str_clone(action);
+	(*event)->actor_id = str_clone(actor_id);
 	(*event)->actor_attributes = actor_attributes;
 	(*event)->time = time;
 	return E_SUCCESS;

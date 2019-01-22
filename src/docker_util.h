@@ -80,12 +80,52 @@ char* get_key(pair*p);
  */
 void free_pair(pair*p);
 
-// Filter utility functions
+// Filter utility functions for use in Docker API calls.
+
+/**
+ * Create new filter json_object for use in calls
+ * to the docker API, which uses filters in many endpoints.
+ *
+ * \return new json_object* which should be passed to all calls to
+ * 		filter methods.
+ */
 json_object* make_filters();
+
+/**
+ * Add a string value to the filter if it exits, or create a new one.
+ *
+ * \param filters the filters object created earlier using make_filters
+ * \param name name of the filter
+ * \param value value of the filter
+ */
 void add_filter_str(json_object* filters, char* name, char* value);
+
+/**
+ * Add an int value to the filter if it exits, or create a new one.
+ *
+ * \param filters the filters object created earlier using make_filters
+ * \param name name of the filter
+ * \param value value of the filter
+ */
 void add_filter_int(json_object* filters, char* name, int value);
+
+/**
+ * Convert the filters object to a json string.
+ * Behaviour is undefined if filters is NULL.
+ *
+ * \param filters
+ * \return json string
+ */
 const char* filters_to_str(json_object* filters);
 
+/**
+ * Clone a string for usage in internal apis.
+ * User of api can then get rid of their copy.
+ * (obviously wasteful, use with caution)
+ *
+ * \param from string to clone from
+ * \return cloned string, NULL if there is an error.
+ */
 char* str_clone(const char* from);
 
 /**

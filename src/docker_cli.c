@@ -226,11 +226,10 @@ cld_err_t cmd_hdlr_container_list(int argc, char** argv) {
 			//get ports
 			char ports_str[1024];
 			ports_str[0] = '\0';
-			for (int j = 0; j < docker_container_list_item_ports_length(ctr);
-					j++) {
+			for (int j = 0; j < array_list_length(ctr->ports); j++) {
 				char port_str[100];
-				docker_container_ports* ports =
-						docker_container_list_item_ports_get_idx(ctr, 0);
+				docker_container_ports* ports = array_list_get_idx(ctr->ports,
+						0);
 				sprintf(port_str, "%ld:%ld", ports->private_port,
 						ports->public_port);
 				if (j == 0) {
@@ -250,15 +249,12 @@ cld_err_t cmd_hdlr_container_list(int argc, char** argv) {
 			//get names
 			char names[1024];
 			names[0] = '\0';
-			for (int j = 0; j < docker_container_list_item_names_length(ctr);
-					j++) {
+			for (int j = 0; j < array_list_length(ctr->names); j++) {
 				if (j == 0) {
-					strcpy(names,
-							docker_container_list_item_names_get_idx(ctr, j));
+					strcpy(names, array_list_get_idx(ctr->names, j));
 				} else {
 					strcat(names, ",");
-					strcat(names,
-							docker_container_list_item_names_get_idx(ctr, j));
+					strcat(names, array_list_get_idx(ctr->names, j));
 				}
 			}
 			printf("%-20.*s\t%-40s\t\"%-20s\"\t%-20s\t%-20s\t%-20s\t%-20s\t\n",

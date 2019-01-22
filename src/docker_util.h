@@ -41,39 +41,6 @@ extern "C" {
 #include <json-c/json_object.h>
 #include "docker_result.h"
 
-#define DOCKER_GETTER(object, type, name) \
-		type docker_ ## object ## _get_ ## name(docker_ ## object* object);
-
-#define DOCKER_GETTER_ARR_ADD(object, type, name) \
-		int docker_ ## object ## _ ## name ## _add(docker_ ## object* object, type data);
-
-#define DOCKER_GETTER_ARR_LEN(object, name) \
-		int docker_ ## object ## _ ## name ## _length(docker_ ## object* object);
-
-#define DOCKER_GETTER_ARR_GET_IDX(object, type, name) \
-		type docker_ ## object ## _ ## name ## _get_idx(docker_ ## object* object, int i);
-
-#define DOCKER_GETTER_IMPL(object, type, name) \
-	type docker_ ## object ## _get_ ## name(docker_ ## object* object) { \
-		return object->name; \
-	} \
-
-
-#define DOCKER_GETTER_ARR_ADD_IMPL(object, type, name) \
-	int docker_ ## object ## _ ## name ## _add(docker_ ## object* object, type data) { \
-		return array_list_add(object->name, (void*) data); \
-	} \
-
-#define DOCKER_GETTER_ARR_LEN_IMPL(object, name) \
-	int docker_ ## object ## _ ## name ##_length(docker_ ## object* object) { \
-		return array_list_length(object->name); \
-	} \
-
-#define DOCKER_GETTER_ARR_GET_IDX_IMPL(object, type, name) \
-	type docker_ ## object ## _ ## name ## _get_idx(docker_ ## object* object, int i) { \
-		return (type) array_list_get_idx(object->name, i); \
-	} \
-
 /**
  * A simple pair of strings
  *

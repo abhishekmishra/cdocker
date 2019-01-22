@@ -52,24 +52,6 @@ d_err_t make_docker_volume(docker_volume** volume, time_t created_at,
 
 void free_docker_volume(docker_volume* volume);
 
-DOCKER_GETTER(volume, time_t, created_at)
-DOCKER_GETTER(volume, char*, name)
-DOCKER_GETTER(volume, char*, driver)
-DOCKER_GETTER(volume, char*, mountpoint)
-DOCKER_GETTER(volume, char*, scope)
-
-DOCKER_GETTER_ARR_ADD(volume, pair*, labels)
-DOCKER_GETTER_ARR_LEN(volume, labels)
-DOCKER_GETTER_ARR_GET_IDX(volume, pair*, labels)
-
-DOCKER_GETTER_ARR_ADD(volume, pair*, options)
-DOCKER_GETTER_ARR_LEN(volume, options)
-DOCKER_GETTER_ARR_GET_IDX(volume, pair*, options)
-
-DOCKER_GETTER_ARR_ADD(volume, pair*, status)
-DOCKER_GETTER_ARR_LEN(volume, status)
-DOCKER_GETTER_ARR_GET_IDX(volume, pair*, status)
-
 /**
  * Get the list of volumes, matching the filters provided.
  * (Any and all filters can be null/0.)

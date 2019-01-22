@@ -57,26 +57,6 @@ void free_docker_image(docker_image* image) {
 	}
 }
 
-DOCKER_GETTER_IMPL(image, char*, id)
-DOCKER_GETTER_IMPL(image, char*, parent_id)
-DOCKER_GETTER_IMPL(image, time_t, created)
-DOCKER_GETTER_IMPL(image, unsigned long, size)
-DOCKER_GETTER_IMPL(image, unsigned long, virtual_size)
-DOCKER_GETTER_IMPL(image, unsigned long, shared_size)
-DOCKER_GETTER_IMPL(image, unsigned long, containers)
-
-DOCKER_GETTER_ARR_ADD_IMPL(image, char*, repo_tags)
-DOCKER_GETTER_ARR_LEN_IMPL(image, repo_tags)
-DOCKER_GETTER_ARR_GET_IDX_IMPL(image, char*, repo_tags)
-
-DOCKER_GETTER_ARR_ADD_IMPL(image, char*, repo_digests)
-DOCKER_GETTER_ARR_LEN_IMPL(image, repo_digests)
-DOCKER_GETTER_ARR_GET_IDX_IMPL(image, char*, repo_digests)
-
-DOCKER_GETTER_ARR_ADD_IMPL(image, pair*, labels)
-DOCKER_GETTER_ARR_LEN_IMPL(image, labels)
-DOCKER_GETTER_ARR_GET_IDX_IMPL(image, pair*, labels)
-
 /**
  * List images matching the filters.
  *
@@ -157,7 +137,7 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 			{
 				pair* p;
 				make_pair(&p, key, (char*) json_object_get_string(val));
-				docker_image_labels_add(img, p);
+				array_list_add(img->labels, p);
 			}
 		}
 		json_object* repo_tags_obj;
@@ -165,7 +145,7 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 		if (repo_tags_obj != NULL) {
 			int num_repo_tags = json_object_array_length(repo_tags_obj);
 			for (int j = 0; j < num_repo_tags; j++) {
-				docker_image_repo_tags_add(img,
+				array_list_add(img->repo_tags,
 						(char*) json_object_get_string(
 								json_object_array_get_idx(repo_tags_obj, j)));
 			}
@@ -175,7 +155,7 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 		if (repo_digests_obj != NULL) {
 			int num_repo_digests = json_object_array_length(repo_digests_obj);
 			for (int j = 0; j < num_repo_digests; j++) {
-				docker_image_repo_digests_add(img,
+				array_list_add(img->repo_digests,
 						(char*) json_object_get_string(
 								json_object_array_get_idx(repo_digests_obj, j)));
 			}

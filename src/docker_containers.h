@@ -53,10 +53,6 @@ d_err_t make_docker_container_ports(docker_container_ports** ports, long priv,
  */
 void free_docker_container_ports(docker_container_ports* ports);
 
-DOCKER_GETTER(container_ports, long, public_port)
-DOCKER_GETTER(container_ports, long, private_port)
-DOCKER_GETTER(container_ports, docker_container_port_type, type)
-
 /**
  * A container label struct: Key value pair.
  */
@@ -83,9 +79,6 @@ d_err_t make_docker_container_label(docker_container_label** label,
  */
 void free_docker_container_label(docker_container_label* label);
 
-DOCKER_GETTER(container_label, char*, key)
-DOCKER_GETTER(container_label, char*, value)
-
 /**
  * Struct for the container host config.
  */
@@ -109,8 +102,6 @@ d_err_t make_docker_container_host_config(
  */
 void free_docker_container_host_config(
 		docker_container_host_config* host_config);
-
-DOCKER_GETTER(container_host_config, char*, network_mode)
 
 /**
  * Struct for the network settings item
@@ -141,17 +132,6 @@ d_err_t make_docker_container_network_settings_item(
 void free_docker_container_network_settings_item(
 		docker_container_network_settings_item* settings_item);
 
-DOCKER_GETTER(container_network_settings_item, char*, name)
-DOCKER_GETTER(container_network_settings_item, char*, network_id)
-DOCKER_GETTER(container_network_settings_item, char*, endpoint_id)
-DOCKER_GETTER(container_network_settings_item, char*, gateway)
-DOCKER_GETTER(container_network_settings_item, char*, ip_address)
-DOCKER_GETTER(container_network_settings_item, int, ip_prefix_len)
-DOCKER_GETTER(container_network_settings_item, char*, ipv6_gateway)
-DOCKER_GETTER(container_network_settings_item, char*, global_ipv6_address)
-DOCKER_GETTER(container_network_settings_item, int, global_ipv6_prefix_len)
-DOCKER_GETTER(container_network_settings_item, char*, mac_address)
-
 typedef struct docker_container_mount_t {
 	char* name;
 	char* type;
@@ -172,15 +152,6 @@ d_err_t make_docker_container_mount(docker_container_mount** mount,
 		const int rw, const char* propagation);
 
 void free_docker_container_mount(docker_container_mount* mount);
-
-DOCKER_GETTER(container_mount, char*, name)
-DOCKER_GETTER(container_mount, char*, type)
-DOCKER_GETTER(container_mount, char*, source)
-DOCKER_GETTER(container_mount, char*, destination)
-DOCKER_GETTER(container_mount, char*, driver)
-DOCKER_GETTER(container_mount, char*, mode)
-DOCKER_GETTER(container_mount, int, rw)
-DOCKER_GETTER(container_mount, char*, propagation)
 
 typedef struct docker_container_list_item_t {
 	char* id;
@@ -211,38 +182,6 @@ d_err_t make_docker_containers_list_item(docker_container_list_item** item,
 		const docker_container_host_config* hostConfig);
 
 void free_docker_container_list_item(docker_container_list_item* item);
-
-DOCKER_GETTER(container_list_item, char*, id)
-DOCKER_GETTER(container_list_item, char*, image)
-DOCKER_GETTER(container_list_item, char*, image_id)
-DOCKER_GETTER(container_list_item, char*, command)
-DOCKER_GETTER(container_list_item, long long, created)
-DOCKER_GETTER(container_list_item, char*, state)
-DOCKER_GETTER(container_list_item, char*, status)
-DOCKER_GETTER(container_list_item, long long, size_rw)
-DOCKER_GETTER(container_list_item, long long, size_root_fs)
-
-DOCKER_GETTER_ARR_ADD(container_list_item, char*, names)
-DOCKER_GETTER_ARR_LEN(container_list_item, names)
-DOCKER_GETTER_ARR_GET_IDX(container_list_item, char*, names)
-
-DOCKER_GETTER_ARR_ADD(container_list_item, docker_container_ports*, ports)
-DOCKER_GETTER_ARR_LEN(container_list_item, ports)
-DOCKER_GETTER_ARR_GET_IDX(container_list_item, docker_container_ports*, ports)
-
-DOCKER_GETTER_ARR_ADD(container_list_item, docker_container_label*, labels)
-DOCKER_GETTER_ARR_LEN(container_list_item, labels)
-DOCKER_GETTER_ARR_GET_IDX(container_list_item, docker_container_label*, labels)
-
-DOCKER_GETTER_ARR_ADD(container_list_item,
-		docker_container_network_settings_item*, network_settings)
-DOCKER_GETTER_ARR_LEN(container_list_item, network_settings)
-DOCKER_GETTER_ARR_GET_IDX(container_list_item,
-		docker_container_network_settings_item*, network_settings)
-
-DOCKER_GETTER_ARR_ADD(container_list_item, docker_container_mount*, mounts)
-DOCKER_GETTER_ARR_LEN(container_list_item, mounts)
-DOCKER_GETTER_ARR_GET_IDX(container_list_item, docker_container_mount*, mounts)
 
 typedef struct array_list docker_containers_list;
 
@@ -390,9 +329,6 @@ d_err_t make_docker_container_change(docker_container_change** item,
 
 void free_docker_container_change(docker_container_change* item);
 
-DOCKER_GETTER(container_change, char*, path)
-DOCKER_GETTER(container_change, change_kind, kind)
-
 typedef struct array_list docker_changes_list;
 
 d_err_t make_docker_changes_list(docker_changes_list** changes_list);
@@ -423,7 +359,6 @@ typedef struct docker_container_pids_stats_t {
 d_err_t make_docker_container_pids_stats(
 		docker_container_pids_stats** pids_stats, int current);
 void free_docker_container_pids_stats(docker_container_pids_stats* pids);
-DOCKER_GETTER(container_pids_stats, int, current)
 
 typedef struct docker_container_net_stats_t {
 	char* name;
@@ -443,15 +378,6 @@ d_err_t make_docker_container_net_stats(docker_container_net_stats** net_stats,
 		unsigned long tx_bytes, unsigned long tx_dropped,
 		unsigned long tx_errors, unsigned long tx_packets);
 void free_docker_container_net_stats(docker_container_net_stats* net_stats);
-DOCKER_GETTER(container_net_stats, char*, name)
-DOCKER_GETTER(container_net_stats, unsigned long, rx_bytes)
-DOCKER_GETTER(container_net_stats, unsigned long, rx_dropped)
-DOCKER_GETTER(container_net_stats, unsigned long, rx_errors)
-DOCKER_GETTER(container_net_stats, unsigned long, rx_packets)
-DOCKER_GETTER(container_net_stats, unsigned long, tx_bytes)
-DOCKER_GETTER(container_net_stats, unsigned long, tx_dropped)
-DOCKER_GETTER(container_net_stats, unsigned long, tx_errors)
-DOCKER_GETTER(container_net_stats, unsigned long, tx_packets)
 
 typedef struct docker_container_mem_stats_t {
 	unsigned long max_usage;
@@ -464,10 +390,6 @@ d_err_t make_docker_container_mem_stats(docker_container_mem_stats** mem_stats,
 		unsigned long max_usage, unsigned long usage, unsigned long failcnt,
 		unsigned long limit);
 void free_docker_container_mem_stats(docker_container_mem_stats* mem_stats);
-DOCKER_GETTER(container_mem_stats, unsigned long, max_usage)
-DOCKER_GETTER(container_mem_stats, unsigned long, usage)
-DOCKER_GETTER(container_mem_stats, unsigned long, failcnt)
-DOCKER_GETTER(container_mem_stats, unsigned long, limit)
 
 //TODO: add throttling data
 typedef struct docker_container_cpu_stats_t {
@@ -484,15 +406,6 @@ d_err_t make_docker_container_cpu_stats(docker_container_cpu_stats** cpu_stats,
 		unsigned long usage_in_kernelmode, unsigned long system_cpu_usage,
 		int online_cpus);
 void free_docker_container_cpu_stats(docker_container_cpu_stats* cpu_stats);
-DOCKER_GETTER(container_cpu_stats, unsigned long, total_usage)
-DOCKER_GETTER(container_cpu_stats, unsigned long, usage_in_usermode)
-DOCKER_GETTER(container_cpu_stats, unsigned long, usage_in_kernelmode)
-DOCKER_GETTER(container_cpu_stats, unsigned long, system_cpu_usage)
-DOCKER_GETTER(container_cpu_stats, int, online_cpus)
-
-DOCKER_GETTER_ARR_ADD(container_cpu_stats, unsigned long, percpu_usage)
-DOCKER_GETTER_ARR_LEN(container_cpu_stats, percpu_usage)
-DOCKER_GETTER_ARR_GET_IDX(container_cpu_stats, unsigned long, percpu_usage)
 
 //TODO: define and add blkio stats
 typedef struct docker_container_stats_t {
@@ -511,18 +424,6 @@ d_err_t make_docker_container_stats(docker_container_stats** stats,
 		docker_container_cpu_stats* precpu_stats);
 
 void free_docker_container_stats(docker_container_stats* stats);
-
-DOCKER_GETTER(container_stats, struct tm*, read)
-DOCKER_GETTER(container_stats, docker_container_pids_stats*, pid_stats)
-DOCKER_GETTER(container_stats, docker_container_mem_stats*, mem_stats)
-DOCKER_GETTER(container_stats, docker_container_cpu_stats*, cpu_stats)
-DOCKER_GETTER(container_stats, docker_container_cpu_stats*, precpu_stats)
-
-DOCKER_GETTER_ARR_ADD(container_stats, docker_container_net_stats*,
-		net_stats_list)
-DOCKER_GETTER_ARR_LEN(container_stats, net_stats_list)
-DOCKER_GETTER_ARR_GET_IDX(container_stats, docker_container_net_stats*,
-		net_stats_list)
 
 float docker_container_stats_get_cpu_usage_percent(
 		docker_container_stats* stats);

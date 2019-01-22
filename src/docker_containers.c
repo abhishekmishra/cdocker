@@ -46,10 +46,6 @@ void free_docker_container_ports(docker_container_ports* ports) {
 	free(ports);
 }
 
-DOCKER_GETTER_IMPL(container_ports, long, public_port)
-DOCKER_GETTER_IMPL(container_ports, long, private_port)
-DOCKER_GETTER_IMPL(container_ports, docker_container_port_type, type)
-
 /**
  * Create a new label.
  *
@@ -79,9 +75,6 @@ void free_docker_container_label(docker_container_label* label) {
 	free(label);
 }
 
-DOCKER_GETTER_IMPL(container_label, char*, key)
-DOCKER_GETTER_IMPL(container_label, char*, value)
-
 /**
  * Create a new host config
  *
@@ -105,8 +98,6 @@ void free_docker_container_host_config(
 	free(host_config->network_mode);
 	free(host_config);
 }
-
-DOCKER_GETTER_IMPL(container_host_config, char*, network_mode)
 
 /**
  * Create a new network settings item
@@ -146,17 +137,6 @@ void free_docker_container_network_settings_item(
 	free(settings_item);
 }
 
-DOCKER_GETTER_IMPL(container_network_settings_item, char*, name)
-DOCKER_GETTER_IMPL(container_network_settings_item, char*, network_id)
-DOCKER_GETTER_IMPL(container_network_settings_item, char*, endpoint_id)
-DOCKER_GETTER_IMPL(container_network_settings_item, char*, gateway)
-DOCKER_GETTER_IMPL(container_network_settings_item, char*, ip_address)
-DOCKER_GETTER_IMPL(container_network_settings_item, int, ip_prefix_len)
-DOCKER_GETTER_IMPL(container_network_settings_item, char*, ipv6_gateway)
-DOCKER_GETTER_IMPL(container_network_settings_item, char*, global_ipv6_address)
-DOCKER_GETTER_IMPL(container_network_settings_item, int, global_ipv6_prefix_len)
-DOCKER_GETTER_IMPL(container_network_settings_item, char*, mac_address)
-
 /**
  * Create a new mount object
  */
@@ -187,15 +167,6 @@ void free_docker_container_mount(docker_container_mount* mount) {
 	free(mount->propagation);
 	free(mount);
 }
-
-DOCKER_GETTER_IMPL(container_mount, char*, name)
-DOCKER_GETTER_IMPL(container_mount, char*, type)
-DOCKER_GETTER_IMPL(container_mount, char*, source)
-DOCKER_GETTER_IMPL(container_mount, char*, destination)
-DOCKER_GETTER_IMPL(container_mount, char*, driver)
-DOCKER_GETTER_IMPL(container_mount, char*, mode)
-DOCKER_GETTER_IMPL(container_mount, int, rw)
-DOCKER_GETTER_IMPL(container_mount, char*, propagation)
 
 /**
  * Create a new containers list item.
@@ -246,41 +217,6 @@ void free_docker_container_list_item(docker_container_list_item* item) {
 	array_list_free(item->mounts);
 	free(item);
 }
-
-DOCKER_GETTER_IMPL(container_list_item, char*, id)
-DOCKER_GETTER_IMPL(container_list_item, char*, image)
-DOCKER_GETTER_IMPL(container_list_item, char*, image_id)
-DOCKER_GETTER_IMPL(container_list_item, char*, command)
-DOCKER_GETTER_IMPL(container_list_item, long long, created)
-DOCKER_GETTER_IMPL(container_list_item, char*, state)
-DOCKER_GETTER_IMPL(container_list_item, char*, status)
-DOCKER_GETTER_IMPL(container_list_item, long long, size_rw)
-DOCKER_GETTER_IMPL(container_list_item, long long, size_root_fs)
-
-DOCKER_GETTER_ARR_ADD_IMPL(container_list_item, char*, names)
-DOCKER_GETTER_ARR_LEN_IMPL(container_list_item, names)
-DOCKER_GETTER_ARR_GET_IDX_IMPL(container_list_item, char*, names)
-
-DOCKER_GETTER_ARR_ADD_IMPL(container_list_item, docker_container_ports*, ports)
-DOCKER_GETTER_ARR_LEN_IMPL(container_list_item, ports)
-DOCKER_GETTER_ARR_GET_IDX_IMPL(container_list_item, docker_container_ports*,
-		ports)
-
-DOCKER_GETTER_ARR_ADD_IMPL(container_list_item, docker_container_label*, labels)
-DOCKER_GETTER_ARR_LEN_IMPL(container_list_item, labels)
-DOCKER_GETTER_ARR_GET_IDX_IMPL(container_list_item, docker_container_label*,
-		labels)
-
-DOCKER_GETTER_ARR_ADD_IMPL(container_list_item,
-		docker_container_network_settings_item*, network_settings)
-DOCKER_GETTER_ARR_LEN_IMPL(container_list_item, network_settings)
-DOCKER_GETTER_ARR_GET_IDX_IMPL(container_list_item,
-		docker_container_network_settings_item*, network_settings)
-
-DOCKER_GETTER_ARR_ADD_IMPL(container_list_item, docker_container_mount*, mounts)
-DOCKER_GETTER_ARR_LEN_IMPL(container_list_item, mounts)
-DOCKER_GETTER_ARR_GET_IDX_IMPL(container_list_item, docker_container_mount*,
-		mounts)
 
 void extract_filter_field_char(json_object* fobj, char* filter_name,
 		int num_items, char** items) {
@@ -372,11 +308,11 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 	json_object* filters = make_filters();
 	while (true) {
 		char* filter_name = va_arg(kvargs, char*);
-		if(filter_name == NULL) {
+		if (filter_name == NULL) {
 			break;
 		}
 		char* filter_value = va_arg(kvargs, char*);
-		if(filter_value == NULL) {
+		if (filter_value == NULL) {
 			break;
 		}
 		add_filter_str(filters, filter_name, filter_value);
@@ -427,7 +363,7 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 				&namesObj)) {
 			struct array_list* names_arr = json_object_get_array(namesObj);
 			for (int ni = 0; ni < names_arr->length; ni++) {
-				docker_container_list_item_names_add(listItem,
+				array_list_add(listItem->names,
 						(char*) json_object_get_string(names_arr->array[ni]));
 			}
 		}
@@ -443,7 +379,7 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 						get_attr_long(ports_arr->array[ni], "PrivatePort"),
 						get_attr_long(ports_arr->array[ni], "PublicPort"),
 						get_attr_str(ports_arr->array[ni], "Type"));
-				docker_container_list_item_ports_add(listItem, ports);
+				array_list_add(listItem->ports, ports);
 			}
 		}
 		free(portsObj);
@@ -456,10 +392,8 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 				docker_container_label* label;
 				make_docker_container_label(&label, key1,
 						json_object_get_string((json_object *) val1));
-				docker_log_debug("Label [%s] = [%s]",
-						docker_container_label_get_key(label),
-						docker_container_label_get_value(label));
-				docker_container_list_item_labels_add(listItem, label);
+				docker_log_debug("Label [%s] = [%s]", label->key, label->value);
+				array_list_add(listItem->labels, label);
 			}
 		}
 		free(labelsObj);
@@ -483,8 +417,7 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 							get_attr_str(v, "GlobalIPv6Address"),
 							get_attr_int(v, "GlobalIPv6PrefixLen"),
 							get_attr_str(v, "MacAddress"));
-					docker_container_list_item_network_settings_add(listItem,
-							settings);
+					array_list_add(listItem->network_settings, settings);
 				}
 				free(networksObj);
 			}
@@ -507,7 +440,7 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 						get_attr_int(mounts_arr->array[ni], "Read"),
 						get_attr_str(mounts_arr->array[ni], "Propagation"));
 
-				docker_container_list_item_mounts_add(listItem, mount);
+				array_list_add(listItem->mounts, mount);
 			}
 			free(mountsObj);
 		}
@@ -766,9 +699,6 @@ void free_docker_container_change(docker_container_change* item) {
 	}
 }
 
-DOCKER_GETTER_IMPL(container_change, char*, path)
-DOCKER_GETTER_IMPL(container_change, change_kind, kind)
-
 d_err_t make_docker_changes_list(docker_changes_list** changes_list) {
 	(*changes_list) = array_list_new(
 			(void (*)(void *)) &free_docker_container_change);
@@ -845,8 +775,6 @@ void free_docker_container_pids_stats(docker_container_pids_stats* pids) {
 	free(pids);
 }
 
-DOCKER_GETTER_IMPL(container_pids_stats, int, current)
-
 d_err_t make_docker_container_net_stats(docker_container_net_stats** net_stats,
 		char* name, unsigned long rx_bytes, unsigned long rx_dropped,
 		unsigned long rx_errors, unsigned long rx_packets,
@@ -874,16 +802,6 @@ void free_docker_container_net_stats(docker_container_net_stats* net_stats) {
 	free(net_stats);
 }
 
-DOCKER_GETTER_IMPL(container_net_stats, char*, name)
-DOCKER_GETTER_IMPL(container_net_stats, unsigned long, rx_bytes)
-DOCKER_GETTER_IMPL(container_net_stats, unsigned long, rx_dropped)
-DOCKER_GETTER_IMPL(container_net_stats, unsigned long, rx_errors)
-DOCKER_GETTER_IMPL(container_net_stats, unsigned long, rx_packets)
-DOCKER_GETTER_IMPL(container_net_stats, unsigned long, tx_bytes)
-DOCKER_GETTER_IMPL(container_net_stats, unsigned long, tx_dropped)
-DOCKER_GETTER_IMPL(container_net_stats, unsigned long, tx_errors)
-DOCKER_GETTER_IMPL(container_net_stats, unsigned long, tx_packets)
-
 d_err_t make_docker_container_mem_stats(docker_container_mem_stats** mem_stats,
 		unsigned long max_usage, unsigned long usage, unsigned long failcnt,
 		unsigned long limit) {
@@ -902,11 +820,6 @@ d_err_t make_docker_container_mem_stats(docker_container_mem_stats** mem_stats,
 void free_docker_container_mem_stats(docker_container_mem_stats* mem_stats) {
 	free(mem_stats);
 }
-
-DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, max_usage)
-DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, usage)
-DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, failcnt)
-DOCKER_GETTER_IMPL(container_mem_stats, unsigned long, limit)
 
 d_err_t make_docker_container_cpu_stats(docker_container_cpu_stats** cpu_stats,
 		unsigned long total_usage, unsigned long usage_in_usermode,
@@ -930,16 +843,6 @@ void free_docker_container_cpu_stats(docker_container_cpu_stats* cpu_stats) {
 	free(cpu_stats->percpu_usage);
 	free(cpu_stats);
 }
-
-DOCKER_GETTER_IMPL(container_cpu_stats, unsigned long, total_usage)
-DOCKER_GETTER_IMPL(container_cpu_stats, unsigned long, usage_in_usermode)
-DOCKER_GETTER_IMPL(container_cpu_stats, unsigned long, usage_in_kernelmode)
-DOCKER_GETTER_IMPL(container_cpu_stats, unsigned long, system_cpu_usage)
-DOCKER_GETTER_IMPL(container_cpu_stats, int, online_cpus)
-
-DOCKER_GETTER_ARR_ADD_IMPL(container_cpu_stats, unsigned long, percpu_usage)
-DOCKER_GETTER_ARR_LEN_IMPL(container_cpu_stats, percpu_usage)
-DOCKER_GETTER_ARR_GET_IDX_IMPL(container_cpu_stats, unsigned long, percpu_usage)
 
 d_err_t make_docker_container_stats(docker_container_stats** stats,
 		struct tm* read, docker_container_pids_stats* pid_stats,
@@ -971,18 +874,6 @@ void free_docker_container_stats(docker_container_stats* stats) {
 	free(stats);
 }
 
-DOCKER_GETTER_IMPL(container_stats, struct tm*, read)
-DOCKER_GETTER_IMPL(container_stats, docker_container_pids_stats*, pid_stats)
-DOCKER_GETTER_IMPL(container_stats, docker_container_mem_stats*, mem_stats)
-DOCKER_GETTER_IMPL(container_stats, docker_container_cpu_stats*, cpu_stats)
-DOCKER_GETTER_IMPL(container_stats, docker_container_cpu_stats*, precpu_stats)
-
-DOCKER_GETTER_ARR_ADD_IMPL(container_stats, docker_container_net_stats*,
-		net_stats_list)
-DOCKER_GETTER_ARR_LEN_IMPL(container_stats, net_stats_list)
-DOCKER_GETTER_ARR_GET_IDX_IMPL(container_stats, docker_container_net_stats*,
-		net_stats_list)
-
 void get_cpu_stats_for_name(json_object* response_obj, char* stats_obj_name,
 		docker_container_cpu_stats** cpu_stats_ret) {
 	docker_container_cpu_stats* cpu_stats;
@@ -1009,10 +900,11 @@ void get_cpu_stats_for_name(json_object* response_obj, char* stats_obj_name,
 				int percpu_usage_len = json_object_array_length(
 						percpu_usage_obj);
 				for (int i = 0; i < percpu_usage_len; i++) {
-					docker_container_cpu_stats_percpu_usage_add(cpu_stats,
-							json_object_get_int64(
-									(json_object_array_get_idx(percpu_usage_obj,
-											i))));
+					//FIXME: value is stored incorrect.
+					unsigned long* pcpu_usg;
+					*pcpu_usg = json_object_get_int64(
+							(json_object_array_get_idx(percpu_usage_obj, i)));
+					array_list_add(cpu_stats->percpu_usage, pcpu_usg);
 				}
 			}
 		}
@@ -1103,7 +995,7 @@ d_err_t docker_container_get_stats(docker_context* ctx, docker_result** result,
 							get_attr_unsigned_long(v, "tx_dropped"),
 							get_attr_unsigned_long(v, "tx_errors"),
 							get_attr_unsigned_long(v, "tx_packets"));
-					docker_container_stats_net_stats_list_add(s, net_stats);
+					array_list_add(s->net_stats_list, net_stats);
 				}
 			}
 			(*stats) = s;
@@ -1176,7 +1068,7 @@ void parse_container_stats_cb(char* msg, void* cb, void* cbargs) {
 								get_attr_unsigned_long(v, "tx_dropped"),
 								get_attr_unsigned_long(v, "tx_errors"),
 								get_attr_unsigned_long(v, "tx_packets"));
-						docker_container_stats_net_stats_list_add(s, net_stats);
+						array_list_add(s->net_stats_list, net_stats);
 					}
 				}
 				docker_container_stats_cb(s, cbargs);
@@ -1220,18 +1112,14 @@ d_err_t docker_container_get_stats_cb(docker_context* ctx,
 float docker_container_stats_get_cpu_usage_percent(
 		docker_container_stats* stats) {
 	float cpu_percent = 0.0;
-	docker_container_cpu_stats* cpu_stats =
-			docker_container_stats_get_cpu_stats(stats);
-	docker_container_cpu_stats* precpu_stats =
-			docker_container_stats_get_precpu_stats(stats);
-	int cpu_count = docker_container_cpu_stats_get_online_cpus(cpu_stats);
+	docker_container_cpu_stats* cpu_stats = stats->cpu_stats;
+	docker_container_cpu_stats* precpu_stats = stats->precpu_stats;
+	int cpu_count = cpu_stats->online_cpus;
 
-	unsigned long cpu_delta = docker_container_cpu_stats_get_total_usage(
-			cpu_stats)
-			- docker_container_cpu_stats_get_total_usage(precpu_stats);
-	unsigned long sys_delta = docker_container_cpu_stats_get_system_cpu_usage(
-			cpu_stats)
-			- docker_container_cpu_stats_get_system_cpu_usage(precpu_stats);
+	unsigned long cpu_delta = cpu_stats->total_usage
+			- precpu_stats->total_usage;
+	unsigned long sys_delta = cpu_stats->system_cpu_usage
+			- precpu_stats->system_cpu_usage;
 	if (sys_delta > 0) {
 		cpu_percent = (100.0 * cpu_delta * cpu_count) / sys_delta;
 	}

@@ -44,8 +44,6 @@ typedef struct docker_network_ipam_config_t {
 
 d_err_t make_docker_network_ipam_config(docker_network_ipam_config** config, char* subnet, char* gateway);
 void free_docker_network_ipam_config(docker_network_ipam_config* config);
-DOCKER_GETTER(network_ipam_config, char*, subnet)
-DOCKER_GETTER(network_ipam_config, char*, gateway)
 
 typedef struct docker_network_ipam_t {
 	char* driver;
@@ -55,13 +53,6 @@ typedef struct docker_network_ipam_t {
 
 d_err_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver);
 void free_docker_network_ipam(docker_network_ipam* ipam);
-DOCKER_GETTER(network_ipam, char*, driver)
-DOCKER_GETTER_ARR_ADD(network_ipam, docker_network_ipam_config*, config)
-DOCKER_GETTER_ARR_LEN(network_ipam, config)
-DOCKER_GETTER_ARR_GET_IDX(network_ipam, docker_network_ipam_config*, config)
-DOCKER_GETTER_ARR_ADD(network_ipam, pair*, options)
-DOCKER_GETTER_ARR_LEN(network_ipam, options)
-DOCKER_GETTER_ARR_GET_IDX(network_ipam, pair*, options)
 
 typedef struct docker_network_container_t {
 	char* id;
@@ -76,12 +67,6 @@ d_err_t make_docker_network_container(docker_network_container** container,
 		char* id, char* name, char* endpoint_id, char* mac_address,
 		char* ipv4_address, char* ipv6_address);
 void free_docker_network_container(docker_network_container* container);
-DOCKER_GETTER(network_container, char*, id)
-DOCKER_GETTER(network_container, char*, name)
-DOCKER_GETTER(network_container, char*, endpoint_id)
-DOCKER_GETTER(network_container, char*, mac_address)
-DOCKER_GETTER(network_container, char*, ipv4_address)
-DOCKER_GETTER(network_container, char*, ipv6_address)
 
 typedef struct docker_network_t {
 	char* name;
@@ -103,25 +88,6 @@ d_err_t make_docker_network(docker_network** network, char* name,
 		char* id, time_t created, char* scope, char* driver, int enableIPv6,
 		docker_network_ipam* ipam, int internal, int attachable, int ingress);
 void free_docker_network(docker_network* network);
-DOCKER_GETTER(network, char*, name)
-DOCKER_GETTER(network, char*, id)
-DOCKER_GETTER(network, time_t, created)
-DOCKER_GETTER(network, char*, scope)
-DOCKER_GETTER(network, char*, driver)
-DOCKER_GETTER(network, int, enableIPv6)
-DOCKER_GETTER(network, docker_network_ipam*, ipam)
-DOCKER_GETTER(network, int, internal)
-DOCKER_GETTER(network, int, attachable)
-DOCKER_GETTER(network, int, ingress)
-DOCKER_GETTER_ARR_ADD(network, docker_network_container*, containers)
-DOCKER_GETTER_ARR_LEN(network, containers)
-DOCKER_GETTER_ARR_GET_IDX(network, docker_network_container*, containers)
-DOCKER_GETTER_ARR_ADD(network, pair*, options)
-DOCKER_GETTER_ARR_LEN(network, options)
-DOCKER_GETTER_ARR_GET_IDX(network, pair*, options)
-DOCKER_GETTER_ARR_ADD(network, pair*, labels)
-DOCKER_GETTER_ARR_LEN(network, labels)
-DOCKER_GETTER_ARR_GET_IDX(network, pair*, labels)
 
 /**
  * List all networks which match the filters given.

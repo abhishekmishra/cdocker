@@ -1,4 +1,4 @@
-CC=gcc
+CC=tcc
 CFLAGS=-std=c11 `pkg-config --cflags json-c` `pkg-config --cflags libcurl` -I./src -fPIC
 # To use colour logs...
 #CFLAGS+= -DLOG_USE_COLOR
@@ -13,7 +13,7 @@ TEST_DIR=./test
 MKDIR_P=mkdir -p
 debug: CFLAGS += -DDEBUG -g -O0
 debug: OUT_DIR = ./bin/debug
-debug: CC=gcc
+debug: CC=tcc
 test: OUT_DIR = ./bin/debug
 test: CFLAGS += `pkg-config --cflags cmocka`
 test: LIBS+= `pkg-config --libs cmocka`
@@ -39,7 +39,7 @@ $(OBJ_DIR):
 # Get list of object files, with paths
 OBJECTS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c))
 			
-clibdocker.so:	$(filter-out %docker_cli.o, $(OBJECTS)) 
+clibdocker.so:	$(filter-out %cld.o, $(OBJECTS)) 
 	$(CC) $(CFLAGS) -o $(OUT_DIR)/$@ $^ $(LIBS) $(LDFLAGS)
 			
 cld: $(OBJECTS)
@@ -57,7 +57,7 @@ $(TEST_OBJ_DIR)/main.o: $(TEST_DIR)/main.c
 TEST_OBJECTS := $(patsubst $(TEST_DIR)/%.c,$(TEST_OBJ_DIR)/%.o,$(wildcard $(TEST_DIR)/*.c))
 
 # Link with everything but main.o (because it contains another definition of main.	
-test_clibdocker: $(filter-out %main.o, $(TEST_OBJECTS)) $(filter-out %docker_cli.o, $(OBJECTS))
+test_clibdocker: $(filter-out %main.o, $(TEST_OBJECTS)) $(filter-out %cld.o, $(OBJECTS))
 			$(CC) $(CFLAGS) -o $(OUT_DIR)/$@ $^ $(LIBS)
 			./bin/debug/test_clibdocker
 

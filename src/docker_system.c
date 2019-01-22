@@ -35,28 +35,6 @@
 #include "docker_util.h"
 #include "docker_connection_util.h"
 
-#define DOCKER_SYSTEM_GETTER_IMPL(object, type, name) \
-	type docker_ ## object ## _get_ ## name(docker_ ## object* object) { \
-		return object->name; \
-	} \
-
-
-#define DOCKER_SYSTEM_GETTER_ARR_ADD_IMPL(object, type, name) \
-	int docker_ ## object ## _ ## name ## _add(docker_ ## object* object, type data) { \
-		return array_list_add(object->name, (void*) data); \
-	} \
-
-#define DOCKER_SYSTEM_GETTER_ARR_LEN_IMPL(object, name) \
-	int docker_ ## object ## _ ## name ##_length(docker_ ## object* object) { \
-		return array_list_length(object->name); \
-	} \
-
-#define DOCKER_SYSTEM_GETTER_ARR_GET_IDX_IMPL(object, type, name) \
-	type docker_ ## object ## _ ## name ## _get_idx(docker_ ## object* object, int i) { \
-		return (type) array_list_get_idx(object->name, i); \
-	} \
-
-
 /**
  * Ping the docker server
  *
@@ -116,17 +94,6 @@ void free_docker_version(docker_version*dv) {
 	free(dv);
 }
 
-DOCKER_SYSTEM_GETTER_IMPL(version, char*, version)
-DOCKER_SYSTEM_GETTER_IMPL(version, char*, os)
-DOCKER_SYSTEM_GETTER_IMPL(version, char*, kernel_version)
-DOCKER_SYSTEM_GETTER_IMPL(version, char*, go_version)
-DOCKER_SYSTEM_GETTER_IMPL(version, char*, git_commit)
-DOCKER_SYSTEM_GETTER_IMPL(version, char*, arch)
-DOCKER_SYSTEM_GETTER_IMPL(version, char*, api_version)
-DOCKER_SYSTEM_GETTER_IMPL(version, char*, min_api_version)
-DOCKER_SYSTEM_GETTER_IMPL(version, char*, build_time)
-DOCKER_SYSTEM_GETTER_IMPL(version, int, experimental)
-
 /**
  * Gets the docker version information
  *
@@ -179,15 +146,6 @@ void free_docker_info(docker_info* info) {
 	free(info->name);
 	free(info);
 }
-
-DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, containers)
-DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, containers_running)
-DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, containers_paused)
-DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, containers_stopped)
-DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, images)
-DOCKER_SYSTEM_GETTER_IMPL(info, char*, name)
-DOCKER_SYSTEM_GETTER_IMPL(info, int, ncpu)
-DOCKER_SYSTEM_GETTER_IMPL(info, unsigned long, memtotal)
 
 /**
  * Gets the docker system information
@@ -242,12 +200,6 @@ void free_docker_event(docker_event* event) {
 	free(event->actor_attributes);
 	free(event);
 }
-
-DOCKER_SYSTEM_GETTER_IMPL(event, char*, type)
-DOCKER_SYSTEM_GETTER_IMPL(event, char*, action)
-DOCKER_SYSTEM_GETTER_IMPL(event, char*, actor_id)
-DOCKER_SYSTEM_GETTER_IMPL(event, json_object*, actor_attributes)
-DOCKER_SYSTEM_GETTER_IMPL(event, time_t, time)
 
 void parse_events_cb(char* msg, void* cb, void* cbargs) {
 	void (*events_cb)(docker_event*, void*) = (void (*)(docker_event*, void*))cb;

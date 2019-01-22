@@ -39,7 +39,7 @@ void log_events(docker_event* evt, void* client_cbargs) {
 void log_stats(docker_container_stats* stats, void* client_cbargs) {
 	if (stats) {
 		docker_container_cpu_stats* cpu_stats =
-				docker_container_stats_get_cpu_stats(stats);
+				stats->cpu_stats;
 		docker_log_info("Cpu usage is %lu, num cpus is %d, usage%% is %f",
 				cpu_stats->system_cpu_usage, cpu_stats->online_cpus,
 				docker_container_stats_get_cpu_usage_percent(stats));

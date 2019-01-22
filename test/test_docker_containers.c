@@ -37,7 +37,7 @@ void log_pull_message(docker_image_create_status* status, void* client_cbargs) {
 void log_stats(docker_container_stats* stats, void* client_cbargs) {
 	if (stats) {
 		docker_container_cpu_stats* cpu_stats =
-				docker_container_stats_get_cpu_stats(stats);
+				stats->cpu_stats;
 		docker_log_info("Cpu usage is %lu, num cpus is %d, usage%% is %f",
 				cpu_stats->system_cpu_usage, cpu_stats->online_cpus,
 				docker_container_stats_get_cpu_usage_percent(stats));
@@ -86,11 +86,8 @@ static void test_start(void **state) {
 
 static void test_list(void **state) {
 	char* id = *state;
-	docker_containers_list_filter* filter;
-	make_docker_containers_list_filter(&filter);
-	containers_filter_add_id(filter, id);
 	docker_containers_list* containers;
-	docker_container_list(ctx, &res, &containers, 0, 5, 1, filter);
+	docker_container_list(ctx, &res, &containers, 0, 5, 1, "id", id, NULL);
 	handle_error(res);
 	docker_log_info("Read %d containers.\n",
 			docker_containers_list_length(containers));
@@ -176,7 +173,7 @@ static void test_stats_container(void **state) {
 	docker_container_get_stats(ctx, &res, &stats, id);
 	handle_error(res);
 	docker_container_cpu_stats* cpu_stats =
-			docker_container_stats_get_cpu_stats(stats);
+			stats->cpu_stats;
 	docker_log_info("Cpu usage is %lu, num cpus is %d, usage%% is %f",
 			cpu_stats->system_cpu_usage, cpu_stats->online_cpus,
 			docker_container_stats_get_cpu_usage_percent(stats));

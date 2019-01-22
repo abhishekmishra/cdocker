@@ -900,8 +900,7 @@ void get_cpu_stats_for_name(json_object* response_obj, char* stats_obj_name,
 				int percpu_usage_len = json_object_array_length(
 						percpu_usage_obj);
 				for (int i = 0; i < percpu_usage_len; i++) {
-					//FIXME: value is stored incorrect.
-					unsigned long* pcpu_usg;
+					unsigned long* pcpu_usg = calloc(1, sizeof(pcpu_usg));
 					*pcpu_usg = json_object_get_int64(
 							(json_object_array_get_idx(percpu_usage_obj, i)));
 					array_list_add(cpu_stats->percpu_usage, pcpu_usg);

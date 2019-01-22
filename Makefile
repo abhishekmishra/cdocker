@@ -57,7 +57,7 @@ $(TEST_OBJ_DIR)/main.o: $(TEST_DIR)/main.c
 TEST_OBJECTS := $(patsubst $(TEST_DIR)/%.c,$(TEST_OBJ_DIR)/%.o,$(wildcard $(TEST_DIR)/*.c))
 
 # Link with everything but main.o (because it contains another definition of main.	
-test_clibdocker: $(TEST_OBJECTS) $(filter-out %main.o, $(OBJECTS))
+test_clibdocker: $(filter-out %main.o, $(TEST_OBJECTS)) $(filter-out %docker_cli.o, $(OBJECTS))
 			$(CC) $(CFLAGS) -o $(OUT_DIR)/$@ $^ $(LIBS)
 			./bin/debug/test_clibdocker
 

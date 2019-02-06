@@ -286,6 +286,31 @@ cld_err_t cmd_toplevel(int argc, char** argv) {
 	return CLD_SUCCESS;
 }
 
+cld_cmd_err sys_version_cmd_handler(void* handler_args, struct array_list* options,
+		struct array_list* args, cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler) {
+	return CLD_COMMAND_ERR_UNKNOWN;
+}
+
+struct array_list* create_commands() {
+	struct array_list* commands = array_list_new(&free_command);
+	cld_command* system_command;
+	cld_cmd_err err = make_command(&system_command, "system", "sys",
+			"Docker System Commands",
+			NULL);
+	if (err == CLD_COMMAND_SUCCESS) {
+		cld_command* sysver_command;
+		err = make_command(&sysver_command, "version", "ver",
+				"Docker System Version",
+				&sys_version_cmd_handler);
+		if(err == CLD_COMMAND_SUCCESS) {
+			array_list_add(system_command->sub_commands, sysver_command);
+		}
+	}
+	array_list_add(commands, system_command);
+	return commands;
+}
+
 char * prompt(EditLine *e) {
 	return "cld> ";
 }
@@ -296,7 +321,7 @@ int parse_line_run_command(Tokenizer* tokenizer, const char* line,
 			(const char***) &*cmd_argv);
 	if (tok_err == 0) {
 //		cmd_toplevel(*cmd_argc, *cmd_argv);
-		exec_command(NULL, *cmd_argc, *cmd_argv);
+		exec_command(create_commands(), *cmd_argc, *cmd_argv);
 	} else {
 		printf("Error: invalid command.\n");
 	}

@@ -312,10 +312,11 @@ cld_cmd_err exec_command(struct array_list* commands, int argc, char** argv) {
 			for (int j = 0; j < array_list_length(cmd_list); j++) {
 				cld_command* cmd = (cld_command*) array_list_get_idx(cmd_list,
 						j);
-				if (strcmp(cmd_name, cmd->name) == 0) {
+				if (strcmp(cmd_name, cmd->name) == 0
+						|| strcmp(cmd_name, cmd->short_name) == 0) {
 					found = 1;
 					cmd_list = cmd->sub_commands;
-					array_list_add(cmd_names, cmd_name);
+					array_list_add(cmd_names, cmd->name);
 					cmd_to_exec = cmd;
 					break;
 				}
@@ -330,6 +331,8 @@ cld_cmd_err exec_command(struct array_list* commands, int argc, char** argv) {
 	if (cmd_to_exec == NULL) {
 		printf("No valid command found. Type help to get more help\n");
 		return CLD_COMMAND_ERR_COMMAND_NOT_FOUND;
+	} else {
+		printf("Running command %s\n", cmd_to_exec->name);
 	}
 
 	for (int i = 0; i < array_list_length(cmd_names); i++) {

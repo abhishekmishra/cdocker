@@ -149,7 +149,7 @@ void free_argument(cld_argument* arg);
 /**
  * Create a new command with the given name and handler
  * Options and sub-commands need to be added after creation.
- * The sub-commands and options lists will be initialized,
+ * The sub-commands, arguments and options lists will be initialized,
  * so one just needs to add items using the arraylist add function.
  *
  * \param command obj to be created

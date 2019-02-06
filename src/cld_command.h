@@ -28,7 +28,8 @@
 typedef enum {
 	CLD_COMMAND_SUCCESS = 0,
 	CLD_COMMAND_ERR_UNKNOWN = 1,
-	CLD_COMMAND_ERR_ALLOC_FAILED = 2
+	CLD_COMMAND_ERR_ALLOC_FAILED = 2,
+	CLD_COMMAND_ERR_COMMAND_NOT_FOUND = 3
 } cld_cmd_err;
 
 typedef enum {
@@ -66,7 +67,8 @@ typedef cld_cmd_err (*cld_command_output_handler)(char* result,
 		cld_cmd_err result_flag);
 
 typedef cld_cmd_err (*cld_command_handler)(void* handler_args,
-		struct array_list* options, cld_command_output_handler success_handler,
+		struct array_list* options, struct array_list* args,
+		cld_command_output_handler success_handler,
 		cld_command_output_handler error_handler);
 
 typedef struct cld_command_t {
@@ -78,7 +80,6 @@ typedef struct cld_command_t {
 	struct array_list* args;
 	cld_command_handler handler;
 } cld_command;
-
 
 /**
  * Create a new value object of given type.
@@ -158,12 +159,39 @@ void free_argument(cld_argument* arg);
  * \param handler function ptr to handler
  * \return error code
  */
-cld_cmd_err make_command(cld_command** command, char* name,
-		char* short_name, char* description, cld_command_handler handler);
+cld_cmd_err make_command(cld_command** command, char* name, char* short_name,
+		char* description, cld_command_handler handler);
 
 /**
  * Free a command object
  */
 void free_command(cld_command* command);
+
+/**
+ * Run the help command for all commands or single command
+ */
+cld_cmd_err help_cmd_handler(void* handler_args, struct array_list* options,
+		struct array_list* args, cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler);
+
+/**
+ * Get the help string for the arg_commands from the registered commands list.
+ * \param help_str the help string to return
+ * \param commands is the configured list of commands
+ * \param arg_commands is a list of string
+ * \return error code
+ */
+cld_cmd_err get_help_for(char** help_str, struct array_list* commands,
+		struct array_list* arg_commands);
+
+/**
+ * Execute a single line containing one top-level command.
+ * All output is written to stdout, all errors to stderr
+ *
+ * \param commands the list of commands registered (this is a list of cld_command*)
+ * \param argc the number of tokens in the line
+ * \param argv args as an array of strings
+ */
+cld_cmd_err exec_command(struct array_list* commands, int argc, char** argv);
 
 #endif /* SRC_CLD_COMMAND_H_ */

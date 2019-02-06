@@ -20,6 +20,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include "cld_command.h"
 
 /**
@@ -218,4 +219,126 @@ void free_command(cld_command* command) {
 	array_list_free(command->sub_commands);
 	array_list_free(command->args);
 	free(command);
+}
+
+/**
+ * Run the help command for all commands or single command
+ */
+cld_cmd_err help_cmd_handler(void* handler_args, struct array_list* options,
+		struct array_list* args, cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler) {
+	struct array_list* commands = (struct array_list*) handler_args;
+	char* help_str;
+	cld_cmd_err e = get_help_for(&help_str, commands, args);
+	if (e == CLD_COMMAND_SUCCESS) {
+		(*success_handler)(help_str, e);
+	} else {
+		(*error_handler)("Error getting help", e);
+	}
+	return e;
+}
+
+/**
+ * Get the help string for the arg_commands from the registered commands list.
+ * \param help_str the help string to return
+ * \param commands is the configured list of commands
+ * \param arg_commands is a list of string
+ * \return error code
+ */
+cld_cmd_err get_help_for(char** help_str, struct array_list* commands,
+		struct array_list* arg_commands) {
+	struct array_list* cmd_list = commands;
+	for (int i = 0; i < array_list_length(arg_commands); i++) {
+		if (cmd_list != NULL) {
+			char* cmd_name = array_list_get_idx(arg_commands, i);
+			int found_cmd = 0;
+			for (int j = 0; j < array_list_length(cmd_list); j++) {
+				cld_command* cmd = array_list_get_idx(cmd_list, j);
+				if (strcmp(cmd_name, cmd->name) == 0) {
+					found_cmd = 1;
+					cmd_list = cmd->sub_commands;
+					(*help_str) = cmd->description;
+					break;
+				}
+			}
+			if (found_cmd == 0) {
+				return CLD_COMMAND_ERR_COMMAND_NOT_FOUND;
+			}
+		} else {
+			return CLD_COMMAND_ERR_COMMAND_NOT_FOUND;
+		}
+	}
+	return CLD_COMMAND_ERR_UNKNOWN;
+}
+
+int gobble(int argc, char** argv, int at_pos) {
+	if (at_pos > (argc - 1)) {
+		return argc;
+	} else {
+		for (int i = at_pos; i < argc; i++) {
+			if (i == argc) {
+				argv[i] = NULL;
+			} else {
+				argv[i] = argv[i + 1];
+			}
+		}
+		return argc - 1;
+	}
+}
+
+cld_cmd_err parse_args(struct array_list* args, int* argc, char*** argv) {
+	int ac = (*argc);
+	char** av = (*argv);
+	return CLD_COMMAND_SUCCESS;
+}
+
+/**
+ * Execute a single line containing one top-level command.
+ * All output is written to stdout, all errors to stderr
+ *
+ * \param commands the list of commands registered (this is a list of cld_command*)
+ * \param argc the number of tokens in the line
+ * \param argv args as an array of strings
+ */
+cld_cmd_err exec_command(struct array_list* commands, int argc, char** argv) {
+	//First read all commands
+	struct array_list* cmd_names = array_list_new(&free);
+	cld_command* cmd_to_exec = NULL;
+	struct array_list* cmd_list = commands;
+	for (int i = 0; i < argc; i++) {
+		char* cmd_name = argv[i];
+		int found = 0;
+		if (cmd_list != NULL) {
+			for (int j = 0; j < array_list_length(cmd_list); j++) {
+				cld_command* cmd = (cld_command*) array_list_get_idx(cmd_list,
+						j);
+				if (strcmp(cmd_name, cmd->name) == 0) {
+					found = 1;
+					cmd_list = cmd->sub_commands;
+					array_list_add(cmd_names, cmd_name);
+					cmd_to_exec = cmd;
+					break;
+				}
+			}
+		}
+		//if current name is not a command break
+		if (found == 0) {
+			break;
+		}
+	}
+
+	if (cmd_to_exec == NULL) {
+		printf("No valid command found. Type help to get more help\n");
+		return CLD_COMMAND_ERR_COMMAND_NOT_FOUND;
+	}
+
+	for (int i = 0; i < array_list_length(cmd_names); i++) {
+		argc = gobble(argc, argv, 0);
+	}
+
+	//Then read all options
+
+	//Now read all arguments
+
+	return CLD_COMMAND_ERR_UNKNOWN;
 }

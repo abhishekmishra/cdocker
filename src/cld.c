@@ -32,6 +32,7 @@
 #include <getopt.h>
 
 #include "docker_all.h"
+#include "cld_command.h"
 
 #define CMD_NOT_FOUND -1
 
@@ -294,7 +295,8 @@ int parse_line_run_command(Tokenizer* tokenizer, const char* line,
 	int tok_err = tok_str(tokenizer, line, &*cmd_argc,
 			(const char***) &*cmd_argv);
 	if (tok_err == 0) {
-		cmd_toplevel(*cmd_argc, *cmd_argv);
+//		cmd_toplevel(*cmd_argc, *cmd_argv);
+		exec_command(NULL, *cmd_argc, *cmd_argv);
 	} else {
 		printf("Error: invalid command.\n");
 	}

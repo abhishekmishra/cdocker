@@ -29,25 +29,86 @@ typedef enum {
 	CLD_COMMAND_SUCCESS = 0,
 	CLD_COMMAND_ERR_UNKNOWN = 1,
 	CLD_COMMAND_ERR_ALLOC_FAILED = 2
-} cld_command_error;
+} cld_cmd_err;
 
 typedef enum {
-	CLD_OPTION_BOOLEAN = 0,
-	CLD_OPTION_INT = 1,
-	CLD_OPTION_DOUBLE = 2,
-	CLD_OPTION_STRING = 3
-} cld_option_type;
+	CLD_TYPE_BOOLEAN = 0,
+	CLD_TYPE_INT = 1,
+	CLD_TYPE_DOUBLE = 2,
+	CLD_TYPE_STRING = 3,
+	CLD_TYPE_FLAG = 4
+} cld_type;
 
-typedef struct cld_option_t {
-	char* name;
-	char* short_name;
-	cld_option_type type;
+typedef struct cld_val_t {
+	cld_type type;
 	int bool_value;
 	int int_value;
 	double dbl_value;
 	char* str_value;
 	char* description;
+} cld_val;
+
+typedef struct cld_option_t {
+	char* name;
+	char* short_name;
+	cld_val* val;
+	char* description;
 } cld_option;
+
+typedef struct cld_argument_t {
+	char* name;
+	cld_val* val;
+	char* description;
+	int optional;
+} cld_argument;
+
+typedef cld_cmd_err (*cld_command_output_handler)(char* result,
+		cld_cmd_err result_flag);
+
+typedef cld_cmd_err (*cld_command_handler)(void* handler_args,
+		struct array_list* options, cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler);
+
+typedef struct cld_command_t {
+	char* name;
+	char* short_name;
+	char* description;
+	struct array_list* sub_commands;
+	struct array_list* options;
+	struct array_list* args;
+	cld_command_handler handler;
+} cld_command;
+
+
+/**
+ * Create a new value object of given type.
+ *
+ * \param val object to create
+ * \param type
+ * \return error code
+ */
+cld_cmd_err make_cld_val(cld_val** val, cld_type type);
+
+/**
+ * Free the created value
+ */
+void free_cld_val(cld_val* val);
+
+/**
+ * Reset values to system defaults.
+ */
+void clear_cld_val(cld_val* val);
+
+/**
+ * Parse the input and read the value of the type of the val object.
+ * (Should not be called when the values is a flag.)
+ * The value should be set as soon as the argument/option is seen
+ *
+ * \param val object whose value will be set
+ * \param input string input
+ * \return error code
+ */
+cld_cmd_err parse_cld_val(cld_val* val, char* input);
 
 /**
  * Create a new option given a name and type.
@@ -59,28 +120,30 @@ typedef struct cld_option_t {
  * \param description
  * \return error code
  */
-cld_command_error make_option(cld_option** option, char* name, char* short_name,
-		cld_option_type type, char* description);
+cld_cmd_err make_option(cld_option** option, char* name, char* short_name,
+		cld_type type, char* description);
 
 /**
  * Free resources used by option
  */
 void free_option(cld_option* option);
 
-typedef cld_command_error (*cld_command_output_handler)(char* result,
-		cld_command_error result_flag);
-typedef cld_command_error (*cld_command_handler)(docker_context* ctx,
-		struct array_list* options, cld_command_output_handler success_handler,
-		cld_command_output_handler error_handler);
+/**
+ * Create a new argument given a name and type.
+ *
+ * \param argument object to create
+ * \param name
+ * \param type
+ * \param description
+ * \return error code
+ */
+cld_cmd_err make_argument(cld_argument** arg, char* name, cld_type type,
+		char* description);
 
-typedef struct cld_command_t {
-	char* name;
-	char* short_name;
-	char* description;
-	struct array_list* sub_commands;
-	struct array_list* options;
-	cld_command_handler handler;
-} cld_command;
+/**
+ * Free resources used by argument
+ */
+void free_argument(cld_argument* arg);
 
 /**
  * Create a new command with the given name and handler
@@ -95,7 +158,7 @@ typedef struct cld_command_t {
  * \param handler function ptr to handler
  * \return error code
  */
-cld_command_error make_command(cld_command** command, char* name,
+cld_cmd_err make_command(cld_command** command, char* name,
 		char* short_name, char* description, cld_command_handler handler);
 
 /**

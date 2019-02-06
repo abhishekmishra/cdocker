@@ -40,6 +40,7 @@ typedef enum {
 	CLD_TYPE_FLAG = 4
 } cld_type;
 
+//TODO add defaults
 typedef struct cld_val_t {
 	cld_type type;
 	int bool_value;

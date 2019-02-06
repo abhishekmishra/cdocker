@@ -285,6 +285,11 @@ int gobble(int argc, char** argv, int at_pos) {
 		return argc - 1;
 	}
 }
+cld_cmd_err parse_options(struct array_list* options, int* argc, char*** argv) {
+	int ac = (*argc);
+	char** av = (*argv);
+	return CLD_COMMAND_SUCCESS;
+}
 
 cld_cmd_err parse_args(struct array_list* args, int* argc, char*** argv) {
 	int ac = (*argc);
@@ -340,8 +345,10 @@ cld_cmd_err exec_command(struct array_list* commands, int argc, char** argv) {
 	}
 
 	//Then read all options
+	parse_options(cmd_to_exec->options, &argc, &argv);
 
 	//Now read all arguments
+	parse_args(cmd_to_exec->args, &argc, &argv);
 
 	return CLD_COMMAND_ERR_UNKNOWN;
 }

@@ -369,6 +369,20 @@ cld_cmd_err parse_options(struct array_list* options, int* argc, char*** argv) {
 cld_cmd_err parse_args(struct array_list* args, int* argc, char*** argv) {
 	int ac = (*argc);
 	char** av = (*argv);
+	int args_len = array_list_length(args);
+	if (args_len == ac) {
+		for (int i = 0; i < args_len; i++) {
+			cld_argument* arg = array_list_get_idx(args, i);
+			char* argval = av[i];
+			//check if we have
+			parse_cld_val(arg->val, argval);
+		}
+	} else {
+		return CLD_COMMAND_ERR_OPTION_NOT_FOUND;
+	}
+	for (int i = 0; i < args_len; i++) {
+		ac = gobble(ac, av, 0);
+	}
 	return CLD_COMMAND_SUCCESS;
 }
 
@@ -420,10 +434,22 @@ cld_cmd_err exec_command(struct array_list* commands, int argc, char** argv) {
 	}
 
 	//Then read all options
-	parse_options(cmd_to_exec->options, &argc, &argv);
+	cld_cmd_err err = parse_options(cmd_to_exec->options, &argc, &argv);
+	if (err != CLD_COMMAND_SUCCESS) {
+		return err;
+	}
 
 	//Now read all arguments
-	parse_args(cmd_to_exec->args, &argc, &argv);
+	err = parse_args(cmd_to_exec->args, &argc, &argv);
+	if (err != CLD_COMMAND_SUCCESS) {
+		return err;
+	}
 
-	return CLD_COMMAND_ERR_UNKNOWN;
+	//anything leftover
+	if (argc > 0) {
+		printf("%d extra arguments found.\n", argc);
+		return CLD_COMMAND_ERR_UNKNOWN;
+	}
+
+	return CLD_COMMAND_SUCCESS;
 }

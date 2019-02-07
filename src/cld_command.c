@@ -61,6 +61,22 @@ void clear_cld_val(cld_val* val) {
 }
 
 /**
+ * Copy values from 'from' to 'to'.
+ * Can be used to reset to defaults.
+ * (description and type are not copied)
+ * str_value should be freed by caller.
+ *
+ * \param to val to set
+ * \param from val to read from
+ */
+void copy_cld_val(cld_val* to, cld_val* from) {
+	to->bool_value = from->bool_value;
+	to->int_value = from->int_value;
+	to->dbl_value = from->dbl_value;
+	to->str_value = from->str_value;
+}
+
+/**
  * Parse the input and read the value of the type of the val object.
  * (Should not be called when the values is a flag.)
  * The value should be set as soon as the argument/option is seen
@@ -122,6 +138,7 @@ cld_cmd_err make_option(cld_option** option, char* name, char* short_name,
 	(*option)->short_name = short_name;
 	(*option)->description = description;
 	make_cld_val(&((*option)->val), type);
+	make_cld_val(&((*option)->default_val), type);
 	return CLD_COMMAND_SUCCESS;
 }
 
@@ -160,6 +177,7 @@ cld_cmd_err make_argument(cld_argument** arg, char* name, cld_type type,
 	(*arg)->description = description;
 	(*arg)->optional = 0;
 	make_cld_val(&((*arg)->val), type);
+	make_cld_val(&((*arg)->default_val), type);
 	return CLD_COMMAND_SUCCESS;
 }
 
@@ -286,10 +304,10 @@ int gobble(int argc, char** argv, int at_pos) {
 	}
 }
 
-//TODO complete implementation
 cld_cmd_err parse_options(struct array_list* options, int* argc, char*** argv) {
 	int ac = (*argc);
 	char** av = (*argv);
+	int skip_count = 0;
 
 	for (int i = 0; i < ac; i++) {
 		char* option = av[i];
@@ -307,28 +325,28 @@ cld_cmd_err parse_options(struct array_list* options, int* argc, char*** argv) {
 			cld_option* found = NULL;
 			for (int j = 0; j < options_len; j++) {
 				cld_option* opt = array_list_get_idx(options, j);
-				if(long_option_name) {
-					if(strcmp(long_option_name, opt->name) == 0) {
+				if (long_option_name) {
+					if (strcmp(long_option_name, opt->name) == 0) {
 						found = opt;
 					}
 				}
-				if(short_option_name) {
-					if(strcmp(short_option_name, opt->short_name) == 0) {
+				if (short_option_name) {
+					if (strcmp(short_option_name, opt->short_name) == 0) {
 						found = opt;
 					}
 				}
 			}
-			if (found==0) {
+			if (found == 0) {
 				printf("Unknown option %s\n.", option);
 				return CLD_COMMAND_ERR_OPTION_NOT_FOUND;
 			} else {
 				//read option value if it is not a flag
-				if(found->val->type != CLD_TYPE_FLAG) {
+				if (found->val->type != CLD_TYPE_FLAG) {
 					if (i == (ac - 1)) {
 						printf("Value missing for option %s.\n", option);
 						return CLD_COMMAND_ERR_OPTION_NOT_FOUND;
 					} else {
-						i = i+1;
+						i = i + 1;
 						char* value = av[i];
 						parse_cld_val(found->val, value);
 					}
@@ -336,8 +354,13 @@ cld_cmd_err parse_options(struct array_list* options, int* argc, char*** argv) {
 			}
 		} else {
 			//not an option, break
+			skip_count = i;
 			break;
 		}
+	}
+
+	for (int i = 0; i < skip_count; i++) {
+		ac = gobble(ac, av, 0);
 	}
 
 	return CLD_COMMAND_SUCCESS;

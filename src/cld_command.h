@@ -55,12 +55,14 @@ typedef struct cld_option_t {
 	char* name;
 	char* short_name;
 	cld_val* val;
+	cld_val* default_val;
 	char* description;
 } cld_option;
 
 typedef struct cld_argument_t {
 	char* name;
 	cld_val* val;
+	cld_val* default_val;
 	char* description;
 	int optional;
 } cld_argument;
@@ -101,6 +103,15 @@ void free_cld_val(cld_val* val);
  * Reset values to system defaults.
  */
 void clear_cld_val(cld_val* val);
+
+/**
+ * Copy values from 'from' to 'to'.
+ * Can be used to reset to defaults.
+ *
+ * \param to val to set
+ * \param from val to read from
+ */
+void copy_cld_val(cld_val* to, cld_val* from);
 
 /**
  * Parse the input and read the value of the type of the val object.

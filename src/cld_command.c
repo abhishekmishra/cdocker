@@ -285,9 +285,61 @@ int gobble(int argc, char** argv, int at_pos) {
 		return argc - 1;
 	}
 }
+
+//TODO complete implementation
 cld_cmd_err parse_options(struct array_list* options, int* argc, char*** argv) {
 	int ac = (*argc);
 	char** av = (*argv);
+
+	for (int i = 0; i < ac; i++) {
+		char* option = av[i];
+		char* long_option_name = NULL;
+		char* short_option_name = NULL;
+		if (strlen(option) > 1 && option[0] == '-') {
+			if (option[1] == '-') {
+				//long option
+				long_option_name = option + 2;
+			} else {
+				//short option
+				short_option_name = option + 1;
+			}
+			int options_len = array_list_length(options);
+			cld_option* found = NULL;
+			for (int j = 0; j < options_len; j++) {
+				cld_option* opt = array_list_get_idx(options, j);
+				if(long_option_name) {
+					if(strcmp(long_option_name, opt->name) == 0) {
+						found = opt;
+					}
+				}
+				if(short_option_name) {
+					if(strcmp(short_option_name, opt->short_name) == 0) {
+						found = opt;
+					}
+				}
+			}
+			if (found==0) {
+				printf("Unknown option %s\n.", option);
+				return CLD_COMMAND_ERR_OPTION_NOT_FOUND;
+			} else {
+				//read option value if it is not a flag
+				if(found->val->type != CLD_TYPE_FLAG) {
+					if (i == (ac - 1)) {
+						printf("Value missing for option %s.\n", option);
+						return CLD_COMMAND_ERR_OPTION_NOT_FOUND;
+					} else {
+						i = i+1;
+						char* value = av[i];
+						parse_cld_val(found->val, value);
+					}
+				}
+			}
+		} else {
+			//not an option, break
+			break;
+		}
+	}
+
 	return CLD_COMMAND_SUCCESS;
 }
 

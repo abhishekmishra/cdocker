@@ -289,6 +289,7 @@ cld_err_t cmd_toplevel(int argc, char** argv) {
 cld_cmd_err sys_version_cmd_handler(void* handler_args, struct array_list* options,
 		struct array_list* args, cld_command_output_handler success_handler,
 		cld_command_output_handler error_handler) {
+	printf("Print version now\n");
 	return CLD_COMMAND_ERR_UNKNOWN;
 }
 
@@ -321,7 +322,10 @@ int parse_line_run_command(Tokenizer* tokenizer, const char* line,
 			(const char***) &*cmd_argv);
 	if (tok_err == 0) {
 //		cmd_toplevel(*cmd_argc, *cmd_argv);
-		exec_command(create_commands(), *cmd_argc, *cmd_argv);
+		cld_err_t err = exec_command(create_commands(), *cmd_argc, *cmd_argv);
+		if(err != CLD_COMMAND_SUCCESS) {
+			printf("Error: invalid command.\n");
+		}
 	} else {
 		printf("Error: invalid command.\n");
 	}

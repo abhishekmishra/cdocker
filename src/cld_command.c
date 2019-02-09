@@ -386,6 +386,12 @@ cld_cmd_err parse_args(struct array_list* args, int* argc, char*** argv) {
 	return CLD_COMMAND_SUCCESS;
 }
 
+cld_cmd_err print_handler(char* result,
+		cld_cmd_err result_flag) {
+	printf("Msg: %s, code %d\n", result, result_flag);
+	return CLD_COMMAND_SUCCESS;
+}
+
 /**
  * Execute a single line containing one top-level command.
  * All output is written to stdout, all errors to stderr
@@ -425,8 +431,6 @@ cld_cmd_err exec_command(struct array_list* commands, int argc, char** argv) {
 	if (cmd_to_exec == NULL) {
 		printf("No valid command found. Type help to get more help\n");
 		return CLD_COMMAND_ERR_COMMAND_NOT_FOUND;
-	} else {
-		printf("Running command %s\n", cmd_to_exec->name);
 	}
 
 	for (int i = 0; i < array_list_length(cmd_names); i++) {
@@ -450,6 +454,8 @@ cld_cmd_err exec_command(struct array_list* commands, int argc, char** argv) {
 		printf("%d extra arguments found.\n", argc);
 		return CLD_COMMAND_ERR_UNKNOWN;
 	}
+
+	cmd_to_exec->handler(NULL, cmd_to_exec->options, cmd_to_exec->args, &print_handler, &print_handler);
 
 	return CLD_COMMAND_SUCCESS;
 }

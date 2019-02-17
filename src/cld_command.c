@@ -216,9 +216,9 @@ cld_cmd_err make_command(cld_command** command, char* name, char* short_name,
 	(*command)->short_name = short_name;
 	(*command)->description = description;
 	(*command)->handler = handler;
-	(*command)->options = array_list_new(&free_option);
-	(*command)->sub_commands = array_list_new(&free_command);
-	(*command)->args = array_list_new(&free_argument);
+	(*command)->options = array_list_new((void (*)(void *)) &free_option);
+	(*command)->sub_commands = array_list_new((void (*)(void *)) &free_command);
+	(*command)->args = array_list_new((void (*)(void *)) &free_argument);
 	return CLD_COMMAND_SUCCESS;
 }
 
@@ -386,8 +386,7 @@ cld_cmd_err parse_args(struct array_list* args, int* argc, char*** argv) {
 	return CLD_COMMAND_SUCCESS;
 }
 
-cld_cmd_err print_handler(char* result,
-		cld_cmd_err result_flag) {
+cld_cmd_err print_handler(char* result, cld_cmd_err result_flag) {
 	printf("Msg: %s, code %d\n", result, result_flag);
 	return CLD_COMMAND_SUCCESS;
 }
@@ -397,10 +396,12 @@ cld_cmd_err print_handler(char* result,
  * All output is written to stdout, all errors to stderr
  *
  * \param commands the list of commands registered (this is a list of cld_command*)
+ * \param handler_args an args value to be passed to the command handler
  * \param argc the number of tokens in the line
  * \param argv args as an array of strings
  */
-cld_cmd_err exec_command(struct array_list* commands, int argc, char** argv) {
+cld_cmd_err exec_command(struct array_list* commands, void* handler_args,
+		int argc, char** argv) {
 	//First read all commands
 	struct array_list* cmd_names = array_list_new(&free);
 	cld_command* cmd_to_exec = NULL;
@@ -455,7 +456,8 @@ cld_cmd_err exec_command(struct array_list* commands, int argc, char** argv) {
 		return CLD_COMMAND_ERR_UNKNOWN;
 	}
 
-	cmd_to_exec->handler(NULL, cmd_to_exec->options, cmd_to_exec->args, &print_handler, &print_handler);
+	cmd_to_exec->handler(handler_args, cmd_to_exec->options, cmd_to_exec->args,
+			&print_handler, &print_handler);
 
 	return CLD_COMMAND_SUCCESS;
 }

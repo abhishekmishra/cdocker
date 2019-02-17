@@ -202,9 +202,10 @@ cld_cmd_err get_help_for(char** help_str, struct array_list* commands,
  * All output is written to stdout, all errors to stderr
  *
  * \param commands the list of commands registered (this is a list of cld_command*)
+ * \param handler_args an args value to be passed to the command handler
  * \param argc the number of tokens in the line
  * \param argv args as an array of strings
  */
-cld_cmd_err exec_command(struct array_list* commands, int argc, char** argv);
+cld_cmd_err exec_command(struct array_list* commands, void* handler_args, int argc, char** argv);
 
 #endif /* SRC_CLD_COMMAND_H_ */

@@ -1,9 +1,9 @@
-CC=tcc
+CC=gcc
 CFLAGS=-std=c11 `pkg-config --cflags json-c` `pkg-config --cflags libcurl` -I./src -fPIC
 # To use colour logs...
 #CFLAGS+= -DLOG_USE_COLOR
 LIBS=`pkg-config --libs json-c` `pkg-config --libs libcurl`
-CLI_LIBS=-ledit -ltermcap
+CLI_LIBS=-ledit# -ltermcap
 LDFLAGS=-fPIC -shared
 OUT_DIR=./bin/release
 OBJ_DIR=./obj

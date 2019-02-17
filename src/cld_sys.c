@@ -39,16 +39,34 @@ cld_cmd_err sys_version_cmd_handler(void* handler_args,
 	return CLD_COMMAND_SUCCESS;
 }
 
+cld_cmd_err sys_connection_cmd_handler(void* handler_args,
+		struct array_list* options, struct array_list* args,
+		cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler) {
+	docker_context* ctx = get_docker_context(handler_args);
+	if (ctx->socket) {
+		printf("Connected to unix socket: %s\n", ctx->socket);
+	}
+	if (ctx->url) {
+		printf("Connected to URL: %s\n", ctx->url);
+	}
+	return CLD_COMMAND_SUCCESS;
+}
+
 cld_command* sys_commands() {
 	cld_command* system_command;
-	cld_cmd_err err = make_command(&system_command, "system", "sys",
-			"Docker System Commands", NULL);
-	if (err == CLD_COMMAND_SUCCESS) {
-		cld_command* sysver_command;
-		err = make_command(&sysver_command, "version", "ver",
-				"Docker System Version", &sys_version_cmd_handler);
-		if (err == CLD_COMMAND_SUCCESS) {
+	if (make_command(&system_command, "system", "sys", "Docker System Commands",
+	NULL) == CLD_COMMAND_SUCCESS) {
+		cld_command *sysver_command, *syscon_command;
+		if (make_command(&sysver_command, "version", "ver",
+				"Docker System Version", &sys_version_cmd_handler)
+				== CLD_COMMAND_SUCCESS) {
 			array_list_add(system_command->sub_commands, sysver_command);
+		}
+		if (make_command(&syscon_command, "connection", "con",
+				"Docker System Connection", &sys_connection_cmd_handler)
+				== CLD_COMMAND_SUCCESS) {
+			array_list_add(system_command->sub_commands, syscon_command);
 		}
 	}
 	return system_command;

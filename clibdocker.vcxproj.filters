@@ -30,12 +30,6 @@
     <ClCompile Include="src\docker_util.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\log.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\docker_images.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -43,6 +37,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\docker_volumes.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cld.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cld_command.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cld_common.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cld_sys.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\docker_log.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -62,9 +71,6 @@
     <ClInclude Include="src\docker_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\log.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\docker_images.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -72,6 +78,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\docker_volumes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cld_command.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cld_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cld_sys.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\docker_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\docker_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\docker_log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -126,27 +126,35 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\cld.c" />
+    <ClCompile Include="src\cld_command.c" />
+    <ClCompile Include="src\cld_common.c" />
+    <ClCompile Include="src\cld_sys.c" />
     <ClCompile Include="src\docker_connection_util.c" />
     <ClCompile Include="src\docker_containers.c" />
     <ClCompile Include="src\docker_images.c" />
+    <ClCompile Include="src\docker_log.c" />
     <ClCompile Include="src\docker_networks.c" />
     <ClCompile Include="src\docker_result.c" />
     <ClCompile Include="src\docker_system.c" />
     <ClCompile Include="src\docker_util.c" />
     <ClCompile Include="src\docker_volumes.c" />
-    <ClCompile Include="src\log.c" />
-    <ClCompile Include="src\main.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\cld_command.h" />
+    <ClInclude Include="src\cld_common.h" />
+    <ClInclude Include="src\cld_sys.h" />
+    <ClInclude Include="src\docker_all.h" />
+    <ClInclude Include="src\docker_common.h" />
     <ClInclude Include="src\docker_connection_util.h" />
     <ClInclude Include="src\docker_containers.h" />
     <ClInclude Include="src\docker_images.h" />
+    <ClInclude Include="src\docker_log.h" />
     <ClInclude Include="src\docker_networks.h" />
     <ClInclude Include="src\docker_result.h" />
     <ClInclude Include="src\docker_system.h" />
     <ClInclude Include="src\docker_util.h" />
     <ClInclude Include="src\docker_volumes.h" />
-    <ClInclude Include="src\log.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

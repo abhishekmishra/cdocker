@@ -5,8 +5,7 @@
  *      Author: abhis
  */
 
-#include "cld_common.h"
-#include "cld_command.h"
+#include "cld_sys.h"
 #include "docker_all.h"
 
 cld_cmd_err sys_version_cmd_handler(void* handler_args,

@@ -34,6 +34,7 @@
 #include "docker_all.h"
 #include "cld_command.h"
 #include "cld_sys.h"
+#include "cld_ctr.h"
 
 #define CMD_NOT_FOUND -1
 
@@ -212,6 +213,7 @@ struct array_list* create_commands() {
 	struct array_list* commands = array_list_new(
 			(void (*)(void *)) &free_command);
 	array_list_add(commands, sys_commands());
+	array_list_add(commands, ctr_commands());
 	return commands;
 }
 

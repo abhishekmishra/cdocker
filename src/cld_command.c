@@ -381,7 +381,8 @@ cld_cmd_err parse_args(struct array_list* args, int* argc, char*** argv) {
 		return CLD_COMMAND_ERR_OPTION_NOT_FOUND;
 	}
 	for (int i = 0; i < args_len; i++) {
-		ac = gobble(ac, av, 0);
+		(*argc) = gobble(ac, av, 0);
+		printf("gobble %d, ac = %d\n", i, (*argc));
 	}
 	return CLD_COMMAND_SUCCESS;
 }
@@ -445,7 +446,9 @@ cld_cmd_err exec_command(struct array_list* commands, void* handler_args,
 	}
 
 	//Now read all arguments
+	printf("Args len -> %d, argc=%d\n", array_list_length(cmd_to_exec->args), argc);
 	err = parse_args(cmd_to_exec->args, &argc, &argv);
+	printf("Args len -> %d, argc=%d\n", array_list_length(cmd_to_exec->args), argc);
 	if (err != CLD_COMMAND_SUCCESS) {
 		return err;
 	}

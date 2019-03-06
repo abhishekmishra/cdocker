@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "docker_all.h": "c",
+        "docker_networks.h": "c",
+        "docker_result.h": "c"
+    }
+}

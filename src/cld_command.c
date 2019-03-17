@@ -378,11 +378,10 @@ cld_cmd_err parse_args(struct array_list* args, int* argc, char*** argv) {
 			parse_cld_val(arg->val, argval);
 		}
 	} else {
-		return CLD_COMMAND_ERR_OPTION_NOT_FOUND;
+		return CLD_COMMAND_ERR_ARG_NOT_FOUND;
 	}
 	for (int i = 0; i < args_len; i++) {
 		(*argc) = gobble(ac, av, 0);
-		printf("gobble %d, ac = %d\n", i, (*argc));
 	}
 	return CLD_COMMAND_SUCCESS;
 }
@@ -454,7 +453,7 @@ cld_cmd_err exec_command(struct array_list* commands, void* handler_args,
 	//anything leftover
 	if (argc > 0) {
 		printf("%d extra arguments found.\n", argc);
-		return CLD_COMMAND_ERR_UNKNOWN;
+		return CLD_COMMAND_ERR_EXTRA_ARGS_FOUND;
 	}
 
 	err = cmd_to_exec->handler(handler_args, cmd_to_exec->options, cmd_to_exec->args,

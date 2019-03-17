@@ -105,7 +105,7 @@ cld_cmd_err parse_cld_val(cld_val* val, char* input) {
 			val->int_value = v;
 			break;
 		case CLD_TYPE_DOUBLE:
-			sscanf(input, "%g", &d);
+			sscanf(input, "%lf", &d);
 			val->dbl_value = d;
 			break;
 		case CLD_TYPE_STRING:

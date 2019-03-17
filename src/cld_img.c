@@ -23,7 +23,8 @@ cld_cmd_err img_pl_cmd_handler(void *handler_args,
     }
     else
     {
-        char *image_name = (char *)array_list_get_idx(args, 0);
+        cld_argument* image_name_arg = (cld_argument*)array_list_get_idx(args, 0);
+        char* image_name = image_name_arg->val->str_value;
         d_err_t docker_error = docker_image_create_from_image(ctx, &res, image_name, NULL, NULL);
         handle_docker_error(res);
         if (docker_error == E_SUCCESS)

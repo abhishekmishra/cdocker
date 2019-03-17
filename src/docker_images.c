@@ -249,7 +249,7 @@ d_err_t docker_image_create_from_image_cb(docker_context* ctx,
 	docker_api_post_cb(ctx, result, url, params, "", &chunk, &response_obj,
 			&parse_status_cb, status_cb, cbargs);
 
-	if ((*result)->http_error_code >= 200) {
+	if ((*result)->http_error_code > 200) {
 		return E_UNKNOWN_ERROR;
 	}
 

@@ -446,9 +446,7 @@ cld_cmd_err exec_command(struct array_list* commands, void* handler_args,
 	}
 
 	//Now read all arguments
-	printf("Args len -> %d, argc=%d\n", array_list_length(cmd_to_exec->args), argc);
 	err = parse_args(cmd_to_exec->args, &argc, &argv);
-	printf("Args len -> %d, argc=%d\n", array_list_length(cmd_to_exec->args), argc);
 	if (err != CLD_COMMAND_SUCCESS) {
 		return err;
 	}
@@ -459,8 +457,8 @@ cld_cmd_err exec_command(struct array_list* commands, void* handler_args,
 		return CLD_COMMAND_ERR_UNKNOWN;
 	}
 
-	cmd_to_exec->handler(handler_args, cmd_to_exec->options, cmd_to_exec->args,
+	err = cmd_to_exec->handler(handler_args, cmd_to_exec->options, cmd_to_exec->args,
 			&print_handler, &print_handler);
 
-	return CLD_COMMAND_SUCCESS;
+	return err;
 }

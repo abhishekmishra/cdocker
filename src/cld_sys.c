@@ -19,7 +19,8 @@ cld_cmd_err sys_version_cmd_handler(void* handler_args,
 	docker_system_version(ctx, &res, &version);
 	handle_docker_error(res);
 
-	printf("\n"
+	char* res_str = calloc(1024, sizeof(char));
+	sprintf(res_str, "\n"
 			"-- Docker Server Version Info\n"
 			"Docker Version:  %s\n"
 			"OS (Kernel):     %s (%s)\n"
@@ -34,6 +35,8 @@ cld_cmd_err sys_version_cmd_handler(void* handler_args,
 			version->arch, version->api_version, version->min_api_version,
 			version->go_version, version->git_commit, version->build_time,
 			version->experimental);
+	success_handler(CLD_RESULT_STRING, res_str, CLD_COMMAND_SUCCESS);
+	free(res_str);
 
 	return CLD_COMMAND_SUCCESS;
 }

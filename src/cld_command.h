@@ -26,6 +26,7 @@
 #include <json-c/arraylist.h>
 
 typedef enum {
+	CLD_COMMAND_IS_RUNNING = -1,
 	CLD_COMMAND_SUCCESS = 0,
 	CLD_COMMAND_ERR_UNKNOWN = 1,
 	CLD_COMMAND_ERR_ALLOC_FAILED = 2,
@@ -42,6 +43,10 @@ typedef enum {
 	CLD_TYPE_STRING = 3,
 	CLD_TYPE_FLAG = 4
 } cld_type;
+
+typedef enum {
+	CLD_RESULT_STRING = 0, CLD_RESULT_TABLE = 1, CLD_RESULT_DICT = 2
+} cld_result_type;
 
 //TODO add defaults
 typedef struct cld_val_t {
@@ -69,8 +74,8 @@ typedef struct cld_argument_t {
 	int optional;
 } cld_argument;
 
-typedef cld_cmd_err (*cld_command_output_handler)(char* result,
-		cld_cmd_err result_flag);
+typedef cld_cmd_err (*cld_command_output_handler)(cld_result_type result_type,
+		void* result, cld_cmd_err result_flag);
 
 typedef cld_cmd_err (*cld_command_handler)(void* handler_args,
 		struct array_list* options, struct array_list* args,
@@ -207,7 +212,11 @@ cld_cmd_err get_help_for(char** help_str, struct array_list* commands,
  * \param handler_args an args value to be passed to the command handler
  * \param argc the number of tokens in the line
  * \param argv args as an array of strings
+ * \param success_handler handle success results
+ * \param error_handler handler error results
  */
-cld_cmd_err exec_command(struct array_list* commands, void* handler_args, int argc, char** argv);
+cld_cmd_err exec_command(struct array_list* commands, void* handler_args,
+		int argc, char** argv, cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler);
 
 #endif /* SRC_CLD_COMMAND_H_ */

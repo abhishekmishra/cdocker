@@ -249,9 +249,9 @@ cld_cmd_err help_cmd_handler(void* handler_args, struct array_list* options,
 	char* help_str;
 	cld_cmd_err e = get_help_for(&help_str, commands, args);
 	if (e == CLD_COMMAND_SUCCESS) {
-		(*success_handler)(help_str, e);
+		(*success_handler)(CLD_RESULT_STRING, help_str, e);
 	} else {
-		(*error_handler)("Error getting help", e);
+		(*error_handler)(CLD_RESULT_STRING, "Error getting help", e);
 	}
 	return e;
 }
@@ -386,11 +386,6 @@ cld_cmd_err parse_args(struct array_list* args, int* argc, char*** argv) {
 	return CLD_COMMAND_SUCCESS;
 }
 
-cld_cmd_err print_handler(char* result, cld_cmd_err result_flag) {
-	printf("Msg: %s, code %d\n", result, result_flag);
-	return CLD_COMMAND_SUCCESS;
-}
-
 /**
  * Execute a single line containing one top-level command.
  * All output is written to stdout, all errors to stderr
@@ -399,9 +394,12 @@ cld_cmd_err print_handler(char* result, cld_cmd_err result_flag) {
  * \param handler_args an args value to be passed to the command handler
  * \param argc the number of tokens in the line
  * \param argv args as an array of strings
+ * \param success_handler handle success results
+ * \param error_handler handler error results
  */
 cld_cmd_err exec_command(struct array_list* commands, void* handler_args,
-		int argc, char** argv) {
+		int argc, char** argv, cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler) {
 	//First read all commands
 	struct array_list* cmd_names = array_list_new(&free);
 	cld_command* cmd_to_exec = NULL;
@@ -456,8 +454,8 @@ cld_cmd_err exec_command(struct array_list* commands, void* handler_args,
 		return CLD_COMMAND_ERR_EXTRA_ARGS_FOUND;
 	}
 
-	err = cmd_to_exec->handler(handler_args, cmd_to_exec->options, cmd_to_exec->args,
-			&print_handler, &print_handler);
+	err = cmd_to_exec->handler(handler_args, cmd_to_exec->options,
+			cmd_to_exec->args, success_handler, error_handler);
 
 	return err;
 }

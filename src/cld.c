@@ -52,11 +52,11 @@ char * prompt(EditLine *e) {
 	return "cld> ";
 }
 
-cld_cmd_err print_handler(cld_result_type res_type, void* result,
-		cld_cmd_err result_flag) {
+cld_cmd_err print_handler(cld_cmd_err result_flag, cld_result_type res_type,
+		void* result) {
 	if (res_type == CLD_RESULT_STRING) {
 		char* result_str = (char*) result;
-		printf("Msg: %s, code %d\n", result_str, result_flag);
+		printf("%s\n", result_str);
 	} else {
 		printf("This result type is not handled %d\n", res_type);
 	}
@@ -69,7 +69,8 @@ int parse_line_run_command(Tokenizer* tokenizer, const char* line,
 			(const char***) &*cmd_argv);
 	if (tok_err == 0) {
 		cld_cmd_err err = exec_command(create_commands(), ctx, *cmd_argc,
-				*cmd_argv, &print_handler, &print_handler);
+				*cmd_argv, (cld_command_output_handler) &print_handler,
+				(cld_command_output_handler) &print_handler);
 		if (err != CLD_COMMAND_SUCCESS) {
 			printf("Error: invalid command.\n");
 		}

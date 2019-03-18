@@ -35,7 +35,7 @@ cld_cmd_err sys_version_cmd_handler(void* handler_args,
 			version->arch, version->api_version, version->min_api_version,
 			version->go_version, version->git_commit, version->build_time,
 			version->experimental);
-	success_handler(CLD_RESULT_STRING, res_str, CLD_COMMAND_SUCCESS);
+	success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_STRING, res_str);
 	free(res_str);
 
 	return CLD_COMMAND_SUCCESS;

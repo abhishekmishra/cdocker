@@ -5,7 +5,8 @@
 #include "docker_all.h"
 
 void log_pull_message(docker_image_create_status* status, void* client_cbargs) {
-	cld_command_output_handler success_handler = (cld_command_output_handler) client_cbargs;
+	cld_command_output_handler success_handler =
+			(cld_command_output_handler) client_cbargs;
 	char* res_str = (char*) calloc(1024, sizeof(char));
 	if (status) {
 		if (status->id) {
@@ -14,8 +15,8 @@ void log_pull_message(docker_image_create_status* status, void* client_cbargs) {
 		} else {
 			sprintf(res_str, "message is %s", status->status);
 		}
-		if(success_handler) {
-			success_handler(CLD_RESULT_STRING, res_str, CLD_COMMAND_IS_RUNNING);
+		if (success_handler) {
+			success_handler(CLD_COMMAND_IS_RUNNING, CLD_RESULT_STRING, res_str);
 		}
 	}
 	free(res_str);
@@ -30,8 +31,8 @@ cld_cmd_err img_pl_cmd_handler(void *handler_args, struct array_list *options,
 
 	int len = array_list_length(args);
 	if (len != 1) {
-		error_handler(CLD_RESULT_STRING, "Image name not provided.",
-				CLD_COMMAND_ERR_UNKNOWN);
+		error_handler(CLD_COMMAND_ERR_UNKNOWN, CLD_RESULT_STRING,
+				"Image name not provided.");
 		return CLD_COMMAND_ERR_UNKNOWN;
 	} else {
 		cld_argument* image_name_arg = (cld_argument*) array_list_get_idx(args,
@@ -43,7 +44,7 @@ cld_cmd_err img_pl_cmd_handler(void *handler_args, struct array_list *options,
 		if (docker_error == E_SUCCESS) {
 			char* res_str = (char*) calloc(1024, sizeof(char));
 			sprintf(res_str, "Image pull successful -> %s", image_name);
-			success_handler(CLD_RESULT_STRING, res_str, CLD_COMMAND_SUCCESS);
+			success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_STRING, res_str);
 			free(res_str);
 			return CLD_COMMAND_SUCCESS;
 		} else {

@@ -74,8 +74,8 @@ typedef struct cld_argument_t {
 	int optional;
 } cld_argument;
 
-typedef cld_cmd_err (*cld_command_output_handler)(cld_result_type result_type,
-		void* result, cld_cmd_err result_flag);
+typedef cld_cmd_err (*cld_command_output_handler)(cld_cmd_err result_flag,
+		cld_result_type result_type, void* result);
 
 typedef cld_cmd_err (*cld_command_handler)(void* handler_args,
 		struct array_list* options, struct array_list* args,

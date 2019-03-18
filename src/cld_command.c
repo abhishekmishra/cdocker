@@ -249,9 +249,9 @@ cld_cmd_err help_cmd_handler(void* handler_args, struct array_list* options,
 	char* help_str;
 	cld_cmd_err e = get_help_for(&help_str, commands, args);
 	if (e == CLD_COMMAND_SUCCESS) {
-		(*success_handler)(CLD_RESULT_STRING, help_str, e);
+		(*success_handler)(e, CLD_RESULT_STRING, help_str);
 	} else {
-		(*error_handler)(CLD_RESULT_STRING, "Error getting help", e);
+		(*error_handler)(e, CLD_RESULT_STRING, "Error getting help");
 	}
 	return e;
 }

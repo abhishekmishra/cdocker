@@ -27,10 +27,21 @@ cld_cmd_err ctr_ls_cmd_handler(void *handler_args,
     }
     else
     {
+    	int num_containers = docker_containers_list_length(containers);
+    	char* ctr_ls_arr [num_containers + 2][7];
 
         printf("%-20s\t%-40s\t%-20s\t%-20s\t%-20s\t%-20s\t%-20s\n",
                "CONTAINER ID", "IMAGE", "COMMAND", "CREATED", "STATUS",
                "PORTS", "NAMES");
+
+        ctr_ls_arr[0][0] = "CONTAINER ID";
+        ctr_ls_arr[0][1] = "IMAGE";
+        ctr_ls_arr[0][2] = "COMMAND";
+        ctr_ls_arr[0][3] = "CREATED";
+        ctr_ls_arr[0][4] = "STATUS";
+        ctr_ls_arr[0][5] = "PORTS";
+        ctr_ls_arr[0][6] = "NAMES";
+
         for (int i = 0; i < docker_containers_list_length(containers); i++)
         {
             docker_container_list_item *ctr = docker_containers_list_get_idx(
@@ -81,7 +92,16 @@ cld_cmd_err ctr_ls_cmd_handler(void *handler_args,
             printf("%-20.*s\t%-40s\t\"%-20s\"\t%-20s\t%-20s\t%-20s\t%-20s\t\n",
                    12, ctr->id, ctr->image, ctr->command, evt_time_str,
                    ctr->status, ports_str, names);
+            ctr_ls_arr[i+1][0] = ctr->id;
+            ctr_ls_arr[i+1][1] = ctr->image;
+            ctr_ls_arr[i+1][2] = ctr->command;
+            ctr_ls_arr[i+1][3] = evt_time_str;
+            ctr_ls_arr[i+1][4] = ctr->status;
+            ctr_ls_arr[i+1][5] = ports_str;
+            ctr_ls_arr[i+1][6] = names;
         }
+
+        success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_TABLE, ctr_ls_arr);
     }
     
     array_list_free(containers);

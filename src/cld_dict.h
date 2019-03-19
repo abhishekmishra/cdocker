@@ -30,11 +30,14 @@ int cld_dict_keys(cld_dict* dict, char** keys);
 #define cld_dict_foreach(dict, key, value) \
 	char* key; \
 	char* value; \
+	int i; \
 	int len = array_list_length(dict->keys); \
-	for(int i = 0; \
-			i < len; \
+	for(i = 0, \
 			key = (char*)array_list_get_idx(dict->keys, i), \
-			value = (char*)array_list_get_idx(dict->vals, i), \
-			i++)
+			value = (char*)array_list_get_idx(dict->vals, i); \
+			i < len; \
+			i++, \
+			key = (char*)array_list_get_idx(dict->keys, i), \
+			value = (char*)array_list_get_idx(dict->vals, i))
 
 #endif /* SRC_CLD_DICT_H_ */

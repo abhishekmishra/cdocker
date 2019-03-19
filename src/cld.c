@@ -85,12 +85,9 @@ cld_cmd_err print_handler(cld_cmd_err result_flag, cld_result_type res_type,
 		printf("\n");
 	} else if (res_type == CLD_RESULT_DICT) {
 		cld_dict* result_dict = (cld_dict*) result;
-		cld_dict_foreach(result_dict, k, v) {
-			printf("%d) %s=%s\n", i, k, v);
-		}
-
-		for (int i = 0; i < array_list_length(result_dict->keys); i++) {
-			printf("%d) %s\n", i, array_list_get_idx(result_dict->keys, i));
+		cld_dict_foreach(result_dict, k, v)
+		{
+			printf("%-26.25s: %s\n", k, v);
 		}
 	} else {
 		printf("This result type is not handled %d\n", res_type);

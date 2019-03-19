@@ -21,26 +21,6 @@ cld_cmd_err sys_version_cmd_handler(void* handler_args,
 
 	cld_dict* ver_dict;
 	if (create_cld_dict(&ver_dict) == 0) {
-		char* res_str = calloc(1024, sizeof(char));
-		sprintf(res_str, "\n"
-				"-- Docker Server Version Info\n"
-				"Docker Version:  %s\n"
-				"OS (Kernel):     %s (%s)\n"
-				"Arch:            %s\n"
-				"API Version:     %s\n"
-				"Min API Version: %s\n"
-				"Go Version:      %s\n"
-				"Git Commit:      %s\n"
-				"Build Time:      %s\n"
-				"Experimental:    %d"
-				"\n--\n", version->version, version->os,
-				version->kernel_version, version->arch, version->api_version,
-				version->min_api_version, version->go_version,
-				version->git_commit, version->build_time,
-				version->experimental);
-		success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_STRING, res_str);
-
-		cld_dict_put(ver_dict, "blah", version->version);
 		cld_dict_put(ver_dict, "Docker Version", version->version);
 		cld_dict_put(ver_dict, "OS", version->os);
 		cld_dict_put(ver_dict, "Kernel", version->kernel_version);
@@ -56,7 +36,6 @@ cld_cmd_err sys_version_cmd_handler(void* handler_args,
 		success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_DICT, ver_dict);
 
 		free_cld_dict(ver_dict);
-		free(res_str);
 	}
 
 	return CLD_COMMAND_SUCCESS;

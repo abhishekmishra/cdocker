@@ -74,9 +74,16 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 		int filter_dangling, char* filter_label, char* filter_reference,
 		char* filter_since);
 
+typedef struct docker_progress_detail_t {
+	long current;
+	long total;
+	char* progress;
+} docker_progress_detail;
+
 typedef struct docker_image_create_status_t {
 	char* status;
 	char* id;
+	docker_progress_detail* progress_detail;
 } docker_image_create_status;
 
 //Docker Image Create commands

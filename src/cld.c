@@ -89,6 +89,7 @@ cld_cmd_err print_handler(cld_cmd_err result_flag, cld_result_type res_type,
 		{
 			printf("%-26.25s: %s\n", k, v);
 		}
+		printf("\n");
 	} else {
 		printf("This result type is not handled %d\n", res_type);
 	}

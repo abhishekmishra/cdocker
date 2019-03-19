@@ -36,6 +36,7 @@
 #include "cld_sys.h"
 #include "cld_ctr.h"
 #include "cld_img.h"
+#include "cld_table.h"
 
 #define CMD_NOT_FOUND -1
 
@@ -57,6 +58,25 @@ cld_cmd_err print_handler(cld_cmd_err result_flag, cld_result_type res_type,
 	if (res_type == CLD_RESULT_STRING) {
 		char* result_str = (char*) result;
 		printf("%s\n", result_str);
+	} else if (res_type == CLD_RESULT_TABLE) {
+		cld_table* result_tbl = (cld_table*) result;
+		char* header;
+		char* value;
+
+		for(int i = 0; i < result_tbl->num_cols; i++) {
+			cld_table_get_header(&header, result_tbl, i);
+			printf("%-26.25s", header);
+		}
+		printf("\n");
+
+		for(int i = 0; i < result_tbl->num_rows; i++) {
+			for(int j = 0; j < result_tbl->num_cols; j++) {
+				cld_table_get_row_val(&value, result_tbl, i, j);
+				printf("%-26.25s", value);
+			}
+			printf("\n");
+		}
+		printf("\n");
 	} else {
 		printf("This result type is not handled %d\n", res_type);
 	}

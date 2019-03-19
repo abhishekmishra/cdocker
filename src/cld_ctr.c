@@ -81,6 +81,7 @@ cld_cmd_err ctr_ls_cmd_handler(void *handler_args, struct array_list *options,
 				cld_table_set_row_val(ctr_tbl, i, 6, names);
 			}
 			success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_TABLE, ctr_tbl);
+			free_cld_table(ctr_tbl);
 		}
 	}
 

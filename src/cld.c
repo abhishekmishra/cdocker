@@ -50,7 +50,7 @@ struct array_list* create_commands() {
 }
 
 char * prompt(EditLine *e) {
-	return "cld> ";
+	return "CLD> ";
 }
 
 cld_cmd_err print_handler(cld_cmd_err result_flag, cld_result_type res_type,
@@ -63,16 +63,20 @@ cld_cmd_err print_handler(cld_cmd_err result_flag, cld_result_type res_type,
 		char* header;
 		char* value;
 
-		for(int i = 0; i < result_tbl->num_cols; i++) {
+		for (int i = 0; i < result_tbl->num_cols; i++) {
 			cld_table_get_header(&header, result_tbl, i);
 			printf("%-26.25s", header);
 		}
 		printf("\n");
 
-		for(int i = 0; i < result_tbl->num_rows; i++) {
-			for(int j = 0; j < result_tbl->num_cols; j++) {
+		for (int i = 0; i < result_tbl->num_rows; i++) {
+			for (int j = 0; j < result_tbl->num_cols; j++) {
 				cld_table_get_row_val(&value, result_tbl, i, j);
-				printf("%-26.25s", value);
+				if (value == NULL) {
+					printf("%-26.25s", "");
+				} else {
+					printf("%-26.25s", value);
+				}
 			}
 			printf("\n");
 		}

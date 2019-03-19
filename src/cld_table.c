@@ -6,6 +6,7 @@
  */
 
 #include <stdlib.h>
+#include "docker_util.h"
 #include "cld_table.h"
 
 int create_cld_table(cld_table** table, int num_rows, int num_cols) {
@@ -46,7 +47,7 @@ void free_cld_table(cld_table* table) {
 
 int cld_table_set_header(cld_table* table, int col_id, char* name) {
 	if (col_id >= 0 && col_id < table->num_cols) {
-		table->header[col_id] = name;
+		table->header[col_id] = str_clone(name);
 		return 0;
 	} else {
 		return -1;
@@ -56,7 +57,7 @@ int cld_table_set_header(cld_table* table, int col_id, char* name) {
 int cld_table_set_row_val(cld_table* table, int row_id, int col_id, char* value) {
 	if (col_id >= 0 && col_id < table->num_cols && row_id >= 0
 			&& row_id < table->num_rows) {
-		table->values[row_id][col_id] = value;
+		table->values[row_id][col_id] = str_clone(value);
 		return 0;
 	} else {
 		return -1;

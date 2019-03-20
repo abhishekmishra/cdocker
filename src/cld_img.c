@@ -3,79 +3,66 @@
 #include <stdlib.h>
 #include "cld_img.h"
 #include "docker_all.h"
+#include "cld_progress.h"
 
 typedef struct {
 	cld_command_output_handler success_handler;
-	array_list* id_ls;
-	array_list* progress_ls;
-	array_list* message_ls;
-//	array_list* current_ls;
-//	array_list* total_ls;
+	cld_multi_progress* multi_progress;
 } docker_pull_update_args;
 
 void log_pull_message(docker_image_create_status* status, void* client_cbargs) {
 	docker_pull_update_args* upd_args = (docker_pull_update_args*) client_cbargs;
-	char* res_str = (char*) calloc(1024, sizeof(char));
 	if (status) {
 		if (status->id) {
-			sprintf(res_str, "message is %s, id is %s", status->status,
-					status->id);
-			int len = array_list_length(upd_args->id_ls);
+			int len = array_list_length(upd_args->multi_progress->progress_ls);
 			int new_len = len;
 			int found = 0;
 			int loc = -1;
 			for (int i = 0; i < len; i++) {
-				if (strcmp(status->id,
-						(char*) array_list_get_idx(upd_args->id_ls, i)) == 0) {
+				cld_progress* p = (cld_progress*) array_list_get_idx(
+						upd_args->multi_progress->progress_ls, i);
+				if (strcmp(status->id, p->name) == 0) {
 					found = 1;
 					loc = i;
 				}
 			}
 			if (found == 0) {
-				array_list_add(upd_args->id_ls, status->id);
-				array_list_add(upd_args->message_ls, status->status);
-				new_len += 1;
-				if (status->progress != NULL) {
-					array_list_add(upd_args->progress_ls, status->progress);
-//					array_list_add(upd_args->current_ls,
-//							&(status->progress_detail->current));
-//					array_list_add(upd_args->total_ls,
-//							&(status->progress_detail->total));
+				cld_progress* p;
+				if (create_cld_progress(&p, status->id, 0, 0) == 0) {
+					array_list_add(upd_args->multi_progress->progress_ls, p);
+					upd_args->multi_progress->old_count = array_list_length(
+							upd_args->multi_progress->progress_ls) - 1;
+					new_len += 1;
+					p->message = status->status;
+					if (status->progress != NULL) {
+						p->extra = status->progress;
+						p->current = status->progress_detail->current;
+						p->total = status->progress_detail->total;
+					} else {
+						p->extra = NULL;
+					}
 				}
 			} else {
-				array_list_put_idx(upd_args->id_ls, loc, status->id);
-				array_list_put_idx(upd_args->message_ls, loc, status->status);
-
+				cld_progress* p = (cld_progress*) array_list_get_idx(
+						upd_args->multi_progress->progress_ls, loc);
+				upd_args->multi_progress->old_count = array_list_length(
+						upd_args->multi_progress->progress_ls);
+				p->message = status->status;
 				if (status->progress != NULL) {
-					array_list_put_idx(upd_args->progress_ls, loc,
-							status->progress);
+					p->extra = status->progress;
+					p->current = status->progress_detail->current;
+					p->total = status->progress_detail->total;
+				} else {
+					p->extra = NULL;
 				}
 			}
-			//printf("lines to clear %d, lines to write %d\n", len, new_len);
-			printf("\033[%dA", len);
-			fflush(stdout);
-			for (int i = 0; i < new_len; i++) {
-				printf("\033[K%s: %s",
-						(char*) array_list_get_idx(upd_args->id_ls, i),
-						(char*) array_list_get_idx(upd_args->message_ls, i));
-				char* progress = (char*) array_list_get_idx(
-						upd_args->progress_ls, i);
-				if (progress != NULL) {
-					printf(" %s", progress);
-				}
-				printf("\n");
-			}
-//			if (status->progress != NULL) {
-//				printf("%s\n", status->progress);
-//			}
+			upd_args->success_handler(CLD_COMMAND_IS_RUNNING,
+					CLD_RESULT_PROGRESS, upd_args->multi_progress);
 		} else {
-			sprintf(res_str, "message is %s", status->status);
+			upd_args->success_handler(CLD_COMMAND_IS_RUNNING, CLD_RESULT_STRING,
+					status->status);
 		}
-//		if (upd_args->success_handler) {
-//			upd_args->success_handler(CLD_COMMAND_IS_RUNNING, CLD_RESULT_STRING, res_str);
-//		}
 	}
-	free(res_str);
 }
 
 cld_cmd_err img_pl_cmd_handler(void *handler_args, struct array_list *options,
@@ -88,11 +75,7 @@ cld_cmd_err img_pl_cmd_handler(void *handler_args, struct array_list *options,
 	docker_pull_update_args* upd_args = (docker_pull_update_args*) calloc(1,
 			sizeof(docker_pull_update_args));
 	upd_args->success_handler = success_handler;
-	upd_args->id_ls = array_list_new(&free);
-	upd_args->message_ls = array_list_new(&free);
-//	upd_args->current_ls = array_list_new(&free);
-//	upd_args->total_ls = array_list_new(&free);
-	upd_args->progress_ls = array_list_new(&free);
+	create_cld_multi_progress(&(upd_args->multi_progress));
 
 	int len = array_list_length(args);
 	if (len != 1) {
@@ -116,6 +99,7 @@ cld_cmd_err img_pl_cmd_handler(void *handler_args, struct array_list *options,
 			return CLD_COMMAND_ERR_UNKNOWN;
 		}
 	}
+	free_cld_multi_progress(upd_args->multi_progress);
 }
 
 cld_command *img_commands() {

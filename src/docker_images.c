@@ -196,6 +196,7 @@ void parse_status_cb(char* msg, void* cb, void* cbargs) {
 			}
 
 			status_cb(status, cbargs);
+//			printf("%s\n", msg);
 		} else {
 			docker_log_debug("Message = Empty");
 		}

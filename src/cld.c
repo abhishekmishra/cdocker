@@ -39,6 +39,7 @@
 #include "cld_img.h"
 #include "cld_table.h"
 #include "cld_dict.h"
+#include "cld_progress.h"
 
 #define CMD_NOT_FOUND -1
 
@@ -85,11 +86,29 @@ cld_cmd_err print_handler(cld_cmd_err result_flag, cld_result_type res_type,
 		printf("\n");
 	} else if (res_type == CLD_RESULT_DICT) {
 		cld_dict* result_dict = (cld_dict*) result;
-		cld_dict_foreach(result_dict, k, v)
-		{
+		cld_dict_foreach(result_dict, k, v) {
 			printf("%-26.25s: %s\n", k, v);
 		}
 		printf("\n");
+	} else if (res_type == CLD_RESULT_PROGRESS) {
+		cld_multi_progress* result_progress = (cld_multi_progress*) result;
+		if(result_progress->old_count > 0) {
+			printf("\033[%dA", result_progress->old_count);
+			fflush(stdout);
+		}
+		int new_len = array_list_length(result_progress->progress_ls);
+//		printf("To remove %d, to write %d\n", result_progress->old_count, new_len);
+		for (int i = 0; i < new_len; i++) {
+			cld_progress* p = (cld_progress*)array_list_get_idx(result_progress->progress_ls, i);
+			printf("\033[K%s: %s",
+					p->name,
+					p->message);
+			char* progress = p->extra;
+			if (progress != NULL) {
+				printf(" %s", progress);
+			}
+			printf("\n");
+		}
 	} else {
 		printf("This result type is not handled %d\n", res_type);
 	}

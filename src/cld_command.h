@@ -45,7 +45,7 @@ typedef enum {
 } cld_type;
 
 typedef enum {
-	CLD_RESULT_STRING = 0, CLD_RESULT_TABLE = 1, CLD_RESULT_DICT = 2
+	CLD_RESULT_STRING = 0, CLD_RESULT_TABLE = 1, CLD_RESULT_DICT = 2, CLD_RESULT_PROGRESS=3
 } cld_result_type;
 
 //TODO add defaults

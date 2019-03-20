@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
 			break;
 
 		case 'i':
-			puts("option -i\n");
+			//puts("option -i\n");
 			interactive = 2;
 			break;
 

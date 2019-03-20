@@ -92,8 +92,7 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 		add_filter_str(filters, "label", str_clone(filter_label));
 	}
 	if (filter_reference != NULL) {
-		add_filter_str(filters, "reference",
-				str_clone(filter_reference));
+		add_filter_str(filters, "reference", str_clone(filter_reference));
 	}
 	if (filter_since != NULL) {
 		add_filter_str(filters, "since", str_clone(filter_since));
@@ -151,13 +150,15 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 			}
 		}
 		json_object* repo_digests_obj;
-		json_object_object_get_ex(current_obj, "RepoDigests", &repo_digests_obj);
+		json_object_object_get_ex(current_obj, "RepoDigests",
+				&repo_digests_obj);
 		if (repo_digests_obj != NULL) {
 			int num_repo_digests = json_object_array_length(repo_digests_obj);
 			for (int j = 0; j < num_repo_digests; j++) {
 				array_list_add(img->repo_digests,
 						(char*) json_object_get_string(
-								json_object_array_get_idx(repo_digests_obj, j)));
+								json_object_array_get_idx(repo_digests_obj,
+										j)));
 			}
 		}
 		array_list_add((*images), img);
@@ -172,31 +173,34 @@ void parse_status_cb(char* msg, void* cb, void* cbargs) {
 	if (msg) {
 		if(status_cb) {
 			json_object* response_obj = json_tokener_parse(msg);
-			char* status_msg = get_attr_str(response_obj, "status");
 			char* id = get_attr_str(response_obj, "id");
-			char* progress = get_attr_str(response_obj, "progress");
+			if(id == NULL) {
+				char* message = get_attr_str(response_obj, "message");
+				status_cb(NULL, cbargs);
+			} else {
+				char* status_msg = get_attr_str(response_obj, "status");
+				char* progress = get_attr_str(response_obj, "progress");
 
-			docker_image_create_status* status = (docker_image_create_status*)calloc(1, sizeof(docker_image_create_status));
-			if(status != NULL) {
-				status->status = status_msg;
-				status->id = id;
-				status->progress = progress;
-			}
-
-			json_object* progress_detail_obj;
-			if (json_object_object_get_ex(response_obj, "progressDetail", &progress_detail_obj) == 1) {
-				long current = get_attr_long(progress_detail_obj, "current");
-				long total = get_attr_long(progress_detail_obj, "total");
-				docker_progress_detail* progress_detail = (docker_progress_detail*)calloc(1, sizeof(docker_progress_detail));
-				if(progress_detail != NULL) {
-					progress_detail->current = current;
-					progress_detail->total = total;
-					status->progress_detail = progress_detail;
+				docker_image_create_status* status = (docker_image_create_status*)calloc(1, sizeof(docker_image_create_status));
+				if(status != NULL) {
+					status->status = status_msg;
+					status->id = id;
+					status->progress = progress;
 				}
-			}
 
-			status_cb(status, cbargs);
-//			printf("%s\n", msg);
+				json_object* progress_detail_obj;
+				if (json_object_object_get_ex(response_obj, "progressDetail", &progress_detail_obj) == 1) {
+					long current = get_attr_long(progress_detail_obj, "current");
+					long total = get_attr_long(progress_detail_obj, "total");
+					docker_progress_detail* progress_detail = (docker_progress_detail*)calloc(1, sizeof(docker_progress_detail));
+					if(progress_detail != NULL) {
+						progress_detail->current = current;
+						progress_detail->total = total;
+						status->progress_detail = progress_detail;
+					}
+				}
+				status_cb(status, cbargs);
+			}
 		} else {
 			docker_log_debug("Message = Empty");
 		}

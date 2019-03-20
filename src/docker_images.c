@@ -174,23 +174,23 @@ void parse_status_cb(char* msg, void* cb, void* cbargs) {
 			json_object* response_obj = json_tokener_parse(msg);
 			char* status_msg = get_attr_str(response_obj, "status");
 			char* id = get_attr_str(response_obj, "id");
+			char* progress = get_attr_str(response_obj, "progress");
 
 			docker_image_create_status* status = (docker_image_create_status*)calloc(1, sizeof(docker_image_create_status));
 			if(status != NULL) {
 				status->status = status_msg;
 				status->id = id;
+				status->progress = progress;
 			}
 
 			json_object* progress_detail_obj;
 			if (json_object_object_get_ex(response_obj, "progressDetail", &progress_detail_obj) == 1) {
 				long current = get_attr_long(progress_detail_obj, "current");
 				long total = get_attr_long(progress_detail_obj, "total");
-				char* progress = get_attr_str(progress_detail_obj, "progress");
 				docker_progress_detail* progress_detail = (docker_progress_detail*)calloc(1, sizeof(docker_progress_detail));
 				if(progress_detail != NULL) {
 					progress_detail->current = current;
 					progress_detail->total = total;
-					progress_detail->progress = progress;
 					status->progress_detail = progress_detail;
 				}
 			}

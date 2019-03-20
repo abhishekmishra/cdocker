@@ -77,12 +77,12 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 typedef struct docker_progress_detail_t {
 	long current;
 	long total;
-	char* progress;
 } docker_progress_detail;
 
 typedef struct docker_image_create_status_t {
 	char* status;
 	char* id;
+	char* progress;
 	docker_progress_detail* progress_detail;
 } docker_image_create_status;
 

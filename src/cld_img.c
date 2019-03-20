@@ -88,7 +88,7 @@ cld_cmd_err img_pl_cmd_handler(void *handler_args, struct array_list *options,
 		char* image_name = image_name_arg->val->str_value;
 		d_err_t docker_error = docker_image_create_from_image_cb(ctx, &res,
 				&log_pull_message, upd_args, image_name, NULL, NULL);
-		handle_docker_error(res);
+		handle_docker_error(res, success_handler, error_handler);
 		if (docker_error == E_SUCCESS) {
 			char* res_str = (char*) calloc(1024, sizeof(char));
 			sprintf(res_str, "Image pull successful -> %s", image_name);

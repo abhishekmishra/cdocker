@@ -17,7 +17,7 @@ cld_cmd_err sys_version_cmd_handler(void* handler_args,
 	docker_version* version;
 	docker_context* ctx = get_docker_context(handler_args);
 	docker_system_version(ctx, &res, &version);
-	handle_docker_error(res);
+	handle_docker_error(res, success_handler, error_handler);
 
 	cld_dict* ver_dict;
 	if (create_cld_dict(&ver_dict) == 0) {

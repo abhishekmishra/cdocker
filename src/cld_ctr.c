@@ -152,9 +152,8 @@ cld_cmd_err ctr_start_cmd_handler(void *handler_args,
 	return CLD_COMMAND_SUCCESS;
 }
 
-cld_cmd_err ctr_stop_cmd_handler(void *handler_args,
-		struct array_list *options, struct array_list *args,
-		cld_command_output_handler success_handler,
+cld_cmd_err ctr_stop_cmd_handler(void *handler_args, struct array_list *options,
+		struct array_list *args, cld_command_output_handler success_handler,
 		cld_command_output_handler error_handler) {
 	int quiet = 0;
 	docker_result *res;
@@ -208,13 +207,154 @@ cld_cmd_err ctr_restart_cmd_handler(void *handler_args,
 	return CLD_COMMAND_SUCCESS;
 }
 
+cld_cmd_err ctr_kill_cmd_handler(void *handler_args, struct array_list *options,
+		struct array_list *args, cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler) {
+	int quiet = 0;
+	docker_result *res;
+	docker_context *ctx = get_docker_context(handler_args);
+	int len = array_list_length(args);
+	if (len != 1) {
+		error_handler(CLD_COMMAND_ERR_UNKNOWN, CLD_RESULT_STRING,
+				"Container not provided.");
+		return CLD_COMMAND_ERR_UNKNOWN;
+	} else {
+		cld_argument* container_arg = (cld_argument*) array_list_get_idx(args,
+				0);
+		char* container = container_arg->val->str_value;
+		docker_kill_container(ctx, &res, container, NULL);
+		int created = is_ok(res);
+		handle_docker_error(res, success_handler, error_handler);
+		if (created) {
+			char res_str[1024];
+			sprintf(res_str, "Killed container %s", container);
+			success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_STRING, res_str);
+		}
+	}
+	return CLD_COMMAND_SUCCESS;
+}
+
+cld_cmd_err ctr_ren_cmd_handler(void *handler_args, struct array_list *options,
+		struct array_list *args, cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler) {
+	int quiet = 0;
+	docker_result *res;
+	docker_context *ctx = get_docker_context(handler_args);
+	int len = array_list_length(args);
+	if (len != 2) {
+		error_handler(CLD_COMMAND_ERR_UNKNOWN, CLD_RESULT_STRING,
+				"Container name and new name not provided.");
+		return CLD_COMMAND_ERR_UNKNOWN;
+	} else {
+		cld_argument* container_arg = (cld_argument*) array_list_get_idx(args,
+				0);
+		char* container = container_arg->val->str_value;
+		char* new_name =
+				((cld_argument*) array_list_get_idx(args, 1))->val->str_value;
+		docker_rename_container(ctx, &res, container, new_name);
+		int created = is_ok(res);
+		handle_docker_error(res, success_handler, error_handler);
+		if (created) {
+			char res_str[1024];
+			sprintf(res_str, "Renamed container %s to %s", container, new_name);
+			success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_STRING, res_str);
+		}
+	}
+	return CLD_COMMAND_SUCCESS;
+}
+
+cld_cmd_err ctr_pause_cmd_handler(void *handler_args,
+		struct array_list *options, struct array_list *args,
+		cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler) {
+	int quiet = 0;
+	docker_result *res;
+	docker_context *ctx = get_docker_context(handler_args);
+	int len = array_list_length(args);
+	if (len != 1) {
+		error_handler(CLD_COMMAND_ERR_UNKNOWN, CLD_RESULT_STRING,
+				"Container not provided.");
+		return CLD_COMMAND_ERR_UNKNOWN;
+	} else {
+		cld_argument* container_arg = (cld_argument*) array_list_get_idx(args,
+				0);
+		char* container = container_arg->val->str_value;
+		docker_pause_container(ctx, &res, container);
+		int created = is_ok(res);
+		handle_docker_error(res, success_handler, error_handler);
+		if (created) {
+			char res_str[1024];
+			sprintf(res_str, "Paused container %s", container);
+			success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_STRING, res_str);
+		}
+	}
+	return CLD_COMMAND_SUCCESS;
+}
+
+cld_cmd_err ctr_unpause_cmd_handler(void *handler_args,
+		struct array_list *options, struct array_list *args,
+		cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler) {
+	int quiet = 0;
+	docker_result *res;
+	docker_context *ctx = get_docker_context(handler_args);
+	int len = array_list_length(args);
+	if (len != 1) {
+		error_handler(CLD_COMMAND_ERR_UNKNOWN, CLD_RESULT_STRING,
+				"Container not provided.");
+		return CLD_COMMAND_ERR_UNKNOWN;
+	} else {
+		cld_argument* container_arg = (cld_argument*) array_list_get_idx(args,
+				0);
+		char* container = container_arg->val->str_value;
+		docker_unpause_container(ctx, &res, container);
+		int created = is_ok(res);
+		handle_docker_error(res, success_handler, error_handler);
+		if (created) {
+			char res_str[1024];
+			sprintf(res_str, "UnPaused container %s", container);
+			success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_STRING, res_str);
+		}
+	}
+	return CLD_COMMAND_SUCCESS;
+}
+
+cld_cmd_err ctr_wait_cmd_handler(void *handler_args, struct array_list *options,
+		struct array_list *args, cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler) {
+	int quiet = 0;
+	docker_result *res;
+	docker_context *ctx = get_docker_context(handler_args);
+	int len = array_list_length(args);
+	if (len != 1) {
+		error_handler(CLD_COMMAND_ERR_UNKNOWN, CLD_RESULT_STRING,
+				"Container not provided.");
+		return CLD_COMMAND_ERR_UNKNOWN;
+	} else {
+		cld_argument* container_arg = (cld_argument*) array_list_get_idx(args,
+				0);
+		char* container = container_arg->val->str_value;
+		docker_wait_container(ctx, &res, container, NULL);
+		int created = is_ok(res);
+		handle_docker_error(res, success_handler, error_handler);
+		if (created) {
+			char res_str[1024];
+			sprintf(res_str, "Waiting for container %s", container);
+			success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_STRING, res_str);
+		}
+	}
+	return CLD_COMMAND_SUCCESS;
+}
+
 cld_command *ctr_commands() {
 	cld_command *container_command;
 	if (make_command(&container_command, "container", "ctr",
 			"Docker Container Commands",
 			NULL) == CLD_COMMAND_SUCCESS) {
 		cld_command *ctrls_command, *ctrcreate_command, *ctrstart_command,
-				*ctrstop_command, *ctrrestart_command;
+				*ctrstop_command, *ctrrestart_command, *ctrkill_command,
+				*ctrren_command, *ctrpause_command, *ctrunpause_command,
+				*ctrwait_command;
 		if (make_command(&ctrls_command, "list", "ls", "Docker Container List",
 				&ctr_ls_cmd_handler) == CLD_COMMAND_SUCCESS) {
 			array_list_add(container_command->sub_commands, ctrls_command);
@@ -258,6 +398,61 @@ cld_command *ctr_commands() {
 			array_list_add(ctrrestart_command->args, container_arg);
 
 			array_list_add(container_command->sub_commands, ctrrestart_command);
+		}
+		if (make_command(&ctrkill_command, "kill", "kill",
+				"Docker Container Kill", &ctr_kill_cmd_handler)
+				== CLD_COMMAND_SUCCESS) {
+			cld_argument* container_arg;
+			make_argument(&container_arg, "Container", CLD_TYPE_STRING,
+					"Name of container to kill.");
+			array_list_add(ctrkill_command->args, container_arg);
+
+			array_list_add(container_command->sub_commands, ctrkill_command);
+		}
+		if (make_command(&ctrren_command, "rename", "ren",
+				"Docker Container Rename", &ctr_ren_cmd_handler)
+				== CLD_COMMAND_SUCCESS) {
+			cld_argument* container_arg;
+			make_argument(&container_arg, "Container", CLD_TYPE_STRING,
+					"Name of container to rename.");
+			array_list_add(ctrren_command->args, container_arg);
+
+			cld_argument* name_arg;
+			make_argument(&name_arg, "Name", CLD_TYPE_STRING,
+					"New name of container.");
+			array_list_add(ctrren_command->args, name_arg);
+
+			array_list_add(container_command->sub_commands, ctrren_command);
+		}
+		if (make_command(&ctrpause_command, "pause", "pause",
+				"Docker Container Pause", &ctr_pause_cmd_handler)
+				== CLD_COMMAND_SUCCESS) {
+			cld_argument* container_arg;
+			make_argument(&container_arg, "Container", CLD_TYPE_STRING,
+					"Name of container to pause.");
+			array_list_add(ctrpause_command->args, container_arg);
+
+			array_list_add(container_command->sub_commands, ctrpause_command);
+		}
+		if (make_command(&ctrunpause_command, "unpause", "unpause",
+				"Docker Container UnPause", &ctr_unpause_cmd_handler)
+				== CLD_COMMAND_SUCCESS) {
+			cld_argument* container_arg;
+			make_argument(&container_arg, "Container", CLD_TYPE_STRING,
+					"Name of container to unpause.");
+			array_list_add(ctrunpause_command->args, container_arg);
+
+			array_list_add(container_command->sub_commands, ctrunpause_command);
+		}
+		if (make_command(&ctrwait_command, "wait", "wait",
+				"Docker Container Wait", &ctr_wait_cmd_handler)
+				== CLD_COMMAND_SUCCESS) {
+			cld_argument* container_arg;
+			make_argument(&container_arg, "Container", CLD_TYPE_STRING,
+					"Name of container to wait.");
+			array_list_add(ctrwait_command->args, container_arg);
+
+			array_list_add(container_command->sub_commands, ctrwait_command);
 		}
 	}
 	return container_command;

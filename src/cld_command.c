@@ -370,18 +370,21 @@ cld_cmd_err parse_args(struct array_list* args, int* argc, char*** argv) {
 	int ac = (*argc);
 	char** av = (*argv);
 	int args_len = array_list_length(args);
+//	printf("args len %d\n", args_len);
 	if (args_len == ac) {
 		for (int i = 0; i < args_len; i++) {
 			cld_argument* arg = array_list_get_idx(args, i);
 			char* argval = av[i];
 			//check if we have
 			parse_cld_val(arg->val, argval);
+//			printf("Argval %s\n", argval);
 		}
 	} else {
 		return CLD_COMMAND_ERR_ARG_NOT_FOUND;
 	}
 	for (int i = 0; i < args_len; i++) {
-		(*argc) = gobble(ac, av, 0);
+		(*argc) = gobble((*argc), av, 0);
+//		printf("new argc = %d\n", (*argc));
 	}
 	return CLD_COMMAND_SUCCESS;
 }

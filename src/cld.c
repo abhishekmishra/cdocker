@@ -56,34 +56,77 @@ char * prompt(EditLine *e) {
 	return "CLD> ";
 }
 
+void print_table_result(void* result) {
+	cld_table* result_tbl = (cld_table*) result;
+	int col_widths[result_tbl->num_cols];
+	char* col_fmtspec[result_tbl->num_cols];
+	char* header;
+	char* value;
+	int min_width = 4, max_width = 25;
+
+	//calculate column widths, and create format specifiers
+	for (int i = 0; i < result_tbl->num_cols; i++) {
+		cld_table_get_header(&header, result_tbl, i);
+		int col_width = strlen(header);
+		for (int j = 0; j < result_tbl->num_rows; j++) {
+			cld_table_get_row_val(&value, result_tbl, j, i);
+			if (value != NULL) {
+				if(strlen(value) > col_width) {
+					col_width = strlen(value);
+				}
+			}
+		}
+		if(col_width < min_width) {
+			col_width = min_width;
+		}
+		if(col_width > max_width) {
+			col_width = max_width;
+		}
+		char* fmtspec = (char*)calloc(16, sizeof(char));
+		sprintf(fmtspec, "%%-%d.%ds", (col_width+1), col_width);
+		col_widths[i] = col_width;
+		col_fmtspec[i] = fmtspec;
+		//printf("%d and %s\n", col_width, fmtspec);
+	}
+
+	printf("\n");
+	for (int i = 0; i < result_tbl->num_cols; i++) {
+		cld_table_get_header(&header, result_tbl, i);
+		printf(col_fmtspec[i], header);
+	}
+	printf("\n");
+	for (int i = 0; i < result_tbl->num_cols; i++) {
+		for(int j = 0; j < col_widths[i] + 1; j++) {
+			printf("-");
+		}
+	}
+	printf("\n");
+
+	for (int i = 0; i < result_tbl->num_rows; i++) {
+		for (int j = 0; j < result_tbl->num_cols; j++) {
+			cld_table_get_row_val(&value, result_tbl, i, j);
+			if (value == NULL) {
+				printf(col_fmtspec[j], "");
+			} else {
+				printf(col_fmtspec[j], value);
+			}
+		}
+		printf("\n");
+	}
+	printf("\n");
+
+	for (int i = 0; i < result_tbl->num_cols; i++) {
+		free(col_fmtspec[i]);
+	}
+}
+
 cld_cmd_err print_handler(cld_cmd_err result_flag, cld_result_type res_type,
 		void* result) {
 	if (res_type == CLD_RESULT_STRING) {
 		char* result_str = (char*) result;
 		printf("%s\n", result_str);
 	} else if (res_type == CLD_RESULT_TABLE) {
-		cld_table* result_tbl = (cld_table*) result;
-		char* header;
-		char* value;
-
-		for (int i = 0; i < result_tbl->num_cols; i++) {
-			cld_table_get_header(&header, result_tbl, i);
-			printf("%-26.25s", header);
-		}
-		printf("\n");
-
-		for (int i = 0; i < result_tbl->num_rows; i++) {
-			for (int j = 0; j < result_tbl->num_cols; j++) {
-				cld_table_get_row_val(&value, result_tbl, i, j);
-				if (value == NULL) {
-					printf("%-26.25s", "");
-				} else {
-					printf("%-26.25s", value);
-				}
-			}
-			printf("\n");
-		}
-		printf("\n");
+		print_table_result(result);
 	} else if (res_type == CLD_RESULT_DICT) {
 		cld_dict* result_dict = (cld_dict*) result;
 		cld_dict_foreach(result_dict, k, v) {
@@ -92,17 +135,16 @@ cld_cmd_err print_handler(cld_cmd_err result_flag, cld_result_type res_type,
 		printf("\n");
 	} else if (res_type == CLD_RESULT_PROGRESS) {
 		cld_multi_progress* result_progress = (cld_multi_progress*) result;
-		if(result_progress->old_count > 0) {
+		if (result_progress->old_count > 0) {
 			printf("\033[%dA", result_progress->old_count);
 			fflush(stdout);
 		}
 		int new_len = array_list_length(result_progress->progress_ls);
 //		printf("To remove %d, to write %d\n", result_progress->old_count, new_len);
 		for (int i = 0; i < new_len; i++) {
-			cld_progress* p = (cld_progress*)array_list_get_idx(result_progress->progress_ls, i);
-			printf("\033[K%s: %s",
-					p->name,
-					p->message);
+			cld_progress* p = (cld_progress*) array_list_get_idx(
+					result_progress->progress_ls, i);
+			printf("\033[K%s: %s", p->name, p->message);
 			char* progress = p->extra;
 			if (progress != NULL) {
 				printf(" %s", progress);

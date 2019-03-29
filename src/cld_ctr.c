@@ -423,6 +423,33 @@ cld_cmd_err ctr_top_cmd_handler(void *handler_args, struct array_list *options,
 	return CLD_COMMAND_SUCCESS;
 }
 
+cld_cmd_err ctr_remove_cmd_handler(void *handler_args, struct array_list *options,
+		struct array_list *args, cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler) {
+	int quiet = 0;
+	docker_result *res;
+	docker_context *ctx = get_docker_context(handler_args);
+	int len = array_list_length(args);
+	if (len != 1) {
+		error_handler(CLD_COMMAND_ERR_UNKNOWN, CLD_RESULT_STRING,
+				"Container not provided.");
+		return CLD_COMMAND_ERR_UNKNOWN;
+	} else {
+		cld_argument* container_arg = (cld_argument*) array_list_get_idx(args,
+				0);
+		char* container = container_arg->val->str_value;
+		docker_remove_container(ctx, &res, container, 0, 0, 0);
+		int created = is_ok(res);
+		handle_docker_error(res, success_handler, error_handler);
+		if (created) {
+			char res_str[1024];
+			sprintf(res_str, "Removed container %s", container);
+			success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_STRING, res_str);
+		}
+	}
+	return CLD_COMMAND_SUCCESS;
+}
+
 cld_command *ctr_commands() {
 	cld_command *container_command;
 	if (make_command(&container_command, "container", "ctr",
@@ -431,7 +458,7 @@ cld_command *ctr_commands() {
 		cld_command *ctrls_command, *ctrcreate_command, *ctrstart_command,
 				*ctrstop_command, *ctrrestart_command, *ctrkill_command,
 				*ctrren_command, *ctrpause_command, *ctrunpause_command,
-				*ctrwait_command, *ctrlogs_command, *ctrtop_command;
+				*ctrwait_command, *ctrlogs_command, *ctrtop_command, *ctrremove_command;
 		if (make_command(&ctrls_command, "list", "ls", "Docker Container List",
 				&ctr_ls_cmd_handler) == CLD_COMMAND_SUCCESS) {
 			array_list_add(container_command->sub_commands, ctrls_command);
@@ -550,6 +577,16 @@ cld_command *ctr_commands() {
 			array_list_add(ctrtop_command->args, container_arg);
 
 			array_list_add(container_command->sub_commands, ctrtop_command);
+		}
+		if (make_command(&ctrremove_command, "remove", "del",
+				"Docker Remove Container", &ctr_remove_cmd_handler)
+				== CLD_COMMAND_SUCCESS) {
+			cld_argument* container_arg;
+			make_argument(&container_arg, "Container", CLD_TYPE_STRING,
+					"Name of container.");
+			array_list_add(ctrremove_command->args, container_arg);
+
+			array_list_add(container_command->sub_commands, ctrremove_command);
 		}
 	}
 	return container_command;

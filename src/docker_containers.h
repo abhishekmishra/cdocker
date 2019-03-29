@@ -552,6 +552,21 @@ d_err_t docker_unpause_container(docker_context* ctx, docker_result** result,
 d_err_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id, char* condition);
 
+
+/**
+ * Remove a container
+ *
+ * \param ctx docker context
+ * \param result pointer to docker_result
+ * \param id container id
+ * \param v remove volumes associated with the container
+ * \param force if the container is running, kill it before removing it.
+ * \param link remove specified link
+ * \return error code
+ */
+d_err_t docker_remove_container(docker_context* ctx, docker_result** result,
+		char* id, int v, int force, int link);
+
 #ifdef __cplusplus 
 }
 #endif

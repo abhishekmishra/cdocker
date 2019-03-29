@@ -423,8 +423,9 @@ cld_cmd_err ctr_top_cmd_handler(void *handler_args, struct array_list *options,
 	return CLD_COMMAND_SUCCESS;
 }
 
-cld_cmd_err ctr_remove_cmd_handler(void *handler_args, struct array_list *options,
-		struct array_list *args, cld_command_output_handler success_handler,
+cld_cmd_err ctr_remove_cmd_handler(void *handler_args,
+		struct array_list *options, struct array_list *args,
+		cld_command_output_handler success_handler,
 		cld_command_output_handler error_handler) {
 	int quiet = 0;
 	docker_result *res;
@@ -450,6 +451,77 @@ cld_cmd_err ctr_remove_cmd_handler(void *handler_args, struct array_list *option
 	return CLD_COMMAND_SUCCESS;
 }
 
+typedef struct stats_args_t {
+	char* id;
+	char* name;
+	cld_command_output_handler success_handler;
+}stats_args;
+
+void docker_container_stats_cb(docker_container_stats* stats, void* cbargs) {
+	stats_args* sarg = (stats_args*) cbargs;
+	cld_table* ctr_tbl;
+	if (create_cld_table(&ctr_tbl, 1, 8) == 0) {
+		cld_table_set_header(ctr_tbl, 0, "CONTAINER ID");
+		cld_table_set_header(ctr_tbl, 1, "NAME");
+		cld_table_set_header(ctr_tbl, 2, "CPU %");
+		cld_table_set_header(ctr_tbl, 3, "MEM USAGE / LIMIT");
+		cld_table_set_header(ctr_tbl, 4, "MEM %");
+		cld_table_set_header(ctr_tbl, 5, "NET I/O");
+		cld_table_set_header(ctr_tbl, 6, "BLOCK I/O");
+		cld_table_set_header(ctr_tbl, 7, "PIDS");
+
+		cld_table_set_row_val(ctr_tbl, 0, 0, sarg->id);
+		cld_table_set_row_val(ctr_tbl, 0, 1, sarg->name);
+
+		char cpu_usg_str[128];
+		sprintf(cpu_usg_str, "%ld", stats->cpu_stats->total_usage);
+		cld_table_set_row_val(ctr_tbl, 0, 2, cpu_usg_str);
+
+		char mem_usg_str[128];
+		sprintf(mem_usg_str, "%ld", stats->mem_stats->usage);
+		cld_table_set_row_val(ctr_tbl, 0, 3, mem_usg_str);
+
+		cld_table_set_row_val(ctr_tbl, 0, 4, "");
+		cld_table_set_row_val(ctr_tbl, 0, 5, "");
+		cld_table_set_row_val(ctr_tbl, 0, 6, "");
+		cld_table_set_row_val(ctr_tbl, 0, 7, "");
+	}
+	sarg->success_handler(CLD_COMMAND_IS_RUNNING, CLD_RESULT_TABLE, ctr_tbl);
+}
+
+cld_cmd_err ctr_stats_cmd_handler(void *handler_args,
+		struct array_list *options, struct array_list *args,
+		cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler) {
+	int quiet = 0;
+	docker_result *res;
+	docker_context *ctx = get_docker_context(handler_args);
+	int len = array_list_length(args);
+	if (len != 1) {
+		error_handler(CLD_COMMAND_ERR_UNKNOWN, CLD_RESULT_STRING,
+				"Container not provided.");
+		return CLD_COMMAND_ERR_UNKNOWN;
+	} else {
+		cld_argument* container_arg = (cld_argument*) array_list_get_idx(args,
+				0);
+		char* container = container_arg->val->str_value;
+		stats_args* sarg = (stats_args*)calloc(1, sizeof(stats_args));
+		sarg->id = container;
+		sarg->name = container;
+		sarg->success_handler = success_handler;
+		docker_container_get_stats_cb(ctx, &res, &docker_container_stats_cb,
+				sarg, container);
+		int success = is_ok(res);
+		handle_docker_error(res, success_handler, error_handler);
+		if (success) {
+			char res_str[1024];
+			sprintf(res_str, "done %s", container);
+			success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_STRING, res_str);
+		}
+	}
+	return CLD_COMMAND_SUCCESS;
+}
+
 cld_command *ctr_commands() {
 	cld_command *container_command;
 	if (make_command(&container_command, "container", "ctr",
@@ -458,7 +530,8 @@ cld_command *ctr_commands() {
 		cld_command *ctrls_command, *ctrcreate_command, *ctrstart_command,
 				*ctrstop_command, *ctrrestart_command, *ctrkill_command,
 				*ctrren_command, *ctrpause_command, *ctrunpause_command,
-				*ctrwait_command, *ctrlogs_command, *ctrtop_command, *ctrremove_command;
+				*ctrwait_command, *ctrlogs_command, *ctrtop_command,
+				*ctrremove_command, *ctrstats_command;
 		if (make_command(&ctrls_command, "list", "ls", "Docker Container List",
 				&ctr_ls_cmd_handler) == CLD_COMMAND_SUCCESS) {
 			array_list_add(container_command->sub_commands, ctrls_command);
@@ -587,6 +660,16 @@ cld_command *ctr_commands() {
 			array_list_add(ctrremove_command->args, container_arg);
 
 			array_list_add(container_command->sub_commands, ctrremove_command);
+		}
+		if (make_command(&ctrstats_command, "stats", "stats",
+				"Docker Container Stats", &ctr_stats_cmd_handler)
+				== CLD_COMMAND_SUCCESS) {
+			cld_argument* container_arg;
+			make_argument(&container_arg, "Container", CLD_TYPE_STRING,
+					"Name of container.");
+			array_list_add(ctrstats_command->args, container_arg);
+
+			array_list_add(container_command->sub_commands, ctrstats_command);
 		}
 	}
 	return container_command;

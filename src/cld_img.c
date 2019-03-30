@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "cld_img.h"
+#include "cld_table.h"
 #include "docker_all.h"
 #include "cld_progress.h"
 
@@ -102,11 +103,94 @@ cld_cmd_err img_pl_cmd_handler(void *handler_args, struct array_list *options,
 	free_cld_multi_progress(upd_args->multi_progress);
 }
 
+char* concat_tags(array_list* tags_ls) {
+	char* tags = NULL;
+	if (tags_ls) {
+		int len_tags = array_list_length(tags_ls);
+		int tag_strlen = 0;
+		for (int i = 0; i < len_tags; i++) {
+			tag_strlen += strlen((char*) array_list_get_idx(tags_ls, i));
+			tag_strlen += 1; //for newline
+		}
+		tag_strlen += 1; //for null terminator
+		tags = (char*) calloc(tag_strlen, sizeof(char));
+		if (tags != NULL) {
+			tags[0] = '\0';
+			for (int i = 0; i < len_tags; i++) {
+				strcat(tags, (char*) array_list_get_idx(tags_ls, i));
+				if (i != (len_tags - 1)) {
+					strcat(tags, "\n");
+				}
+			}
+		}
+	}
+	return tags;
+}
+
+char* get_image_tags_concat(docker_image* img) {
+	array_list* tags_ls = img->repo_tags;
+	char* tags = concat_tags(tags_ls);
+	return tags;
+}
+
+cld_cmd_err img_ls_cmd_handler(void *handler_args, struct array_list *options,
+		struct array_list *args, cld_command_output_handler success_handler,
+		cld_command_output_handler error_handler) {
+	int quiet = 0;
+	docker_result *res;
+	docker_context *ctx = get_docker_context(handler_args);
+	array_list* images;
+
+	d_err_t docker_error = docker_images_list(ctx, &res, &images, 1, 1, NULL, 0,
+	NULL, NULL, NULL);
+	int success = is_ok(res);
+	handle_docker_error(res, success_handler, error_handler);
+	if (success) {
+		char res_str[1024];
+		sprintf(res_str, "Listing images");
+		success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_STRING, res_str);
+
+		int col_num = 0;
+		int len_images = array_list_length(images);
+		cld_table* ctr_tbl;
+		if (create_cld_table(&ctr_tbl, len_images, 6) == 0) {
+			cld_table_set_header(ctr_tbl, 0, "REPOSITORY");
+			cld_table_set_header(ctr_tbl, 1, "TAG");
+			cld_table_set_header(ctr_tbl, 2, "DIGEST");
+			cld_table_set_header(ctr_tbl, 3, "IMAGE ID");
+			cld_table_set_header(ctr_tbl, 4, "CREATED");
+			cld_table_set_header(ctr_tbl, 5, "SIZE");
+			for (int i = 0; i < len_images; i++) {
+				docker_image* img = (docker_image*) array_list_get_idx(images,
+						i);
+				col_num = 0;
+				char cstr[1024];
+				sprintf(cstr, "%ld", img->created);
+				char sstr[1024];
+				sprintf(sstr, "%ld", img->size);
+				cld_table_set_row_val(ctr_tbl, i, 0,
+						concat_tags(img->repo_tags));
+				cld_table_set_row_val(ctr_tbl, i, 1,
+						get_image_tags_concat(img));
+				cld_table_set_row_val(ctr_tbl, i, 2,
+						concat_tags(img->repo_digests));
+				cld_table_set_row_val(ctr_tbl, i, 3, img->id);
+				cld_table_set_row_val(ctr_tbl, i, 4, cstr);
+				cld_table_set_row_val(ctr_tbl, i, 5, sstr);
+			}
+			success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_TABLE, ctr_tbl);
+		}
+	} else {
+		return CLD_COMMAND_ERR_UNKNOWN;
+	}
+	return CLD_COMMAND_SUCCESS;
+}
+
 cld_command *img_commands() {
 	cld_command *image_command;
 	if (make_command(&image_command, "image", "img", "Docker Image Commands",
 	NULL) == CLD_COMMAND_SUCCESS) {
-		cld_command *imgpl_command;
+		cld_command *imgpl_command, *imgls_command;
 		if (make_command(&imgpl_command, "pull", "pl", "Docker Image Pull",
 				&img_pl_cmd_handler) == CLD_COMMAND_SUCCESS) {
 			cld_argument* image_name_arg;
@@ -115,6 +199,10 @@ cld_command *img_commands() {
 			array_list_add(imgpl_command->args, image_name_arg);
 
 			array_list_add(image_command->sub_commands, imgpl_command);
+		}
+		if (make_command(&imgls_command, "list", "ls", "Docker Image List",
+				&img_ls_cmd_handler) == CLD_COMMAND_SUCCESS) {
+			array_list_add(image_command->sub_commands, imgls_command);
 		}
 	}
 	return image_command;

@@ -486,6 +486,7 @@ void docker_container_stats_cb(docker_container_stats* stats, void* cbargs) {
 		cld_table_set_row_val(ctr_tbl, 0, 6, "");
 		cld_table_set_row_val(ctr_tbl, 0, 7, "");
 	}
+	sarg->success_handler(CLD_COMMAND_IS_RUNNING, CLD_RESULT_STRING, "\033[0;0H\033[2J");
 	sarg->success_handler(CLD_COMMAND_IS_RUNNING, CLD_RESULT_TABLE, ctr_tbl);
 }
 

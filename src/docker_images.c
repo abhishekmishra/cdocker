@@ -277,3 +277,43 @@ d_err_t docker_image_create_from_image_cb(docker_context* ctx,
 	return E_SUCCESS;
 }
 
+/**
+ * see https://docs.docker.com/engine/api/v1.39/#operation/ImageBuild
+ * Build a new image from the files in a folder, with a progress callback
+ *
+ * \param ctx docker context
+ * \param result the docker result object to return
+ * \param folder the folder containing the docker image build files
+ * \param dockerfile name of the dockerfile. (If NULL, default "Dockerfile" is assumed)
+ * \param status_cb callback to call for updates
+ * \param cbargs callback args for the upate call
+ * \param rest options to the build command
+ * \return error code.
+ */
+d_err_t docker_image_build_cb(docker_context* ctx,
+		docker_result** result, char* folder, char* dockerfile,
+		void (*status_cb)(docker_image_create_status*, void* cbargs),
+		void* cbargs, ...) {
+	char* url = create_service_url_id_method(IMAGE, NULL, "create");
+
+	struct array_list* params = array_list_new(
+			(void (*)(void *)) &free_url_param);
+	url_param* p;
+
+	//Get folder and dockerfile name
+	//Add dockerfile as param to the request, if not NULL
+
+	//Create tarball from folder into a buffer
+
+	//Post tarball buffer to the API
+	json_object *response_obj = NULL;
+	struct http_response_memory chunk;
+	docker_api_post_cb(ctx, result, url, params, "", &chunk, &response_obj,
+			&parse_status_cb, status_cb, cbargs);
+
+	if ((*result)->http_error_code > 200) {
+		return E_UNKNOWN_ERROR;
+	}
+
+	return E_SUCCESS;
+}

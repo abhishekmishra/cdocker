@@ -123,6 +123,24 @@ d_err_t docker_image_create_from_image_cb(docker_context* ctx,
 
 //error_t docker_image_create_from_src(docker_context* ctx, docker_result** res, char* from_src, char* repo, char* tag, char* platform);
 
+/**
+ * see https://docs.docker.com/engine/api/v1.39/#operation/ImageBuild
+ * Build a new image from the files in a folder, with a progress callback
+ *
+ * \param ctx docker context
+ * \param result the docker result object to return
+ * \param folder the folder containing the docker image build files (if NULL, default is current directory)
+ * \param dockerfile name of the dockerfile. (If NULL, default "Dockerfile" is assumed)
+ * \param status_cb callback to call for updates
+ * \param cbargs callback args for the upate call
+ * \param rest options to the build command
+ * \return error code.
+ */
+d_err_t docker_image_build_cb(docker_context* ctx, docker_result** result,
+		char* folder, char* dockerfile,
+		void (*status_cb)(docker_image_create_status*, void* cbargs),
+		void* cbargs, ...);
+
 #ifdef __cplusplus 
 }
 #endif

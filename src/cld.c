@@ -37,6 +37,7 @@
 #include "cld_sys.h"
 #include "cld_ctr.h"
 #include "cld_img.h"
+#include "cld_vol.h"
 #include "cld_table.h"
 #include "cld_dict.h"
 #include "cld_progress.h"
@@ -49,6 +50,7 @@ struct array_list* create_commands() {
 	array_list_add(commands, sys_commands());
 	array_list_add(commands, ctr_commands());
 	array_list_add(commands, img_commands());
+	array_list_add(commands, vol_commands());
 	return commands;
 }
 

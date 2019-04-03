@@ -152,14 +152,14 @@ cld_cmd_err img_ls_cmd_handler(void *handler_args, struct array_list *options,
 
 		int col_num = 0;
 		int len_images = array_list_length(images);
-		cld_table* ctr_tbl;
-		if (create_cld_table(&ctr_tbl, len_images, 6) == 0) {
-			cld_table_set_header(ctr_tbl, 0, "REPOSITORY");
-			cld_table_set_header(ctr_tbl, 1, "TAG");
-			cld_table_set_header(ctr_tbl, 2, "DIGEST");
-			cld_table_set_header(ctr_tbl, 3, "IMAGE ID");
-			cld_table_set_header(ctr_tbl, 4, "CREATED");
-			cld_table_set_header(ctr_tbl, 5, "SIZE");
+		cld_table* img_tbl;
+		if (create_cld_table(&img_tbl, len_images, 6) == 0) {
+			cld_table_set_header(img_tbl, 0, "REPOSITORY");
+			cld_table_set_header(img_tbl, 1, "TAG");
+			cld_table_set_header(img_tbl, 2, "DIGEST");
+			cld_table_set_header(img_tbl, 3, "IMAGE ID");
+			cld_table_set_header(img_tbl, 4, "CREATED");
+			cld_table_set_header(img_tbl, 5, "SIZE");
 			for (int i = 0; i < len_images; i++) {
 				docker_image* img = (docker_image*) array_list_get_idx(images,
 						i);
@@ -168,17 +168,17 @@ cld_cmd_err img_ls_cmd_handler(void *handler_args, struct array_list *options,
 				sprintf(cstr, "%ld", img->created);
 				char sstr[1024];
 				sprintf(sstr, "%ld", img->size);
-				cld_table_set_row_val(ctr_tbl, i, 0,
+				cld_table_set_row_val(img_tbl, i, 0,
 						concat_tags(img->repo_tags));
-				cld_table_set_row_val(ctr_tbl, i, 1,
+				cld_table_set_row_val(img_tbl, i, 1,
 						get_image_tags_concat(img));
-				cld_table_set_row_val(ctr_tbl, i, 2,
+				cld_table_set_row_val(img_tbl, i, 2,
 						concat_tags(img->repo_digests));
-				cld_table_set_row_val(ctr_tbl, i, 3, img->id);
-				cld_table_set_row_val(ctr_tbl, i, 4, cstr);
-				cld_table_set_row_val(ctr_tbl, i, 5, sstr);
+				cld_table_set_row_val(img_tbl, i, 3, img->id);
+				cld_table_set_row_val(img_tbl, i, 4, cstr);
+				cld_table_set_row_val(img_tbl, i, 5, sstr);
 			}
-			success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_TABLE, ctr_tbl);
+			success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_TABLE, img_tbl);
 		}
 	} else {
 		return CLD_COMMAND_ERR_UNKNOWN;

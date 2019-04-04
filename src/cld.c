@@ -45,8 +45,7 @@
 
 #define CMD_NOT_FOUND -1
 
-struct array_list*
-create_commands()
+struct array_list* create_commands()
 {
 	struct array_list* commands = array_list_new(
 			(void (*)(void *)) &free_command);
@@ -58,8 +57,7 @@ create_commands()
 	return commands;
 }
 
-char *
-prompt(EditLine *e)
+char* prompt(EditLine *e)
 {
 	return "CLD> ";
 }

@@ -219,6 +219,32 @@ int parse_line_run_command(Tokenizer* tokenizer, const char* line,
 	return tok_err;
 }
 
+int parse_line_help_command(Tokenizer* tokenizer, const char* line,
+		int* cmd_argc, char*** cmd_argv, docker_context* ctx)
+{
+	int tok_err = tok_str(tokenizer, line, &*cmd_argc,
+			(const char***) &*cmd_argv);
+	if (tok_err == 0)
+	{
+		cld_cmd_err err = help_cmd_handler(create_commands(), ctx, *cmd_argc,
+				*cmd_argv, (cld_command_output_handler) &print_handler,
+				(cld_command_output_handler) &print_handler);
+		if (err != CLD_COMMAND_SUCCESS)
+		{
+			printf("Error: invalid command.\n");
+		}
+	}
+	else
+	{
+		printf("Error: invalid command.\n");
+	}
+
+	//reset tokenizer;
+	tok_reset(tokenizer);
+
+	return tok_err;
+}
+
 int main(int argc, char *argv[])
 {
 	static docker_context* ctx;
@@ -230,6 +256,8 @@ int main(int argc, char *argv[])
 	int command = 0;
 	char* command_str;
 	char* url;
+	int connected = 0;
+	int show_help = 0;
 
 	/* Temp variables */
 	int count;
@@ -302,10 +330,32 @@ int main(int argc, char *argv[])
 			interactive = 2;
 			break;
 
-		case 'c':
-//			printf("option -c with value `%s'\n", optarg);
-			command = 1;
-			command_str = optarg;
+//		case 'c':
+////			printf("option -c with value `%s'\n", optarg);
+//			command = 1;
+//			command_str = optarg;
+//			break;
+
+		case 'h':
+			show_help = 1;
+			break;
+
+		case 'H':
+			url = optarg;
+			if (is_http_url(url))
+			{
+				if (make_docker_context_url(&ctx, url) == E_SUCCESS)
+				{
+					connected = 1;
+				}
+			}
+			else if (is_unix_socket(url))
+			{
+				if (make_docker_context_socket(&ctx, url) == E_SUCCESS)
+				{
+					connected = 1;
+				}
+			}
 			break;
 
 		case '?':
@@ -318,37 +368,32 @@ int main(int argc, char *argv[])
 	}
 
 	/* Print any remaining command line arguments (not options). */
-	int connected = 0;
 	docker_result* res;
 	if (optind < argc)
 	{
-		url = argv[optind];
-		if (is_http_url(url))
+//		printf("There are extra arguments: ");
+		command = 1;
+		int total_len = 1;
+		for (int i = optind; i < argc; i++)
 		{
-			if (make_docker_context_url(&ctx, url) == E_SUCCESS)
+			total_len += strlen(argv[i]);
+			total_len += 1; // for space
+		}
+		command_str = (char*) calloc(total_len, sizeof(char));
+		command_str[0] = '\0';
+		for (int i = optind; i < argc; i++)
+		{
+			//printf("%s ", argv[optind++]);
+			strcat(command_str, argv[i]);
+			if (i != (argc - 1))
 			{
-				connected = 1;
+				strcat(command_str, " ");
 			}
 		}
-		else if (is_unix_socket(url))
-		{
-			if (make_docker_context_socket(&ctx, url) == E_SUCCESS)
-			{
-				connected = 1;
-			}
-		}
-		optind++;
-
-		if (optind < argc)
-		{
-			printf("There are extra arguments: ");
-			while (optind < argc)
-				printf("%s ", argv[optind++]);
-			putchar('\n');
-		}
-
+//		printf("Command is <%s>\n", command_str);
 	}
-	else
+
+	if (!connected)
 	{
 		url = DOCKER_DEFINE_DEFAULT_UNIX_SOCKET;
 		if (make_docker_context_socket(&ctx, url) == E_SUCCESS)
@@ -372,8 +417,17 @@ int main(int argc, char *argv[])
 
 	if (command)
 	{
-		int tok_err = parse_line_run_command(tokenizer, command_str, &cmd_argc,
-				&cmd_argv, ctx);
+		if (show_help == 1)
+		{
+			int tok_err = parse_line_help_command(tokenizer, command_str,
+					&cmd_argc, &cmd_argv, ctx);
+
+		}
+		else
+		{
+			int tok_err = parse_line_run_command(tokenizer, command_str,
+					&cmd_argc, &cmd_argv, ctx);
+		}
 	}
 
 	if (interactive > command)

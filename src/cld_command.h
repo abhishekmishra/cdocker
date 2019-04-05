@@ -25,7 +25,8 @@
 #include "docker_connection_util.h"
 #include <json-c/arraylist.h>
 
-typedef enum {
+typedef enum
+{
 	CLD_COMMAND_IS_RUNNING = -1,
 	CLD_COMMAND_SUCCESS = 0,
 	CLD_COMMAND_ERR_UNKNOWN = 1,
@@ -36,7 +37,8 @@ typedef enum {
 	CLD_COMMAND_ERR_EXTRA_ARGS_FOUND = 6
 } cld_cmd_err;
 
-typedef enum {
+typedef enum
+{
 	CLD_TYPE_BOOLEAN = 0,
 	CLD_TYPE_INT = 1,
 	CLD_TYPE_DOUBLE = 2,
@@ -44,12 +46,17 @@ typedef enum {
 	CLD_TYPE_FLAG = 4
 } cld_type;
 
-typedef enum {
-	CLD_RESULT_STRING = 0, CLD_RESULT_TABLE = 1, CLD_RESULT_DICT = 2, CLD_RESULT_PROGRESS=3
+typedef enum
+{
+	CLD_RESULT_STRING = 0,
+	CLD_RESULT_TABLE = 1,
+	CLD_RESULT_DICT = 2,
+	CLD_RESULT_PROGRESS = 3
 } cld_result_type;
 
 //TODO add defaults
-typedef struct cld_val_t {
+typedef struct cld_val_t
+{
 	cld_type type;
 	int bool_value;
 	int int_value;
@@ -58,7 +65,8 @@ typedef struct cld_val_t {
 	char* description;
 } cld_val;
 
-typedef struct cld_option_t {
+typedef struct cld_option_t
+{
 	char* name;
 	char* short_name;
 	cld_val* val;
@@ -66,7 +74,8 @@ typedef struct cld_option_t {
 	char* description;
 } cld_option;
 
-typedef struct cld_argument_t {
+typedef struct cld_argument_t
+{
 	char* name;
 	cld_val* val;
 	cld_val* default_val;
@@ -82,7 +91,8 @@ typedef cld_cmd_err (*cld_command_handler)(void* handler_args,
 		cld_command_output_handler success_handler,
 		cld_command_output_handler error_handler);
 
-typedef struct cld_command_t {
+typedef struct cld_command_t
+{
 	char* name;
 	char* short_name;
 	char* description;
@@ -189,9 +199,16 @@ void free_command(cld_command* command);
 
 /**
  * Run the help command for all commands or single command
+ *
+ * \param commands the list of commands registered (this is a list of cld_command*)
+ * \param handler_args an args value to be passed to the command handler
+ * \param argc the number of tokens in the line
+ * \param argv args as an array of strings
+ * \param success_handler handle success results
+ * \param error_handler handler error results
  */
-cld_cmd_err help_cmd_handler(void* handler_args, struct array_list* options,
-		struct array_list* args, cld_command_output_handler success_handler,
+cld_cmd_err help_cmd_handler(struct array_list* commands, void* handler_args,
+		int argc, char** argv, cld_command_output_handler success_handler,
 		cld_command_output_handler error_handler);
 
 /**

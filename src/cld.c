@@ -196,6 +196,9 @@ cld_cmd_err print_handler(cld_cmd_err result_flag, cld_result_type res_type,
 int parse_line_run_command(Tokenizer* tokenizer, const char* line,
 		int* cmd_argc, char*** cmd_argv, docker_context* ctx)
 {
+	if(strcmp(line, "\n") == 0) {
+		return 0;
+	}
 	int tok_err = tok_str(tokenizer, line, &*cmd_argc,
 			(const char***) &*cmd_argv);
 	if (tok_err == 0)

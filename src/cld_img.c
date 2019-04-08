@@ -10,11 +10,11 @@ typedef struct
 {
 	cld_command_output_handler success_handler;
 	cld_multi_progress* multi_progress;
-} docker_pull_update_args;
+} docker_image_update_args;
 
 void log_pull_message(docker_image_create_status* status, void* client_cbargs)
 {
-	docker_pull_update_args* upd_args = (docker_pull_update_args*) client_cbargs;
+	docker_image_update_args* upd_args = (docker_image_update_args*) client_cbargs;
 	if (status)
 	{
 		if (status->id)
@@ -92,8 +92,8 @@ cld_cmd_err img_pl_cmd_handler(void *handler_args, struct array_list *options,
 	docker_result *res;
 	docker_context *ctx = get_docker_context(handler_args);
 
-	docker_pull_update_args* upd_args = (docker_pull_update_args*) calloc(1,
-			sizeof(docker_pull_update_args));
+	docker_image_update_args* upd_args = (docker_image_update_args*) calloc(1,
+			sizeof(docker_image_update_args));
 	upd_args->success_handler = success_handler;
 	create_cld_multi_progress(&(upd_args->multi_progress));
 
@@ -224,6 +224,18 @@ cld_cmd_err img_ls_cmd_handler(void *handler_args, struct array_list *options,
 	return CLD_COMMAND_SUCCESS;
 }
 
+void log_build_message(docker_build_status* status, void* client_cbargs) {
+	docker_image_update_args* upd_args = (docker_image_update_args*) client_cbargs;
+	if (status)
+	{
+		if (status->stream)
+		{
+			upd_args->success_handler(CLD_COMMAND_IS_RUNNING,
+					CLD_RESULT_STRING, status->stream);
+		}
+	}
+}
+
 cld_cmd_err img_build_cmd_handler(void *handler_args,
 		struct array_list *options, struct array_list *args,
 		cld_command_output_handler success_handler,
@@ -233,8 +245,8 @@ cld_cmd_err img_build_cmd_handler(void *handler_args,
 	docker_result *res;
 	docker_context *ctx = get_docker_context(handler_args);
 
-	docker_pull_update_args* upd_args = (docker_pull_update_args*) calloc(1,
-			sizeof(docker_pull_update_args));
+	docker_image_update_args* upd_args = (docker_image_update_args*) calloc(1,
+			sizeof(docker_image_update_args));
 	upd_args->success_handler = success_handler;
 	create_cld_multi_progress(&(upd_args->multi_progress));
 
@@ -251,12 +263,12 @@ cld_cmd_err img_build_cmd_handler(void *handler_args,
 				args, 0);
 		char* folder_url_dash = folder_url_dash_arg->val->str_value;
 		d_err_t docker_error = docker_image_build_cb(ctx, &res, folder_url_dash,
-		NULL, &log_pull_message, upd_args, NULL);
+		NULL, &log_build_message, upd_args, NULL);
 		handle_docker_error(res, success_handler, error_handler);
 		if (docker_error == E_SUCCESS)
 		{
 			char* res_str = (char*) calloc(1024, sizeof(char));
-			sprintf(res_str, "Image pull successful -> %s", folder_url_dash);
+			sprintf(res_str, "Image pull successful -> %s\n", folder_url_dash);
 			success_handler(CLD_COMMAND_SUCCESS, CLD_RESULT_STRING, res_str);
 			free(res_str);
 			return CLD_COMMAND_SUCCESS;

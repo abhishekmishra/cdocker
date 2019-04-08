@@ -88,6 +88,11 @@ typedef struct docker_image_create_status_t {
 	docker_progress_detail* progress_detail;
 } docker_image_create_status;
 
+typedef struct docker_build_status_t {
+	char* stream;
+	char* aux_id;
+} docker_build_status;
+
 //Docker Image Create commands
 /**
  * see https://docs.docker.com/engine/api/v1.39/#operation/ImageCreate
@@ -140,7 +145,7 @@ d_err_t docker_image_create_from_image_cb(docker_context* ctx,
  */
 d_err_t docker_image_build_cb(docker_context* ctx, docker_result** result,
 		char* folder, char* dockerfile,
-		void (*status_cb)(docker_image_create_status*, void* cbargs),
+		void (*status_cb)(docker_build_status*, void* cbargs),
 		void* cbargs, ...);
 
 #ifdef __cplusplus 

@@ -187,6 +187,15 @@ void parse_iso_datetime(char* date_str, struct tm* tm);
 
 void parse_docker_stats_readtime(char* date_str, struct tm* tm);
 
+/**
+ * Get the size in bytes, kb, mb, gb, tb etc.
+ * (higest possible unit)
+ *
+ * \param size
+ * \return string with the description of the size
+ */
+char* calculate_size(uint64_t size);
+
 #ifdef __cplusplus 
 }
 #endif

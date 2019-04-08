@@ -148,7 +148,7 @@ cld_cmd_err print_handler(cld_cmd_err result_flag, cld_result_type res_type,
 	if (res_type == CLD_RESULT_STRING)
 	{
 		char* result_str = (char*) result;
-		printf("%s\n", result_str);
+		printf("%s", result_str);
 	}
 	else if (res_type == CLD_RESULT_TABLE)
 	{

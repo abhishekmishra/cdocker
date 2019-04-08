@@ -198,6 +198,7 @@ void parse_status_cb(char* msg, void* cb, void* cbargs)
 			void*) = (void (*)(docker_image_create_status*, void*))cb;
 	if (msg)
 	{
+//		printf("%s\n", msg);
 		if(status_cb)
 		{
 			json_object* response_obj = json_tokener_parse(msg);
@@ -364,6 +365,35 @@ array_list* list_dir(char* folder_path)
 	return paths;
 }
 
+void parse_build_response_cb(char* msg, void* cb, void* cbargs)
+{
+	void (*status_cb)(docker_build_status*,
+			void*) = (void (*)(docker_build_status*, void*))cb;
+	if (msg)
+	{
+//		printf("%s\n", msg);
+		if(status_cb)
+		{
+			docker_build_status* status = (docker_build_status*)calloc(1, sizeof(docker_build_status));
+			json_object* response_obj = json_tokener_parse(msg);
+			status->stream = get_attr_str(response_obj, "stream");
+			json_object* extractObj;
+			int flag = 0;
+			if (json_object_object_get_ex(response_obj, "aux", &extractObj)) {
+				status->aux_id = (char*) get_attr_str(extractObj, "ID");
+				free(extractObj);
+			}
+
+			status_cb(status, cbargs);
+		}
+		else
+		{
+			docker_log_debug("Message = Empty");
+		}
+	}
+}
+
+
 /**
  * see https://docs.docker.com/engine/api/v1.39/#operation/ImageBuild
  * Build a new image from the files in a folder, with a progress callback
@@ -379,7 +409,7 @@ array_list* list_dir(char* folder_path)
  */
 d_err_t docker_image_build_cb(docker_context* ctx, docker_result** result,
 		char* folder, char* dockerfile,
-		void (*status_cb)(docker_image_create_status*, void* cbargs),
+		void (*status_cb)(docker_build_status*, void* cbargs),
 		void* cbargs, ...)
 {
 	char* url = create_service_url_id_method(SYSTEM, NULL, "build");
@@ -412,16 +442,20 @@ d_err_t docker_image_build_cb(docker_context* ctx, docker_result** result,
 	int len;
 	int fd;
 
+	size_t out_buf_len = 100*1024*1024;
+	char* out_buf = (char*)calloc(out_buf_len, sizeof(char));
+	size_t archive_size = 0;
+
 	a = archive_write_new();
-//	archive_write_add_filter_gzip(a);
+	archive_write_add_filter_gzip(a);
 	archive_write_set_format_pax_restricted(a); // Note 1
-	archive_write_open_filename(a, "/home/abhishek/tmp/test.tar");
+	archive_write_open_memory(a, out_buf, out_buf_len, &archive_size);
 	array_list* sub_dir_ls = list_dir(folder_path);
 	int ls_count = array_list_length(sub_dir_ls);
 	for (int i = 0; i < ls_count; i++)
 	{
 		char* filename = array_list_get_idx(sub_dir_ls, i);
-		printf("%s\n", filename);
+//		printf("%s\n", filename);
 		stat(filename, &st);
 		entry = archive_entry_new(); // Note 2
 		archive_entry_set_pathname(entry, filename);
@@ -447,8 +481,10 @@ d_err_t docker_image_build_cb(docker_context* ctx, docker_result** result,
 	//Post tarball buffer to the API
 	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
-	docker_api_post_cb(ctx, result, url, params, "", &chunk, &response_obj,
-			&parse_status_cb, status_cb, cbargs);
+	out_buf[archive_size] = '\0';
+	printf("Sending build context to docker daemon - %s\n", calculate_size(archive_size));
+	docker_api_post_buf_cb_w_content_type(ctx, result, url, params, out_buf, out_buf_len, &chunk, &response_obj,
+			&parse_build_response_cb, status_cb, cbargs, HEADER_TAR);
 
 	if ((*result)->http_error_code > 200)
 	{

@@ -35,6 +35,8 @@ extern "C" {
 #include "docker_result.h"
 #include "docker_util.h"
 
+#define DEFAULT_DOCKER_FILE_NAME "Dockerfile"
+
 typedef struct docker_image_t {
 	char* id;
 	char* parent_id;

@@ -455,7 +455,7 @@ typedef struct stats_args_t {
 	char* id;
 	char* name;
 	cld_command_output_handler success_handler;
-}stats_args;
+} stats_args;
 
 void docker_container_stats_cb(docker_container_stats* stats, void* cbargs) {
 	stats_args* sarg = (stats_args*) cbargs;
@@ -486,7 +486,8 @@ void docker_container_stats_cb(docker_container_stats* stats, void* cbargs) {
 		cld_table_set_row_val(ctr_tbl, 0, 6, "");
 		cld_table_set_row_val(ctr_tbl, 0, 7, "");
 	}
-	sarg->success_handler(CLD_COMMAND_IS_RUNNING, CLD_RESULT_STRING, "\033[0;0H\033[2J");
+	sarg->success_handler(CLD_COMMAND_IS_RUNNING, CLD_RESULT_STRING,
+			"\033[0;0H\033[2J");
 	sarg->success_handler(CLD_COMMAND_IS_RUNNING, CLD_RESULT_TABLE, ctr_tbl);
 }
 
@@ -506,7 +507,7 @@ cld_cmd_err ctr_stats_cmd_handler(void *handler_args,
 		cld_argument* container_arg = (cld_argument*) array_list_get_idx(args,
 				0);
 		char* container = container_arg->val->str_value;
-		stats_args* sarg = (stats_args*)calloc(1, sizeof(stats_args));
+		stats_args* sarg = (stats_args*) calloc(1, sizeof(stats_args));
 		sarg->id = container;
 		sarg->name = container;
 		sarg->success_handler = success_handler;
@@ -535,7 +536,12 @@ cld_command *ctr_commands() {
 				*ctrremove_command, *ctrstats_command;
 		if (make_command(&ctrls_command, "list", "ls", "Docker Container List",
 				&ctr_ls_cmd_handler) == CLD_COMMAND_SUCCESS) {
+			cld_option *all_option, *filter_option, *format_option,
+					*last_option, *latest_option, *notrunc_option,
+					*quiet_option, *size_option;
+			make_option(&all_option, "all", "a", CLD_TYPE_FLAG, "Show all containers (by default shows only running ones).");
 			array_list_add(container_command->sub_commands, ctrls_command);
+			array_list_add(container_command->options, all_option);
 		}
 		if (make_command(&ctrcreate_command, "create", "create",
 				"Docker Container Create", &ctr_create_cmd_handler)

@@ -18,6 +18,7 @@
 extern "C" {
 #endif
 
+#include <stdlib.h>
 #include "docker_common.h"
 #include <stdbool.h>
 #include <json-c/arraylist.h>

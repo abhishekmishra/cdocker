@@ -1,5 +1,6 @@
 cmake_minimum_required ( VERSION 3.9 )
-project ( clibdocker )
+
+project ( clibdocker C )
 
 # Set the project source dir (just convention)
 set( CLIBDOCKER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
@@ -31,3 +32,20 @@ set( CLIBDOCKER_SOURCES
 )
 
 add_library ( ${PROJECT_NAME} ${CLIBDOCKER_SOURCES} )
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 11)
+
+find_package(json-c CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE json-c::json-c)
+
+find_package(CURL CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+
+#find_package(libarchive CONFIG REQUIRED)
+#target_link_libraries(${PROJECT_NAME} PRIVATE libarchive::libarchive)
+
+# To find and use azure-storage-cpp
+find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
+find_library(LIBARCHIVE_LIBRARY archive)
+include_directories(${LIBARCHIVE_INCLUDE_DIR})
+link_libraries(${LIBARCHIVE_LIBRARY})

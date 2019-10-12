@@ -11,7 +11,7 @@
 #include <cmocka.h>
 #include <stdio.h>
 
-#include "../src/docker_log.h"
+#include "docker_log.h"
 #include "test_docker_containers.h"
 #include "test_docker_system.h"
 #include "test_docker_images.h"

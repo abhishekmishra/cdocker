@@ -31,21 +31,58 @@ set( CLIBDOCKER_SOURCES
   src/tinydir.h
 )
 
+set( CLIBDOCKER_TEST_SOURCES 
+  test/test_all.c
+  test/test_docker_containers.c
+  test/test_docker_images.c
+  test/test_docker_networks.c
+  test/test_docker_system.c
+  test/test_docker_volumes.c
+  test/test_util.c
+)
+
+
 add_library ( ${PROJECT_NAME} ${CLIBDOCKER_SOURCES} )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 11)
 
 find_package(json-c CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE json-c::json-c)
+target_link_libraries(${PROJECT_NAME} PUBLIC json-c::json-c)
 
 find_package(CURL CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
 
-#find_package(libarchive CONFIG REQUIRED)
-#target_link_libraries(${PROJECT_NAME} PRIVATE libarchive::libarchive)
-
-# To find and use azure-storage-cpp
+# To find and use libarchive, as the vcpkg build does not have cmake config
 find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
 find_library(LIBARCHIVE_LIBRARY archive)
 include_directories(${LIBARCHIVE_INCLUDE_DIR})
 link_libraries(${LIBARCHIVE_LIBRARY})
+
+option(ENABLE_TESTS "Perform unit tests after build" OFF)
+set ( CLIBDOCKER_TEST_PROGRAM_NAME clibdocker_test )
+if (ENABLE_TESTS)
+  add_executable(${CLIBDOCKER_TEST_PROGRAM_NAME} ${CLIBDOCKER_TEST_SOURCES})
+  set_property(TARGET ${CLIBDOCKER_TEST_PROGRAM_NAME} PROPERTY C_STANDARD 11)
+  include_directories( test )
+
+  # cmocka
+  find_package(cmocka CONFIG REQUIRED)
+  target_include_directories(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_INCLUDE_DIR})
+  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_LIBRARIES})
+
+  find_package(json-c CONFIG REQUIRED)
+  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC json-c::json-c)
+
+  find_package(CURL CONFIG REQUIRED)
+  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC CURL::libcurl)
+
+  # To find and use libarchive, as the vcpkg build does not have cmake config
+  find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
+  find_library(LIBARCHIVE_LIBRARY archive)
+  include_directories(${LIBARCHIVE_INCLUDE_DIR})
+  link_libraries(${LIBARCHIVE_LIBRARY})
+
+  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC ${PROJECT_NAME})
+  add_test( all_docker_tests ${CLIBDOCKER_TEST_PROGRAM_NAME} )
+  enable_testing()
+endif(ENABLE_TESTS)

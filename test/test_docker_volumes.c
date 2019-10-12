@@ -28,7 +28,7 @@
 
 #include "test_docker_volumes.h"
 
-#include "../src/docker_log.h"
+#include "docker_log.h"
 #include "docker_volumes.h"
 #include "docker_connection_util.h"
 #include "test_util.h"

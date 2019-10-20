@@ -49,9 +49,9 @@ d_err_t make_docker_image(docker_image** image, char* id, char* parent_id,
 	(*image)->shared_size = shared_size;
 	(*image)->containers = containers;
 
-	(*image)->repo_tags = array_list_new(&free);
-	(*image)->repo_digests = array_list_new(&free);
-	(*image)->labels = array_list_new((void (*)(void *)) &free_pair);
+	arraylist_new(&(*image)->repo_tags, &free);
+	arraylist_new(&(*image)->repo_digests, &free);
+	arraylist_new(&(*image)->labels, (void (*)(void *)) &free_pair);
 
 	return E_SUCCESS;
 }
@@ -62,9 +62,9 @@ void free_docker_image(docker_image* image)
 	{
 		free(image->id);
 		free(image->parent_id);
-		array_list_free(image->repo_tags);
-		array_list_free(image->repo_digests);
-		array_list_free(image->labels);
+		arraylist_free(image->repo_tags);
+		arraylist_free(image->repo_digests);
+		arraylist_free(image->labels);
 	}
 }
 
@@ -84,14 +84,15 @@ void free_docker_image(docker_image* image)
  * \return error code
  */
 d_err_t docker_images_list(docker_context* ctx, docker_result** result,
-		struct array_list** images, int all, int digests, char* filter_before,
+		arraylist** images, int all, int digests, char* filter_before,
 		int filter_dangling, char* filter_label, char* filter_reference,
 		char* filter_since)
 {
 	char* url = create_service_url_id_method(IMAGE, NULL, "json");
 
-	struct array_list* params = array_list_new(
-			(void (*)(void *)) &free_url_param);
+	struct arraylist* params;
+	arraylist_new(&params, (void (*)(void *)) &free_url_param);
+
 	url_param* p;
 	json_object* filters = make_filters();
 	if (filter_before != NULL)
@@ -115,25 +116,25 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 		add_filter_str(filters, "since", str_clone(filter_since));
 	}
 	make_url_param(&p, "filters", (char *) filters_to_str(filters));
-	array_list_add(params, p);
+	arraylist_add(params, p);
 
 	if (all != 0)
 	{
 		make_url_param(&p, "all", "true");
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	if (digests != 0)
 	{
 		make_url_param(&p, "digests", "true");
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
 
-	(*images) = array_list_new((void (*)(void *)) &free_docker_image);
+	arraylist_new(images, (void (*)(void *)) &free_docker_image);
 	int num_imgs = json_object_array_length(response_obj);
 
 	for (int i = 0; i < num_imgs; i++)
@@ -157,7 +158,7 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 			{
 				pair* p;
 				make_pair(&p, key, (char*) json_object_get_string(val));
-				array_list_add(img->labels, p);
+				arraylist_add(img->labels, p);
 			}
 		}
 		json_object* repo_tags_obj;
@@ -167,7 +168,7 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 			int num_repo_tags = json_object_array_length(repo_tags_obj);
 			for (int j = 0; j < num_repo_tags; j++)
 			{
-				array_list_add(img->repo_tags,
+				arraylist_add(img->repo_tags,
 						(char*) json_object_get_string(
 								json_object_array_get_idx(repo_tags_obj, j)));
 			}
@@ -180,13 +181,13 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 			int num_repo_digests = json_object_array_length(repo_digests_obj);
 			for (int j = 0; j < num_repo_digests; j++)
 			{
-				array_list_add(img->repo_digests,
+				arraylist_add(img->repo_digests,
 						(char*) json_object_get_string(
 								json_object_array_get_idx(repo_digests_obj,
 										j)));
 			}
 		}
-		array_list_add((*images), img);
+		arraylist_add((*images), img);
 	}
 
 	return E_SUCCESS;
@@ -290,21 +291,21 @@ d_err_t docker_image_create_from_image_cb(docker_context* ctx,
 
 	char* url = create_service_url_id_method(IMAGE, NULL, "create");
 
-	struct array_list* params = array_list_new(
-			(void (*)(void *)) &free_url_param);
+	arraylist* params;
+	arraylist_new(&params, (void (*)(void*)) & free_url_param);
 	url_param* p;
 
 	make_url_param(&p, "fromImage", from_image);
-	array_list_add(params, p);
+	arraylist_add(params, p);
 	if (tag != NULL)
 	{
 		make_url_param(&p, "tag", tag);
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 	if (platform != NULL)
 	{
 		make_url_param(&p, " platform", platform);
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	json_object *response_obj = NULL;
@@ -320,9 +321,10 @@ d_err_t docker_image_create_from_image_cb(docker_context* ctx,
 	return E_SUCCESS;
 }
 
-array_list* list_dir(char* folder_path)
+arraylist* list_dir(char* folder_path)
 {
-	array_list* paths = array_list_new(&free);
+	arraylist* paths;
+	arraylist_new(&paths, &free);
 //	printf("To list %s\n", folder_path);
 
 	tinydir_dir dir;
@@ -344,18 +346,18 @@ array_list* list_dir(char* folder_path)
 			if (file.is_dir)
 			{
 //				printf("/\n");
-				array_list* sub_dir_ls = list_dir(sub_dir_path);
-				int ls_count = array_list_length(sub_dir_ls);
+				arraylist* sub_dir_ls = list_dir(sub_dir_path);
+				int ls_count = arraylist_length(sub_dir_ls);
 				for (int i = 0; i < ls_count; i++)
 				{
-					array_list_add(paths,
-							str_clone(array_list_get_idx(sub_dir_ls, i)));
+					arraylist_add(paths,
+							str_clone(arraylist_get(sub_dir_ls, i)));
 				}
 				free(sub_dir_ls);
 			} else {
 //				printf("\n");
 			}
-			array_list_add(paths, sub_dir_path);
+			arraylist_add(paths, sub_dir_path);
 		}
 		tinydir_next(&dir);
 	}
@@ -416,8 +418,8 @@ d_err_t docker_image_build_cb(docker_context* ctx, docker_result** result,
 	char* folder_path = ".";
 	char* docker_file_name = DEFAULT_DOCKER_FILE_NAME;
 
-	struct array_list* params = array_list_new(
-			(void (*)(void *)) &free_url_param);
+	arraylist* params;
+	arraylist_new(&params, (void (*)(void *)) &free_url_param);
 	url_param* p;
 
 	//Get folder and dockerfile name
@@ -450,11 +452,11 @@ d_err_t docker_image_build_cb(docker_context* ctx, docker_result** result,
 	archive_write_add_filter_gzip(a);
 	archive_write_set_format_pax_restricted(a); // Note 1
 	archive_write_open_memory(a, out_buf, out_buf_len, &archive_size);
-	array_list* sub_dir_ls = list_dir(folder_path);
-	int ls_count = array_list_length(sub_dir_ls);
+	arraylist* sub_dir_ls = list_dir(folder_path);
+	int ls_count = arraylist_length(sub_dir_ls);
 	for (int i = 0; i < ls_count; i++)
 	{
-		char* filename = array_list_get_idx(sub_dir_ls, i);
+		char* filename = arraylist_get(sub_dir_ls, i);
 //		printf("%s\n", filename);
 		stat(filename, &st);
 		entry = archive_entry_new(); // Note 2

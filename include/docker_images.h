@@ -31,6 +31,7 @@
 extern "C" {
 #endif
 
+#include <arraylist.h>
 #include "docker_connection_util.h"
 #include "docker_result.h"
 #include "docker_util.h"
@@ -40,13 +41,13 @@ extern "C" {
 typedef struct docker_image_t {
 	char* id;
 	char* parent_id;
-	struct array_list* repo_tags;
-	struct array_list* repo_digests;
+	arraylist* repo_tags;
+	arraylist* repo_digests;
 	time_t created;
 	unsigned long size;
 	unsigned long virtual_size;
 	unsigned long shared_size;
-	struct array_list* labels; //of pair
+	arraylist* labels; //of pair
 	unsigned long containers;
 } docker_image;
 
@@ -72,7 +73,7 @@ void free_docker_image(docker_image* image);
  * \return error code
  */
 d_err_t docker_images_list(docker_context* ctx, docker_result** result,
-		struct array_list** images, int all, int digests, char* filter_before,
+		arraylist** images, int all, int digests, char* filter_before,
 		int filter_dangling, char* filter_label, char* filter_reference,
 		char* filter_since);
 

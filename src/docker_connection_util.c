@@ -156,7 +156,7 @@ d_err_t free_docker_context(docker_context** ctx)
 	return E_SUCCESS;
 }
 
-char* build_url(CURL *curl, char* base_url, struct array_list* url_params)
+char* build_url(CURL *curl, char* base_url, arraylist* url_params)
 {
 	if (url_params == NULL)
 	{
@@ -164,7 +164,7 @@ char* build_url(CURL *curl, char* base_url, struct array_list* url_params)
 	}
 	else
 	{
-		int num_params = array_list_length(url_params);
+		int num_params = arraylist_length(url_params);
 		if (num_params <= 0)
 		{
 			return base_url;
@@ -176,7 +176,7 @@ char* build_url(CURL *curl, char* base_url, struct array_list* url_params)
 			char** allvals = (char**) malloc(num_params * sizeof(char*));
 			for (int i = 0; i < num_params; i++)
 			{
-				url_param* param = (url_param*) array_list_get_idx(url_params,
+				url_param* param = (url_param*) arraylist_get(url_params,
 						i);
 				docker_log_debug("%s=%s\n", param->k, param->v);
 				allkeys[i] = curl_easy_escape(curl, param->k, 0);
@@ -248,7 +248,7 @@ static size_t write_memory_callback(void *contents, size_t size, size_t nmemb,
 }
 
 d_err_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
-		struct array_list* url_params)
+		arraylist* url_params)
 {
 	if (ctx->socket != NULL)
 	{
@@ -332,7 +332,7 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 }
 
 d_err_t docker_api_post(docker_context* ctx, docker_result** result,
-		char* api_url, struct array_list* url_params, const char* post_data,
+		char* api_url, arraylist* url_params, const char* post_data,
 		struct http_response_memory *chunk, json_object** response)
 {
 	return docker_api_post_cb(ctx, result, api_url, url_params, post_data,
@@ -340,7 +340,7 @@ d_err_t docker_api_post(docker_context* ctx, docker_result** result,
 }
 
 d_err_t docker_api_post_buf_cb_w_content_type(docker_context* ctx,
-		docker_result** result, char* api_url, struct array_list* url_params,
+		docker_result** result, char* api_url, arraylist* url_params,
 		const void* post_data, size_t post_data_len, struct http_response_memory *chunk,
 		json_object** response,
 		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
@@ -419,7 +419,7 @@ d_err_t docker_api_post_buf_cb_w_content_type(docker_context* ctx,
 
 
 d_err_t docker_api_post_cb_w_content_type(docker_context* ctx,
-		docker_result** result, char* api_url, struct array_list* url_params,
+		docker_result** result, char* api_url, arraylist* url_params,
 		const char* post_data, struct http_response_memory *chunk,
 		json_object** response,
 		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
@@ -497,7 +497,7 @@ d_err_t docker_api_post_cb_w_content_type(docker_context* ctx,
 }
 
 d_err_t docker_api_post_cb(docker_context* ctx, docker_result** result,
-		char* api_url, struct array_list* url_params, const char* post_data,
+		char* api_url, arraylist* url_params, const char* post_data,
 		struct http_response_memory *chunk, json_object** response,
 		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
 		void* cbargs, void* client_cbargs)
@@ -510,7 +510,7 @@ d_err_t docker_api_post_cb(docker_context* ctx, docker_result** result,
 }
 
 d_err_t docker_api_get(docker_context* ctx, docker_result** result,
-		char* api_url, struct array_list* url_params,
+		char* api_url, arraylist* url_params,
 		struct http_response_memory *chunk, json_object** response)
 {
 	return docker_api_get_cb(ctx, result, api_url, url_params, chunk, response,
@@ -518,7 +518,7 @@ d_err_t docker_api_get(docker_context* ctx, docker_result** result,
 }
 
 d_err_t docker_api_get_cb(docker_context* ctx, docker_result** result,
-		char* api_url, struct array_list* url_params,
+		char* api_url, arraylist* url_params,
 		struct http_response_memory *chunk, json_object** response,
 		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
 		void* cbargs, void* client_cbargs)
@@ -585,7 +585,7 @@ d_err_t docker_api_get_cb(docker_context* ctx, docker_result** result,
 }
 
 d_err_t docker_api_delete(docker_context* ctx, docker_result** result,
-		char* api_url, struct array_list* url_params,
+		char* api_url, arraylist* url_params,
 		struct http_response_memory *chunk, json_object** response)
 {
 	CURL *curl;

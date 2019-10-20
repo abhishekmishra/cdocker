@@ -18,6 +18,7 @@
 extern "C" {
 #endif
 
+#include <arraylist.h>
 #include <stdlib.h>
 #include "docker_common.h"
 #include <stdbool.h>
@@ -87,10 +88,10 @@ MODULE_API void free_url_param(url_param* p);
 /**
  * Build a url given a CURL object, a base url and url parameters object (and it's length).
  */
-MODULE_API char* build_url(CURL *curl, char* base_url, struct array_list* url_params);
+MODULE_API char* build_url(CURL *curl, char* base_url, arraylist* url_params);
 
 MODULE_API d_err_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
-		struct array_list* url_params);
+		arraylist* url_params);
 
 struct http_response_memory {
 	char *memory;
@@ -105,24 +106,24 @@ struct http_response_memory {
  * Util method used internally to HTTP POST to the Docker url.
  */
 MODULE_API d_err_t docker_api_post(docker_context* ctx, docker_result** res, char* api_url,
-		struct array_list* url_params, const char* post_data,
+		arraylist* url_params, const char* post_data,
 		struct http_response_memory *chunk, json_object** response);
 
 MODULE_API d_err_t docker_api_post_cb(docker_context* ctx, docker_result** result,
-		char* api_url, struct array_list* url_params, const char* post_data,
+		char* api_url, arraylist* url_params, const char* post_data,
 		struct http_response_memory *chunk, json_object** response,
 		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
 		void* cbargs, void* client_cbargs);
 
 MODULE_API d_err_t docker_api_post_cb_w_content_type(docker_context* ctx,
-		docker_result** result, char* api_url, struct array_list* url_params,
+		docker_result** result, char* api_url, arraylist* url_params,
 		const char* post_data, struct http_response_memory *chunk,
 		json_object** response,
 		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
 		void* cbargs, void* client_cbargs, char* content_type_header);
 
 MODULE_API d_err_t docker_api_post_buf_cb_w_content_type(docker_context* ctx,
-		docker_result** result, char* api_url, struct array_list* url_params,
+		docker_result** result, char* api_url, arraylist* url_params,
 		const void* post_data, size_t post_data_len, struct http_response_memory *chunk,
 		json_object** response,
 		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
@@ -132,11 +133,11 @@ MODULE_API d_err_t docker_api_post_buf_cb_w_content_type(docker_context* ctx,
  * Util method used internally to HTTP GET to the Docker url.
  */
 MODULE_API d_err_t docker_api_get(docker_context* ctx, docker_result** res, char* api_url,
-		struct array_list* url_params, struct http_response_memory *chunk,
+		arraylist* url_params, struct http_response_memory *chunk,
 		json_object** response);
 
 MODULE_API d_err_t docker_api_get_cb(docker_context* ctx, docker_result** res,
-		char* api_url, struct array_list* url_params,
+		char* api_url, arraylist* url_params,
 		struct http_response_memory *chunk, json_object** response,
 		void (*status_callback)(char* msg, void* cbargs, void* client_cbargs),
 		void* cbargs, void* client_cbargs);
@@ -145,7 +146,7 @@ MODULE_API d_err_t docker_api_get_cb(docker_context* ctx, docker_result** res,
  * Util method used internally to HTTP DELETE to the Docker url.
  */
 MODULE_API d_err_t docker_api_delete(docker_context* ctx, docker_result** res, char* api_url,
-		struct array_list* url_params, struct http_response_memory *chunk,
+		arraylist* url_params, struct http_response_memory *chunk,
 		json_object** response);
 
 /**

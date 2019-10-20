@@ -52,6 +52,11 @@ target_link_libraries(${PROJECT_NAME} PUBLIC json-c::json-c)
 find_package(CURL CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
 
+set(CMAKE_FIND_USE_PACKAGE_REGISTRY ON)
+
+find_package(coll CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC coll::coll)
+
 # To find and use libarchive, as the vcpkg build does not have cmake config
 find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
 find_library(LIBARCHIVE_LIBRARY archive)
@@ -73,7 +78,7 @@ if (ENABLE_TESTS)
   find_package(json-c CONFIG REQUIRED)
   target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC json-c::json-c)
 
-  find_package(CURL CONFIG REQUIRED)
+  find_package(CURL REQUIRED)
   target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC CURL::libcurl)
 
   # To find and use libarchive, as the vcpkg build does not have cmake config

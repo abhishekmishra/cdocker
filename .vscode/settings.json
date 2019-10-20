@@ -3,6 +3,19 @@
         "docker_all.h": "c",
         "docker_networks.h": "c",
         "docker_result.h": "c",
-        "arraylist.h": "c"
+        "arraylist.h": "c",
+        "test_util.h": "c",
+        "stdlib.h": "c",
+        "curl.h": "c",
+        "test_docker_containers.h": "c",
+        "docker_log.h": "c",
+        "docker_containers.h": "c",
+        "docker_images.h": "c",
+        "docker_connection_util.h": "c",
+        "docker_util.h": "c",
+        "docker_common.h": "c",
+        "linkhash.h": "c",
+        "json_tokener.h": "c",
+        "json_object.h": "c"
     }
 }

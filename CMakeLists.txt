@@ -29,20 +29,39 @@ set( CLIBDOCKER_SOURCES
   src/docker_util.c
   src/docker_volumes.c
   src/tinydir.h
+
+  include/docker_all.h
+  include/docker_common.h
+  include/docker_connection_util.h
+  include/docker_containers.h
+  include/docker_images.h
+  include/docker_log.h
+  include/docker_networks.h
+  include/docker_result.h
+  include/docker_system.h
+  include/docker_util.h
+  include/docker_volumes.h
 )
 
 set( CLIBDOCKER_TEST_SOURCES 
   test/test_all.c
   test/test_docker_containers.c
+  test/test_docker_containers.h
   test/test_docker_images.c
+  test/test_docker_images.h
   test/test_docker_networks.c
+  test/test_docker_networks.h
   test/test_docker_system.c
+  test/test_docker_system.h
   test/test_docker_volumes.c
+  test/test_docker_volumes.h
   test/test_util.c
+  test/test_util.h
 )
 
 
 add_library ( ${PROJECT_NAME} ${CLIBDOCKER_SOURCES} )
+target_include_directories(${PROJECT_NAME} PRIVATE ${YOUR_DIRECTORY})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 11)
 

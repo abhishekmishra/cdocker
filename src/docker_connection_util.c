@@ -35,7 +35,6 @@
 #include "docker_result.h"
 #include "docker_connection_util.h"
 #include "docker_util.h"
-#include <json-c/arraylist.h>
 #include <json-c/json_object.h>
 #include <json-c/json_tokener.h>
 #include <json-c/linkhash.h>

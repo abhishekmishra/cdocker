@@ -8,7 +8,6 @@
 #include <docker_log.h>
 #include "docker_containers.h"
 
-#include <json-c/arraylist.h>
 #include <json-c/json_object.h>
 #include <json-c/json_tokener.h>
 #include <json-c/linkhash.h>

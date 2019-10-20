@@ -49,7 +49,7 @@ static int group_setup(void **state) {
 	docker_create_container_params* p;
 
 	curl_global_init(CURL_GLOBAL_ALL);
-	make_docker_context_socket(&ctx, "/var/run/docker.sock");
+	make_docker_context_socket(&ctx, DOCKER_DEFAULT_SOCKET);
 	make_docker_create_container_params(&p);
 	p->image = "alpine";
 	p->cmd = (char**) malloc(2 * sizeof(char*));

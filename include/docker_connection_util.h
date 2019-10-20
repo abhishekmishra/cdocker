@@ -29,7 +29,16 @@ extern "C" {
 #include "docker_result.h"
 
 #define DOCKER_API_VERSION_1_39 "1.39"
-#define DOCKER_DEFINE_DEFAULT_UNIX_SOCKET "/var/run/docker.sock"
+#define DOCKER_DEFAULT_UNIX_SOCKET "/var/run/docker.sock"
+#define DOCKER_DEFAULT_WINDOWS_SOCKET "npipe:////./pipe/docker_engine"
+
+#if defined(_WIN32)
+#define DOCKER_DEFAULT_SOCKET DOCKER_DEFAULT_WINDOWS_SOCKET
+#endif
+
+#if defined(unix) || defined(__unix__) || defined(__unix)
+#define DOCKER_DEFAULT_SOCKET DOCKER_DEFAULT_UNIX_SOCKET
+#endif
 
 #define HEADER_JSON "Content-Type: application/json"
 #define HEADER_TAR "Content-Type: application/x-tar"

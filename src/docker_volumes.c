@@ -43,21 +43,20 @@ d_err_t make_docker_volume(docker_volume** volume, time_t created_at,
 	(*volume)->driver = str_clone(driver);
 	(*volume)->mountpoint = str_clone(mountpoint);
 	(*volume)->scope = str_clone(scope);
-	(*volume)->labels = array_list_new((void (*)(void *)) &free_pair);
-	(*volume)->options = array_list_new((void (*)(void *)) &free_pair);
-	(*volume)->status = array_list_new((void (*)(void *)) &free_pair);
+	arraylist_new(&(*volume)->labels, (void (*)(void *)) &free_pair);
+	arraylist_new(&(*volume)->options, (void (*)(void *)) &free_pair);
+	arraylist_new(&(*volume)->status, (void (*)(void *)) &free_pair);
 	return E_SUCCESS;
 }
 
 void free_docker_volume(docker_volume* volume) {
 	free(volume->name);
 	free(volume->driver);
-	free(volume->driver);
 	free(volume->mountpoint);
 	free(volume->scope);
-	array_list_free(volume->options);
-	array_list_free(volume->labels);
-	array_list_free(volume->status);
+	arraylist_free(volume->options);
+	arraylist_free(volume->labels);
+	arraylist_free(volume->status);
 	free(volume);
 }
 
@@ -76,12 +75,13 @@ void free_docker_volume(docker_volume* volume) {
  * \return error code.
  */
 d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
-		struct array_list** volumes, struct array_list** warnings,
+		arraylist** volumes, arraylist** warnings,
 		int filter_dangling, char* filter_driver, char* filter_label,
 		char* filter_name) {
 	char* url = create_service_url_id_method(VOLUME, NULL, NULL);
 
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 	json_object* filters = make_filters();
@@ -99,14 +99,14 @@ d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
 		add_filter_str(filters, "name", filter_name);
 	}
 	make_url_param(&p, "filters", (char*) filters_to_str(filters));
-	array_list_add(params, p);
+	arraylist_add(params, p);
 
 	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
 
-	(*volumes) = array_list_new((void (*)(void *)) &free_docker_volume);
-	(*warnings) = array_list_new(&free);
+	arraylist_new(volumes, (void (*)(void *)) &free_docker_volume);
+	arraylist_new(warnings, &free);
 
 	json_object* volumes_obj;
 	json_object_object_get_ex(response_obj, "Volumes", &volumes_obj);
@@ -134,7 +134,7 @@ d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
 				{
 					pair* p;
 					make_pair(&p, key, (char*) json_object_get_string(val));
-					array_list_add(vi->labels, p);
+					arraylist_add(vi->labels, p);
 				}
 			}
 			json_object* options_obj;
@@ -144,10 +144,10 @@ d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
 				{
 					pair* p;
 					make_pair(&p, key1, (char*) json_object_get_string(val1));
-					array_list_add(vi->options, p);
+					arraylist_add(vi->options, p);
 				}
 			}
-			array_list_add((*volumes), vi);
+			arraylist_add((*volumes), vi);
 		}
 	}
 
@@ -159,7 +159,7 @@ d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
 			json_object* current_obj = json_object_array_get_idx(warnings_obj,
 					i);
 			char* warning = (char*) json_object_get_string(current_obj);
-			array_list_add((*warnings), warning);
+			arraylist_add((*warnings), warning);
 		}
 	}
 
@@ -224,7 +224,7 @@ d_err_t docker_volume_create(docker_context* ctx, docker_result** result,
 			{
 				pair* p;
 				make_pair(&p, key, (char*) json_object_get_string(val));
-				array_list_add(vi->labels, p);
+				arraylist_add(vi->labels, p);
 			}
 		}
 
@@ -235,7 +235,7 @@ d_err_t docker_volume_create(docker_context* ctx, docker_result** result,
 			{
 				pair* p;
 				make_pair(&p, key1, (char*) json_object_get_string(val1));
-				array_list_add(vi->status, p);
+				arraylist_add(vi->status, p);
 			}
 		}
 		(*volume) = vi;
@@ -283,7 +283,7 @@ d_err_t docker_volume_inspect(docker_context* ctx, docker_result** result,
 			{
 				pair* p;
 				make_pair(&p, key, (char*) json_object_get_string(val));
-				array_list_add(vi->labels, p);
+				arraylist_add(vi->labels, p);
 			}
 		}
 
@@ -294,7 +294,7 @@ d_err_t docker_volume_inspect(docker_context* ctx, docker_result** result,
 			{
 				pair* p;
 				make_pair(&p, key1, (char*) json_object_get_string(val1));
-				array_list_add(vi->status, p);
+				arraylist_add(vi->status, p);
 			}
 		}
 		(*volume) = vi;
@@ -316,12 +316,13 @@ d_err_t docker_volume_delete(docker_context* ctx, docker_result** result,
 		const char* name, int force) {
 	char* url = create_service_url_id_method(VOLUME, NULL, name);
 
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 	if (force == 1) {
 		make_url_param(&p, "force", str_clone("true"));
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	json_object *response_obj = NULL;
@@ -343,11 +344,12 @@ d_err_t docker_volume_delete(docker_context* ctx, docker_result** result,
  * \return error code
  */
 d_err_t docker_volumes_delete_unused(docker_context* ctx,
-		docker_result** result, struct array_list** volumes_deleted,
+		docker_result** result, arraylist** volumes_deleted,
 		unsigned long* space_reclaimed, int num_label_filters, ...) {
 	char* url = create_service_url_id_method(VOLUME, NULL, "prune");
 
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 
 	url_param* p;
@@ -378,7 +380,7 @@ d_err_t docker_volumes_delete_unused(docker_context* ctx,
 		}
 	}
 	make_url_param(&p, "filters", (char*) filters_to_str(filters));
-	array_list_add(params, p);
+	arraylist_add(params, p);
 
 	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
@@ -386,14 +388,15 @@ d_err_t docker_volumes_delete_unused(docker_context* ctx,
 
 	if ((*result)->http_error_code == 200) {
 		if (response_obj) {
-			struct array_list* vols_del = array_list_new(&free);
+			arraylist* vols_del;
+			arraylist_new(&vols_del, &free);
 			json_object* vols_obj;
 			json_object_object_get_ex(response_obj, "VolumesDeleted",
 					&vols_obj);
 			if (vols_obj) {
 				int vols_len = json_object_array_length(vols_obj);
 				for (int i = 0; i < vols_len; i++) {
-					array_list_add(vols_del,
+					arraylist_add(vols_del,
 							str_clone(
 									json_object_get_string(
 											json_object_array_get_idx(vols_obj,

@@ -78,11 +78,11 @@ static void test_inspect_volume(void **state) {
 }
 
 static void test_list_volumes(void **state) {
-	struct array_list* volumes;
-	struct array_list* warnings;
+	arraylist* volumes;
+	arraylist* warnings;
 	docker_volumes_list(ctx, &res, &volumes, &warnings, 1, NULL, "clibdocker_test_label=clibdocker_test_value", NULL);
 	handle_error(res);
-	int len_vols = array_list_length(volumes);
+	int len_vols = arraylist_length(volumes);
 	assert_int_equal(res->http_error_code, 200);
 	assert_int_equal(len_vols, 2);
 }
@@ -94,13 +94,13 @@ static void test_delete_volume(void **state) {
 }
 
 static void test_prune_unused_volumes(void **state) {
-	struct array_list* volumes_deleted;
+	arraylist* volumes_deleted;
 	long space_reclaimed;
 	docker_volumes_delete_unused(ctx, &res, &volumes_deleted, &space_reclaimed, 0, "clibdocker_test_label", "clibdocker_test_value");
 	handle_error(res);
-	for (int i = 0; i < array_list_length(volumes_deleted); i++) {
+	for (int i = 0; i < arraylist_length(volumes_deleted); i++) {
 		docker_log_info("Deleted unused volume %s",
-				(char* )array_list_get_idx(volumes_deleted, i));
+				(char* )arraylist_get(volumes_deleted, i));
 	}
 	assert_int_equal(res->http_error_code, 200);
 }

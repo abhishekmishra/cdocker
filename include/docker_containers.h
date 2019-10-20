@@ -17,6 +17,7 @@
 extern "C" {
 #endif
 
+#include <arraylist.h>
 #include "docker_result.h"
 #include "docker_connection_util.h"
 #include "docker_util.h"
@@ -164,11 +165,11 @@ typedef struct docker_container_list_item_t {
 	long long size_rw;
 	long long size_root_fs;
 	docker_container_host_config* hostConfig;
-	struct array_list* names;
-	struct array_list* ports;
-	struct array_list* labels;
-	struct array_list* network_settings;
-	struct array_list* mounts;
+	arraylist* names;
+	arraylist* ports;
+	arraylist* labels;
+	arraylist* network_settings;
+	arraylist* mounts;
 } docker_container_list_item;
 
 /**
@@ -183,7 +184,7 @@ d_err_t make_docker_containers_list_item(docker_container_list_item** item,
 
 void free_docker_container_list_item(docker_container_list_item* item);
 
-typedef struct array_list docker_containers_list;
+typedef arraylist docker_containers_list;
 
 /**
  * List docker containers
@@ -266,11 +267,11 @@ d_err_t docker_create_container(docker_context* ctx, docker_result** result,
  * Struct which holds the titles of the process line, and the details of all processes.
  */
 typedef struct docker_container_ps_t {
-	struct array_list* titles;
+	arraylist* titles;
 
 	//each item in this list is another list with values for
 	//each process
-	struct array_list* processes;
+	arraylist* processes;
 } docker_container_ps;
 
 /**
@@ -329,7 +330,7 @@ d_err_t make_docker_container_change(docker_container_change** item,
 
 void free_docker_container_change(docker_container_change* item);
 
-typedef struct array_list docker_changes_list;
+typedef arraylist docker_changes_list;
 
 d_err_t make_docker_changes_list(docker_changes_list** changes_list);
 int docker_changes_list_add(docker_changes_list* list,
@@ -393,7 +394,7 @@ void free_docker_container_mem_stats(docker_container_mem_stats* mem_stats);
 
 //TODO: add throttling data
 typedef struct docker_container_cpu_stats_t {
-	struct array_list* percpu_usage; //of unsigned long
+	arraylist* percpu_usage; //of unsigned long
 	unsigned long total_usage;
 	unsigned long usage_in_usermode;
 	unsigned long usage_in_kernelmode;
@@ -411,7 +412,7 @@ void free_docker_container_cpu_stats(docker_container_cpu_stats* cpu_stats);
 typedef struct docker_container_stats_t {
 	struct tm* read;
 	docker_container_pids_stats* pid_stats;
-	struct array_list* net_stats_list; //of docker_container_net_stats*
+	arraylist* net_stats_list; //of docker_container_net_stats*
 	docker_container_mem_stats* mem_stats;
 	docker_container_cpu_stats* cpu_stats;
 	docker_container_cpu_stats* precpu_stats;

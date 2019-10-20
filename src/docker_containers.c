@@ -5,10 +5,10 @@
  *      Author: abhishek
  */
 
+#include <arraylist.h>
 #include <docker_log.h>
 #include "docker_containers.h"
 
-#include <json-c/arraylist.h>
 #include <json-c/json_object.h>
 #include <json-c/json_tokener.h>
 #include <json-c/linkhash.h>
@@ -191,13 +191,13 @@ d_err_t make_docker_containers_list_item(docker_container_list_item** item,
 	li->size_rw = size_rw;
 	li->size_root_fs = size_root_fs;
 
-	li->names = array_list_new(&free);
-	li->ports = array_list_new((void (*)(void *)) &free_docker_container_ports);
-	li->labels = array_list_new(
+	arraylist_new(&li->names, &free);
+	arraylist_new(&li->ports, (void (*)(void *)) &free_docker_container_ports);
+	arraylist_new(&li->labels, 
 			(void (*)(void *)) &free_docker_container_label);
-	li->network_settings = array_list_new(
+	arraylist_new(&li->network_settings,
 			(void (*)(void *)) &free_docker_container_network_settings_item);
-	li->mounts = array_list_new(
+	arraylist_new(&li->mounts,
 			(void (*)(void *)) &free_docker_container_mount);
 	return E_SUCCESS;
 }
@@ -210,11 +210,11 @@ void free_docker_container_list_item(docker_container_list_item* item) {
 	free(item->state);
 	free(item->status);
 
-	array_list_free(item->names);
-	array_list_free(item->ports);
-	array_list_free(item->labels);
-	array_list_free(item->network_settings);
-	array_list_free(item->mounts);
+	arraylist_free(item->names);
+	arraylist_free(item->ports);
+	arraylist_free(item->labels);
+	arraylist_free(item->network_settings);
+	arraylist_free(item->mounts);
 	free(item);
 }
 
@@ -241,23 +241,23 @@ void extract_filter_field_int(json_object* fobj, char* filter_name,
 }
 
 d_err_t make_docker_containers_list(docker_containers_list** container_list) {
-	(*container_list) = array_list_new(
+	arraylist_new(container_list, 
 			(void (*)(void *)) &free_docker_container_list_item);
 	return E_SUCCESS;
 }
 
 int docker_containers_list_add(docker_containers_list* list,
 		docker_container_list_item* item) {
-	return array_list_add(list, item);
+	return arraylist_add(list, item);
 }
 
 docker_container_list_item* docker_containers_list_get_idx(
 		docker_containers_list* list, int i) {
-	return (docker_container_list_item*) array_list_get_idx(list, i);
+	return (docker_container_list_item*) arraylist_get(list, i);
 }
 
 int docker_containers_list_length(docker_containers_list* list) {
-	return array_list_length(list);
+	return arraylist_length(list);
 }
 
 /**
@@ -282,25 +282,26 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 	sprintf(url, "%s%s", containers, method);
 	docker_log_debug("List url is %s\n", url);
 
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 
 	if (all > 0) {
 		make_url_param(&p, "all", "true");
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	if (limit > 0) {
 		char* lim_val = (char*) malloc(128 * sizeof(char));
 		sprintf(lim_val, "%d", limit);
 		make_url_param(&p, "limit", lim_val);
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	if (size > 0) {
 		make_url_param(&p, "size", "true");
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	va_list kvargs;
@@ -318,28 +319,28 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 		add_filter_str(filters, filter_name, filter_value);
 	}
 	make_url_param(&p, "filters", (char*) filters_to_str(filters));
-	array_list_add(params, p);
+	arraylist_add(params, p);
 
-	json_object *response_obj = NULL;
+	json_object *containers_arr_obj = NULL;
 	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
+	docker_api_get(ctx, result, url, params, &chunk, &containers_arr_obj);
 	free(params);
 
-	struct array_list* containers_arr = json_object_get_array(response_obj);
-	int len = containers_arr->length;
+//	arraylist* containers_arr = json_object_get_array(containers_arr_obj);
+	int len = json_object_array_length(containers_arr_obj);
 
-	(*container_list) = array_list_new(
+	arraylist_new(container_list, 
 			(void (*)(void *)) &free_docker_container_list_item);
-	struct array_list* clist = (*container_list);
+	arraylist* clist = (*container_list);
 
-	for (int i = 0; i < containers_arr->length; i++) {
+	for (int i = 0; i < len; i++) {
 		docker_log_debug("Item #%d is %s\n", i,
-				json_object_to_json_string(containers_arr->array[i]));
+				json_object_to_json_string(json_object_array_get_idx(containers_arr_obj, i)));
 		docker_container_list_item* listItem;
 
 		json_object* hostConfigObj;
 		docker_container_host_config* host_config;
-		if (json_object_object_get_ex(containers_arr->array[i], "HostConfig",
+		if (json_object_object_get_ex(json_object_array_get_idx(containers_arr_obj, i), "HostConfig",
 				&hostConfigObj)) {
 			make_docker_container_host_config(&host_config,
 					get_attr_str(hostConfigObj, "NetworkMode"));
@@ -347,45 +348,43 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 		free(hostConfigObj);
 
 		make_docker_containers_list_item(&listItem,
-				get_attr_str(containers_arr->array[i], "Id"),
-				get_attr_str(containers_arr->array[i], "Image"),
-				get_attr_str(containers_arr->array[i], "ImageID"),
-				get_attr_str(containers_arr->array[i], "Command"),
-				get_attr_long_long(containers_arr->array[i], "Created"),
-				get_attr_str(containers_arr->array[i], "State"),
-				get_attr_str(containers_arr->array[i], "Status"),
-				get_attr_long_long(containers_arr->array[i], "SizeRW"),
-				get_attr_long_long(containers_arr->array[i], "SizeRootFs"),
+				get_attr_str(json_object_array_get_idx(containers_arr_obj, i), "Id"),
+				get_attr_str(json_object_array_get_idx(containers_arr_obj, i), "Image"),
+				get_attr_str(json_object_array_get_idx(containers_arr_obj, i), "ImageID"),
+				get_attr_str(json_object_array_get_idx(containers_arr_obj, i), "Command"),
+				get_attr_long_long(json_object_array_get_idx(containers_arr_obj, i), "Created"),
+				get_attr_str(json_object_array_get_idx(containers_arr_obj, i), "State"),
+				get_attr_str(json_object_array_get_idx(containers_arr_obj, i), "Status"),
+				get_attr_long_long(json_object_array_get_idx(containers_arr_obj, i), "SizeRW"),
+				get_attr_long_long(json_object_array_get_idx(containers_arr_obj, i), "SizeRootFs"),
 				host_config);
 
 		json_object* namesObj;
-		if (json_object_object_get_ex(containers_arr->array[i], "Names",
+		if (json_object_object_get_ex(json_object_array_get_idx(containers_arr_obj, i), "Names",
 				&namesObj)) {
-			struct array_list* names_arr = json_object_get_array(namesObj);
-			for (int ni = 0; ni < names_arr->length; ni++) {
-				array_list_add(listItem->names,
-						(char*) json_object_get_string(names_arr->array[ni]));
+			for (int ni = 0; ni < json_object_array_length(namesObj); ni++) {
+				arraylist_add(listItem->names,
+						(char*) json_object_get_string(json_object_array_get_idx(namesObj, ni)));
 			}
 		}
 		free(namesObj);
 
 		json_object* portsObj;
-		if (json_object_object_get_ex(containers_arr->array[i], "Ports",
+		if (json_object_object_get_ex(json_object_array_get_idx(containers_arr_obj, i), "Ports",
 				&portsObj)) {
-			struct array_list* ports_arr = json_object_get_array(portsObj);
-			for (int ni = 0; ni < ports_arr->length; ni++) {
+			for (int ni = 0; ni < json_object_array_length(portsObj); ni++) {
 				docker_container_ports* ports;
 				make_docker_container_ports(&ports,
-						get_attr_long(ports_arr->array[ni], "PrivatePort"),
-						get_attr_long(ports_arr->array[ni], "PublicPort"),
-						get_attr_str(ports_arr->array[ni], "Type"));
-				array_list_add(listItem->ports, ports);
+						get_attr_long(json_object_array_get_idx(portsObj, ni), "PrivatePort"),
+						get_attr_long(json_object_array_get_idx(portsObj, ni), "PublicPort"),
+						get_attr_str(json_object_array_get_idx(portsObj, ni), "Type"));
+				arraylist_add(listItem->ports, ports);
 			}
 		}
 		free(portsObj);
 
 		json_object* labelsObj;
-		if (json_object_object_get_ex(containers_arr->array[i], "Labels",
+		if (json_object_object_get_ex(json_object_array_get_idx(containers_arr_obj, i), "Labels",
 				&labelsObj)) {
 			json_object_object_foreach(labelsObj, key1, val1)
 			{
@@ -393,13 +392,13 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 				make_docker_container_label(&label, key1,
 						json_object_get_string((json_object *) val1));
 				docker_log_debug("Label [%s] = [%s]", label->key, label->value);
-				array_list_add(listItem->labels, label);
+				arraylist_add(listItem->labels, label);
 			}
 		}
 		free(labelsObj);
 
 		json_object* networkSettingsObj;
-		if (json_object_object_get_ex(containers_arr->array[i],
+		if (json_object_object_get_ex(json_object_array_get_idx(containers_arr_obj, i),
 				"NetworkSettings", &networkSettingsObj)) {
 			json_object* networksObj;
 			if (json_object_object_get_ex(networkSettingsObj, "Networks",
@@ -417,7 +416,7 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 							get_attr_str(v, "GlobalIPv6Address"),
 							get_attr_int(v, "GlobalIPv6PrefixLen"),
 							get_attr_str(v, "MacAddress"));
-					array_list_add(listItem->network_settings, settings);
+					arraylist_add(listItem->network_settings, settings);
 				}
 				free(networksObj);
 			}
@@ -425,22 +424,21 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 		}
 
 		json_object* mountsObj;
-		if (json_object_object_get_ex(containers_arr->array[i], "Mounts",
+		if (json_object_object_get_ex(json_object_array_get_idx(containers_arr_obj, i), "Mounts",
 				&mountsObj)) {
-			struct array_list* mounts_arr = json_object_get_array(mountsObj);
-			for (int ni = 0; ni < mounts_arr->length; ni++) {
+			for (int ni = 0; ni < json_object_array_length(mountsObj); ni++) {
 				docker_container_mount* mount;
 				make_docker_container_mount(&mount,
-						get_attr_str(mounts_arr->array[ni], "Name"),
-						get_attr_str(mounts_arr->array[ni], "Type"),
-						get_attr_str(mounts_arr->array[ni], "Source"),
-						get_attr_str(mounts_arr->array[ni], "Destination"),
-						get_attr_str(mounts_arr->array[ni], "Driver"),
-						get_attr_str(mounts_arr->array[ni], "Mode"),
-						get_attr_int(mounts_arr->array[ni], "Read"),
-						get_attr_str(mounts_arr->array[ni], "Propagation"));
+						get_attr_str(json_object_array_get_idx(mountsObj, ni), "Name"),
+						get_attr_str(json_object_array_get_idx(mountsObj, ni), "Type"),
+						get_attr_str(json_object_array_get_idx(mountsObj, ni), "Source"),
+						get_attr_str(json_object_array_get_idx(mountsObj, ni), "Destination"),
+						get_attr_str(json_object_array_get_idx(mountsObj, ni), "Driver"),
+						get_attr_str(json_object_array_get_idx(mountsObj, ni), "Mode"),
+						get_attr_int(json_object_array_get_idx(mountsObj, ni), "Read"),
+						get_attr_str(json_object_array_get_idx(mountsObj, ni), "Propagation"));
 
-				array_list_add(listItem->mounts, mount);
+				arraylist_add(listItem->mounts, mount);
 			}
 			free(mountsObj);
 		}
@@ -554,9 +552,9 @@ d_err_t docker_process_list_container(docker_context* ctx,
 		json_object* titles_obj;
 		json_object_object_get_ex(response_obj, "Titles", &titles_obj);
 		int num_titles = json_object_array_length(titles_obj);
-		p->titles = array_list_new(&free);
+		arraylist_new(&p->titles, &free);
 		for (int i = 0; i < num_titles; i++) {
-			array_list_add(p->titles,
+			arraylist_add(p->titles,
 					(char *) json_object_get_string(
 							json_object_array_get_idx(titles_obj, i)));
 		}
@@ -564,18 +562,19 @@ d_err_t docker_process_list_container(docker_context* ctx,
 		json_object* processes_obj;
 		json_object_object_get_ex(response_obj, "Processes", &processes_obj);
 		int num_processes = json_object_array_length(processes_obj);
-		p->processes = array_list_new((void (*)(void *)) &array_list_free);
+		arraylist_new(&p->processes, (void (*)(void *)) &arraylist_free);
 		for (int i = 0; i < num_processes; i++) {
 			json_object* process_obj = json_object_array_get_idx(processes_obj,
 					i);
-			struct array_list* process_arr = array_list_new(&free);
+			arraylist* process_arr;
+			arraylist_new(&process_arr, &free);
 			int num_vals = json_object_array_length(process_obj);
 			for (int j = 0; j < num_vals; j++) {
-				array_list_add(process_arr,
+				arraylist_add(process_arr,
 						(char*) json_object_get_string(
 								json_object_array_get_idx(process_obj, j)));
 			}
-			array_list_add(p->processes, process_arr);
+			arraylist_add(p->processes, process_arr);
 		}
 		(*ps) = p;
 	} else {
@@ -613,44 +612,45 @@ d_err_t docker_container_logs(docker_context* ctx, docker_result** result,
 	sprintf(url, "%s%s%s", containers, id, method);
 	docker_log_debug("Stdout url is %s", url);
 
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params, 
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 
 	if (std_out > 0) {
 		make_url_param(&p, "stdout", "true");
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	if (std_err > 0) {
 		make_url_param(&p, "stderr", "true");
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	if (since >= 0) {
 		char* since_val = (char*) malloc(128 * sizeof(char));
 		sprintf(since_val, "%ld", since);
 		make_url_param(&p, "since", since_val);
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	if (until > 0) {
 		char* until_val = (char*) malloc(128 * sizeof(char));
 		sprintf(until_val, "%ld", until);
 		make_url_param(&p, "until", until_val);
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	if (timestamps > 0) {
 		make_url_param(&p, "timestamps", "true");
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	if (tail > 0) {
 		char* tail_val = (char*) malloc(128 * sizeof(char));
 		sprintf(tail_val, "%d", tail);
 		make_url_param(&p, "tail", tail_val);
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	json_object *response_obj = NULL;
@@ -700,22 +700,22 @@ void free_docker_container_change(docker_container_change* item) {
 }
 
 d_err_t make_docker_changes_list(docker_changes_list** changes_list) {
-	(*changes_list) = array_list_new(
+	arraylist_new(changes_list,
 			(void (*)(void *)) &free_docker_container_change);
 	return E_SUCCESS;
 }
 
 int docker_changes_list_add(docker_changes_list* list,
 		docker_container_change* item) {
-	return array_list_add(list, item);
+	return arraylist_add(list, item);
 }
 
 docker_container_change* docker_changes_list_get_idx(docker_changes_list* list,
 		int i) {
-	return (docker_container_change*) array_list_get_idx(list, i);
+	return (docker_container_change*) arraylist_get(list, i);
 }
 int docker_changes_list_length(docker_changes_list* list) {
-	return array_list_length(list);
+	return arraylist_length(list);
 }
 
 /**
@@ -834,7 +834,7 @@ d_err_t make_docker_container_cpu_stats(docker_container_cpu_stats** cpu_stats,
 	(*cpu_stats)->usage_in_usermode = usage_in_usermode;
 	(*cpu_stats)->usage_in_kernelmode = usage_in_kernelmode;
 	(*cpu_stats)->system_cpu_usage = system_cpu_usage;
-	(*cpu_stats)->percpu_usage = array_list_new(NULL);
+	arraylist_new(&(*cpu_stats)->percpu_usage, NULL);
 	(*cpu_stats)->online_cpus = online_cpus;
 	return E_SUCCESS;
 }
@@ -858,7 +858,7 @@ d_err_t make_docker_container_stats(docker_container_stats** stats,
 	(*stats)->mem_stats = mem_stats;
 	(*stats)->cpu_stats = cpu_stats;
 	(*stats)->precpu_stats = precpu_stats;
-	(*stats)->net_stats_list = array_list_new(
+	arraylist_new(&(*stats)->net_stats_list, 
 			(void (*)(void *)) &free_docker_container_net_stats);
 	return E_SUCCESS;
 }
@@ -870,7 +870,7 @@ void free_docker_container_stats(docker_container_stats* stats) {
 	free(stats->mem_stats);
 	free(stats->cpu_stats);
 	free(stats->precpu_stats);
-	array_list_free(stats->net_stats_list);
+	arraylist_free(stats->net_stats_list);
 	free(stats);
 }
 
@@ -903,7 +903,7 @@ void get_cpu_stats_for_name(json_object* response_obj, char* stats_obj_name,
 					unsigned long* pcpu_usg = calloc(1, sizeof(pcpu_usg));
 					*pcpu_usg = json_object_get_int64(
 							(json_object_array_get_idx(percpu_usage_obj, i)));
-					array_list_add(cpu_stats->percpu_usage, pcpu_usg);
+					arraylist_add(cpu_stats->percpu_usage, pcpu_usg);
 				}
 			}
 		}
@@ -927,11 +927,12 @@ d_err_t docker_container_get_stats(docker_context* ctx, docker_result** result,
 	}
 
 	char* url = create_service_url_id_method(CONTAINER, id, "stats");
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 	make_url_param(&p, "stream", str_clone("false"));
-	array_list_add(params, p);
+	arraylist_add(params, p);
 
 	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
@@ -994,7 +995,7 @@ d_err_t docker_container_get_stats(docker_context* ctx, docker_result** result,
 							get_attr_unsigned_long(v, "tx_dropped"),
 							get_attr_unsigned_long(v, "tx_errors"),
 							get_attr_unsigned_long(v, "tx_packets"));
-					array_list_add(s->net_stats_list, net_stats);
+					arraylist_add(s->net_stats_list, net_stats);
 				}
 			}
 			(*stats) = s;
@@ -1067,7 +1068,7 @@ void parse_container_stats_cb(char* msg, void* cb, void* cbargs) {
 								get_attr_unsigned_long(v, "tx_dropped"),
 								get_attr_unsigned_long(v, "tx_errors"),
 								get_attr_unsigned_long(v, "tx_packets"));
-						array_list_add(s->net_stats_list, net_stats);
+						arraylist_add(s->net_stats_list, net_stats);
 					}
 				}
 				docker_container_stats_cb(s, cbargs);
@@ -1094,11 +1095,12 @@ d_err_t docker_container_get_stats_cb(docker_context* ctx,
 	}
 
 	char* url = create_service_url_id_method(CONTAINER, id, "stats");
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 	make_url_param(&p, "stream", str_clone("true"));
-	array_list_add(params, p);
+	arraylist_add(params, p);
 
 	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
@@ -1138,13 +1140,14 @@ d_err_t docker_start_container(docker_context* ctx, docker_result** result,
 		char* id, char* detachKeys) {
 	char* url = create_service_url_id_method(CONTAINER, id, "start");
 
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 
 	if (detachKeys != NULL) {
 		make_url_param(&p, "detachKeys", detachKeys);
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	json_object *response_obj = NULL;
@@ -1168,7 +1171,8 @@ d_err_t docker_stop_container(docker_context* ctx, docker_result** result,
 		char* id, int t) {
 	char* url = create_service_url_id_method(CONTAINER, id, "stop");
 
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 
@@ -1176,7 +1180,7 @@ d_err_t docker_stop_container(docker_context* ctx, docker_result** result,
 		char* tstr = (char*) malloc(sizeof(char) * 128);
 		sprintf(tstr, "%d", t);
 		make_url_param(&p, "t", tstr);
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	json_object *response_obj = NULL;
@@ -1209,7 +1213,8 @@ d_err_t docker_restart_container(docker_context* ctx, docker_result** result,
 		char* id, int t) {
 	char* url = create_service_url_id_method(CONTAINER, id, "restart");
 
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 
@@ -1217,7 +1222,7 @@ d_err_t docker_restart_container(docker_context* ctx, docker_result** result,
 		char* tstr = (char*) malloc(sizeof(char) * 128);
 		sprintf(tstr, "%d", t);
 		make_url_param(&p, "t", tstr);
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	json_object *response_obj = NULL;
@@ -1245,13 +1250,14 @@ d_err_t docker_kill_container(docker_context* ctx, docker_result** result,
 		char* id, char* signal) {
 	char* url = create_service_url_id_method(CONTAINER, id, "kill");
 
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 
 	if (signal != NULL) {
 		make_url_param(&p, "signal", str_clone(signal));
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	json_object *response_obj = NULL;
@@ -1283,13 +1289,14 @@ d_err_t docker_rename_container(docker_context* ctx, docker_result** result,
 		char* id, char* name) {
 	char* url = create_service_url_id_method(CONTAINER, id, "rename");
 
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 
 	if (name != NULL) {
 		make_url_param(&p, "name", str_clone(name));
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	json_object *response_obj = NULL;
@@ -1365,13 +1372,14 @@ d_err_t docker_wait_container(docker_context* ctx, docker_result** result,
 		char* id, char* condition) {
 	char* url = create_service_url_id_method(CONTAINER, id, "wait");
 
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 
 	if (condition != NULL) {
 		make_url_param(&p, "condition", str_clone(condition));
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	json_object *response_obj = NULL;
@@ -1398,7 +1406,8 @@ d_err_t docker_remove_container(docker_context* ctx, docker_result** result,
 	char* url = create_service_url_id_method(CONTAINER, NULL, id);
 	printf("%s\n", url);
 
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 

@@ -231,13 +231,13 @@ void parse_events_cb(char* msg, void* cb, void* cbargs) {
  *
  * \param ctx the docker context
  * \param result the docker result object to return
- * \param events is an array_list containing objects of type docker_event
+ * \param events is an arraylist containing objects of type docker_event
  * \param start_time
  * \param end_time
  * \return error code
  */
 d_err_t docker_system_events(docker_context* ctx, docker_result** result,
-		array_list** events, time_t start_time, time_t end_time) {
+		arraylist** events, time_t start_time, time_t end_time) {
 	if (end_time <= 0) {
 		docker_log_warn(
 				"This call with end_time %d will never end, and will have no response, use the method with callbacks instead.",
@@ -256,30 +256,31 @@ d_err_t docker_system_events(docker_context* ctx, docker_result** result,
  * \param result the docker result object to return
  * \param docker_events_cb pointer to callback when an event is received.
  * \param cbargs is a pointer to callback arguments
- * \param events is an array_list containing objects of type docker_event
+ * \param events is an arraylist containing objects of type docker_event
  * \param start_time
  * \param end_time
  * \return error code
  */
 d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 		void (*docker_events_cb)(docker_event* evt, void* cbargs), void* cbargs,
-		array_list** events, time_t start_time, time_t end_time) {
+		arraylist** events, time_t start_time, time_t end_time) {
 	char* url = create_service_url_id_method(SYSTEM, NULL, "events");
 
-	struct array_list* params = array_list_new(
+	arraylist* params;
+	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 	char* start_time_str = (char*) calloc(128, sizeof(char));
 
 	sprintf(start_time_str, "%lu", start_time);
 	make_url_param(&p, "since", start_time_str);
-	array_list_add(params, p);
+	arraylist_add(params, p);
 
 	if (end_time != 0) {
 		char* end_time_str = (char*) calloc(128, sizeof(char));
 		sprintf(end_time_str, "%lu", end_time);
 		make_url_param(&p, "until", end_time_str);
-		array_list_add(params, p);
+		arraylist_add(params, p);
 	}
 
 	json_object *response_obj = NULL;
@@ -290,8 +291,9 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 
 	//cannot use the default response object, as that parses only one object from the response
 
-	(*events) = array_list_new((void (*)(void *)) &free_docker_event);
-	array_list* json_arr = array_list_new(&free);
+	arraylist_new(events, (void (*)(void *)) &free_docker_event);
+	arraylist* json_arr;
+	arraylist_new(&json_arr, &free);
 
 	if ((*result)->http_error_code >= 200) {
 		if (chunk.memory && strlen(chunk.memory) > 0) {
@@ -303,21 +305,22 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 					chunk.memory[i] = '\0';
 					json_object* item = json_tokener_parse(
 							chunk.memory + start);
-					array_list_add(json_arr, item);
+					arraylist_add(json_arr, item);
 					chunk.memory[i] = '\n';
 					start = i;
 				}
 			}
 		}
 
-		int num_events = array_list_length(json_arr);
+		int num_events = arraylist_length(json_arr);
 		docker_log_debug("Read %d items.", num_events);
 
-		array_list* evtls = array_list_new(
+		arraylist* evtls;
+		arraylist_new(&evtls,
 				(void (*)(void *)) &free_docker_event);
 
 		for (int j = 0; j < num_events; j++) {
-			json_object* evt_obj = array_list_get_idx(json_arr, j);
+			json_object* evt_obj = arraylist_get(json_arr, j);
 			docker_event* evt;
 			json_object* extractObj;
 			char* attr = NULL;
@@ -329,7 +332,7 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 						get_attr_str(extractObj, "ID"), attrs_obj,
 						get_attr_unsigned_long(evt_obj, "time"));
 			}
-			array_list_add((*events), evt);
+			arraylist_add((*events), evt);
 		}
 	}
 

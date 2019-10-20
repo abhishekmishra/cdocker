@@ -141,7 +141,7 @@ void free_docker_event(docker_event* event);
  * \return error code
  */
 d_err_t docker_system_events(docker_context* ctx, docker_result** result,
-		array_list** events, time_t start_time, time_t end_time);
+		arraylist** events, time_t start_time, time_t end_time);
 
 /**
  * Get the docker events in a time range.
@@ -157,7 +157,7 @@ d_err_t docker_system_events(docker_context* ctx, docker_result** result,
  */
 d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 		void (*docker_events_cb)(docker_event* evt, void* cbargs), void* cbargs,
-		array_list** events, time_t start_time, time_t end_time);
+		arraylist** events, time_t start_time, time_t end_time);
 
 //Docker df
 

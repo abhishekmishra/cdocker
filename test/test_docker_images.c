@@ -56,12 +56,12 @@ static void test_pull_alpine_latest(void **state) {
 }
 
 static void test_list_images(void **state) {
-	struct array_list* images;
+	arraylist* images;
 	docker_images_list(ctx, &res, &images, 0, 1, NULL, 0, NULL, NULL, NULL);
 	handle_error(res);
 	assert_int_equal(res->http_error_code, 200);
 	assert_non_null(images);
-	assert_int_not_equal(array_list_length(images), 0);
+	assert_int_not_equal(arraylist_length(images), 0);
 }
 
 int docker_images_tests() {

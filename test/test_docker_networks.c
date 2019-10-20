@@ -52,12 +52,12 @@ static int group_teardown(void **state) {
 }
 
 static void test_list_networks(void **state) {
-	struct array_list* networks;
+	arraylist* networks;
 	docker_networks_list(ctx, &res, &networks, NULL, NULL, NULL, NULL, NULL, NULL);
 	handle_error(res);
-	int len_nets = array_list_length(networks);
+	int len_nets = arraylist_length(networks);
 	for(int i = 0; i < len_nets; i++) {
-		docker_network* ni = (docker_network*)array_list_get_idx(networks, i);
+		docker_network* ni = (docker_network*)arraylist_get(networks, i);
 		assert_non_null(ni->name);
 	}
 	assert_int_equal(res->http_error_code, 200);

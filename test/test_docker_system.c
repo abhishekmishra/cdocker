@@ -31,6 +31,7 @@
 #include <cmocka.h>
 #include <stdlib.h>
 #include <curl/curl.h>
+#include <arraylist.h>
 
 #include "test_docker_system.h"
 
@@ -80,13 +81,13 @@ static void test_info(void **state) {
 }
 
 static void test_events(void **state) {
-	array_list* events;
+	arraylist* events;
 	time_t now = time(NULL);
 	docker_system_events(ctx, &res, &events, now - 360000, now);
 	handle_error(res);
 	assert_int_equal(res->http_error_code, 200);
 	assert_non_null(events);
-	assert_int_not_equal(array_list_length(events), 0);
+	assert_int_not_equal(arraylist_length(events), 0);
 }
 
 

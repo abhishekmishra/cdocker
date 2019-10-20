@@ -40,10 +40,10 @@ typedef struct docker_volume_t {
 	char* name;
 	char* driver;
 	char* mountpoint;
-	struct array_list* labels; //of pair
+	arraylist* labels; //of pair
 	char* scope;
-	struct array_list* options; //of pair
-	struct array_list* status; //of pair
+	arraylist* options; //of pair
+	arraylist* status; //of pair
 } docker_volume;
 
 d_err_t make_docker_volume(docker_volume** volume, time_t created_at,
@@ -66,7 +66,7 @@ void free_docker_volume(docker_volume* volume);
  * \return error code.
  */
 d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
-		struct array_list** volumes, struct array_list** warnings,
+		arraylist** volumes, arraylist** warnings,
 		int filter_dangling, char* filter_driver, char* filter_label,
 		char* filter_name);
 
@@ -122,7 +122,7 @@ d_err_t docker_volume_delete(docker_context* ctx, docker_result** result,
  * \return error code
  */
 d_err_t docker_volumes_delete_unused(docker_context* ctx,
-		docker_result** result, struct array_list** volumes_deleted,
+		docker_result** result, arraylist** volumes_deleted,
 		unsigned long* space_reclaimed, int num_label_filters, ...);
 
 #ifdef __cplusplus 

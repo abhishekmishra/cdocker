@@ -109,7 +109,8 @@ static void test_stopping_stopped_container(void **state) {
 	char* id = *state;
 	docker_stop_container(ctx, &res, id, 0);
 	handle_error(res);
-	assert_int_equal(res->http_error_code, 304);
+	assert_int_equal(res->http_error_code, 304L);
+	free_docker_result(&res);
 }
 
 static void test_killing_stopped_container(void **state) {

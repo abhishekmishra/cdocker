@@ -108,7 +108,7 @@ void docker_simple_error_handler_print(docker_result* res) {
 	if (!is_ok(res)) {
 		printf("DOCKER RESULT: %s\n", res->message);
 	}
-	free_docker_result(&res);
+	//free_docker_result(&res);
 }
 
 /**
@@ -123,5 +123,5 @@ void docker_simple_error_handler_log(docker_result* res) {
 	if (!is_ok(res)) {
 		docker_log_error("DOCKER RESULT: %s", res->message);
 	}
-	free_docker_result(&res);
+	//free_docker_result(&res);
 }

@@ -110,3 +110,8 @@ if (ENABLE_TESTS)
   add_test( all_docker_tests ${CLIBDOCKER_TEST_PROGRAM_NAME} )
   enable_testing()
 endif(ENABLE_TESTS)
+
+# Package Configuration
+export(TARGETS clibdocker NAMESPACE clibdocker:: FILE clibdockerConfig.cmake)
+set(CMAKE_EXPORT_PACKAGE_REGISTRY ON)
+export(PACKAGE clibdocker)

@@ -61,7 +61,7 @@ set( CLIBDOCKER_TEST_SOURCES
 
 
 add_library ( ${PROJECT_NAME} ${CLIBDOCKER_SOURCES} )
-target_include_directories(${PROJECT_NAME} PRIVATE ${YOUR_DIRECTORY})
+target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 11)
 

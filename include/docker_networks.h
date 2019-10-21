@@ -46,8 +46,8 @@ void free_docker_network_ipam_config(docker_network_ipam_config* config);
 
 typedef struct docker_network_ipam_t {
 	char* driver;
-	struct array_list* config; //of docker_network_ipam_config
-	struct array_list* options;
+	arraylist* config; //of docker_network_ipam_config
+	arraylist* options;
 } docker_network_ipam;
 
 d_err_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver);
@@ -78,9 +78,9 @@ typedef struct docker_network_t {
 	int internal;
 	int attachable;
 	int ingress;
-	struct array_list* containers; // of docker_network_container
-	struct array_list* options; //of pair
-	struct array_list* labels; //of pair
+	arraylist* containers; // of docker_network_container
+	arraylist* options; //of pair
+	arraylist* labels; //of pair
 } docker_network;
 
 d_err_t make_docker_network(docker_network** network, char* name,
@@ -104,7 +104,7 @@ void free_docker_network(docker_network* network);
  * \return error code
  */
 d_err_t docker_networks_list(docker_context* ctx, docker_result** result,
-		struct array_list** networks, char* filter_driver, char* filter_id,
+		arraylist** networks, char* filter_driver, char* filter_id,
 		char* filter_label, char* filter_name, char* filter_scope,
 		char* filter_type);
 

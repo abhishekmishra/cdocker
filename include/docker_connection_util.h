@@ -31,6 +31,7 @@ extern "C" {
 #define DOCKER_API_VERSION_1_39 "1.39"
 #define DOCKER_DEFAULT_UNIX_SOCKET "/var/run/docker.sock"
 #define DOCKER_DEFAULT_WINDOWS_SOCKET "npipe:////./pipe/docker_engine"
+#define DOCKER_DEFAULT_LOCALHOST_URL "http://localhost:2375/"
 
 #if defined(_WIN32)
 #define DOCKER_DEFAULT_SOCKET DOCKER_DEFAULT_WINDOWS_SOCKET
@@ -75,6 +76,14 @@ MODULE_API d_err_t make_docker_context_url(docker_context** ctx, const char* url
  * be safely freed by the calling program.
  */
 MODULE_API d_err_t make_docker_context_socket(docker_context** ctx, const char* socket);
+
+/**
+ * Connect to the default local docker.
+ *
+ * @param ctx context to create
+ * @return error code
+ */
+MODULE_API d_err_t make_docker_context_default_local(docker_context** ctx);
 
 /**
  * Free docker context memory.

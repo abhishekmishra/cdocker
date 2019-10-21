@@ -38,7 +38,7 @@ static docker_result* res;
 
 static int group_setup(void **state) {
 	curl_global_init(CURL_GLOBAL_ALL);
-	make_docker_context_socket(&ctx, DOCKER_DEFAULT_SOCKET);
+	make_docker_context_default_local(&ctx);
 	return E_SUCCESS;
 }
 

@@ -104,7 +104,7 @@ if (ENABLE_TESTS)
   find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
   find_library(LIBARCHIVE_LIBRARY archive)
   include_directories(${LIBARCHIVE_INCLUDE_DIR})
-  target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBARCHIVE_LIBRARY})
+  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC ${LIBARCHIVE_LIBRARY})
   #link_libraries(${LIBARCHIVE_LIBRARY})
 
   target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC ${PROJECT_NAME})

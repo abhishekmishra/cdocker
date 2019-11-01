@@ -6,8 +6,7 @@
                 "${workspaceFolder}/**",
                 "${vcpkgRoot}/x64-windows/include",
                 "${vcpkgRoot}/x86-windows/include",
-                "C:\\cygwin64\\usr\\include",
-                "/usr/local/Cellar/json-c/0.13.1/include/json-c"
+                "C:\\cygwin64\\usr\\include"
             ],
             "defines": [
                 "_DEBUG",
@@ -24,7 +23,8 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${vcpkgRoot}/x64-osx/include"
+                "${vcpkgRoot}/x64-osx/include",
+                "/Users/abhishekmishra/programs/coll/src"
             ],
             "defines": [],
             "macFrameworkPath": [

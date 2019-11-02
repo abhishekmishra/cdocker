@@ -18,7 +18,7 @@ include_directories( include )
 
 # Lists
 # Setup the list of source files
-set( CLIBDOCKER_SOURCES 
+set( CLIBDOCKER_SOURCES
   src/docker_connection_util.c
   src/docker_containers.c
   src/docker_images.c
@@ -43,7 +43,7 @@ set( CLIBDOCKER_SOURCES
   include/docker_volumes.h
 )
 
-set( CLIBDOCKER_TEST_SOURCES 
+set( CLIBDOCKER_TEST_SOURCES
   test/test_all.c
   test/test_docker_containers.c
   test/test_docker_containers.h
@@ -59,28 +59,41 @@ set( CLIBDOCKER_TEST_SOURCES
   test/test_util.h
 )
 
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+	message(STATUS ">>> Linux, using pkg-config since vcpkg is broken")
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(json-c REQUIRED IMPORTED_TARGET json-c)
+	pkg_check_modules(curl REQUIRED IMPORTED_TARGET libcurl)
+	pkg_check_modules(archive REQUIRED IMPORTED_TARGET libarchive)
+endif()
 
 add_library ( ${PROJECT_NAME} ${CLIBDOCKER_SOURCES} )
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 11)
 
-find_package(json-c CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC json-c::json-c)
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+	target_link_libraries(${PROJECT_NAME} PUBLIC json-c)
+	target_link_libraries(${PROJECT_NAME} PUBLIC curl)
+	target_link_libraries(${PROJECT_NAME} PUBLIC archive)
+else()
+	find_package(json-c CONFIG REQUIRED)
+	target_link_libraries(${PROJECT_NAME} PUBLIC json-c::json-c)
 
-find_package(CURL CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
+	find_package(CURL CONFIG REQUIRED)
+	target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
 
+	# To find and use libarchive, as the vcpkg build does not have cmake config
+	find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
+	find_library(LIBARCHIVE_LIBRARY archive)
+	include_directories(${LIBARCHIVE_INCLUDE_DIR})
+	target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBARCHIVE_LIBRARY})
+endif()
 set(CMAKE_FIND_USE_PACKAGE_REGISTRY ON)
 
 find_package(coll CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC coll::coll)
 
-# To find and use libarchive, as the vcpkg build does not have cmake config
-find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
-find_library(LIBARCHIVE_LIBRARY archive)
-include_directories(${LIBARCHIVE_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBARCHIVE_LIBRARY})
 
 option(ENABLE_TESTS "Perform unit tests after build" OFF)
 set ( CLIBDOCKER_TEST_PROGRAM_NAME clibdocker_test )
@@ -89,22 +102,28 @@ if (ENABLE_TESTS)
   set_property(TARGET ${CLIBDOCKER_TEST_PROGRAM_NAME} PROPERTY C_STANDARD 11)
   include_directories( test )
 
-  # cmocka
-  find_package(cmocka CONFIG REQUIRED)
-  target_include_directories(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_INCLUDE_DIR})
-  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_LIBRARIES})
+	if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+		pkg_check_modules(cmocka REQUIRED IMPORTED_TARGET cmocka)
+		target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC cmocka)
+	else()
+		# cmocka
+		find_package(cmocka CONFIG REQUIRED)
+		target_include_directories(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_INCLUDE_DIR})
+		target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_LIBRARIES})
+	endif()
 
-  find_package(json-c CONFIG REQUIRED)
-  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC json-c::json-c)
+	#  find_package(json-c CONFIG REQUIRED)
+	#  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC json-c::json-c)
 
-  find_package(CURL REQUIRED)
-  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC CURL::libcurl)
+	#  find_package(CURL REQUIRED)
+	#  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC CURL::libcurl)
 
   # To find and use libarchive, as the vcpkg build does not have cmake config
-  find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
-  find_library(LIBARCHIVE_LIBRARY archive)
-  include_directories(${LIBARCHIVE_INCLUDE_DIR})
-  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC ${LIBARCHIVE_LIBRARY})
+  #  find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
+  #  find_library(LIBARCHIVE_LIBRARY archive)
+  #  include_directories(${LIBARCHIVE_INCLUDE_DIR})
+  #  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC ${LIBARCHIVE_LIBRARY})
+
   #link_libraries(${LIBARCHIVE_LIBRARY})
 
   target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC ${PROJECT_NAME})

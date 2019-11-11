@@ -309,7 +309,7 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 	{
 		fprintf(stderr, "curl_easy_perform() failed: %s\n",
 				curl_easy_strerror(res));
-		make_docker_result(result, E_SUCCESS, -1, NULL,
+		make_docker_result(result, E_CONNECTION_FAILED, -1, NULL,
 		NULL);
 	}
 	else

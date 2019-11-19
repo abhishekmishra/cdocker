@@ -1,3 +1,6 @@
+# create the build directory
+New-Item -path . -name build -itemtype directory
+
 # change to the build directory
 Set-Location .\build
 

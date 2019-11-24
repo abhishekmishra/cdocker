@@ -26,6 +26,7 @@
  *
  */
 
+#include "docker_util.h"
 #include <docker_log.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,13 +51,17 @@ d_err_t make_docker_result(docker_result** result, d_err_t error_code,
 	if (message) {
 		(*result)->message = (char*) malloc(
 				sizeof(char) * (strlen(message) + 1));
-		strcpy((*result)->message, message);
+		if ((*result)->message != NULL) {
+			strcpy((*result)->message, message);
+		}
 	} else {
 		(*result)->message = NULL;
 	}
 	if (url) {
 		(*result)->url = (char*) malloc(sizeof(char) * (strlen(url) + 1));
-		strcpy((*result)->url, url);
+		if ((*result)->url != NULL) {
+			strcpy((*result)->url, url);
+		}
 	} else {
 		(*result)->url = NULL;
 	}

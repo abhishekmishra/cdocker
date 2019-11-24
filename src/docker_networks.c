@@ -165,8 +165,8 @@ d_err_t docker_networks_list(docker_context* ctx, docker_result** result,
 	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
 
 	arraylist_new(networks, (void (*)(void *)) &free_docker_network);
-	int num_nets = json_object_array_length(response_obj);
-	for (int i = 0; i < num_nets; i++) {
+	size_t num_nets = json_object_array_length(response_obj);
+	for (size_t i = 0; i < num_nets; i++) {
 		json_object* current_obj = json_object_array_get_idx(response_obj, i);
 		docker_network* ni;
 
@@ -189,8 +189,8 @@ d_err_t docker_networks_list(docker_context* ctx, docker_result** result,
 		json_object* ipam_config_obj;
 		json_object_object_get_ex(ipam_obj, "Config", &ipam_config_obj);
 		if (ipam_config_obj != NULL) {
-			int num_configs = json_object_array_length(ipam_config_obj);
-			for (int j = 0; j < num_configs; j++) {
+			size_t num_configs = json_object_array_length(ipam_config_obj);
+			for (size_t j = 0; j < num_configs; j++) {
 				json_object* current_config_obj = json_object_array_get_idx(
 						ipam_config_obj, j);
 				docker_network_ipam_config* config;
@@ -309,10 +309,9 @@ d_err_t docker_network_inspect(docker_context* ctx, docker_result** result,
 
 		json_object* ipam_config_obj;
 		json_object_object_get_ex(ipam_obj, "Config", &ipam_config_obj);
-		int num_configs = json_object_array_length(ipam_config_obj);
 		if (ipam_config_obj != NULL) {
-			int num_configs = json_object_array_length(ipam_config_obj);
-			for (int j = 0; j < num_configs; j++) {
+			size_t num_configs = json_object_array_length(ipam_config_obj);
+			for (size_t j = 0; j < num_configs; j++) {
 
 				json_object* current_config_obj = json_object_array_get_idx(
 						ipam_config_obj, j);

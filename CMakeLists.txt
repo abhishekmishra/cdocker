@@ -58,6 +58,15 @@ set( CLIBDOCKER_TEST_SOURCES
   test/test_util.c
   test/test_util.h
 )
+option (ENABLE_LUA "Enable LUA bindings for collections" OFF)
+if (ENABLE_LUA)
+  include(FindLua)
+  if (LUA_FOUND)
+    message("-- lua found at ${LUA_LIBRARIES} ${LUA_INCLUDE_DIR}")
+    message("-- lua version is ${LUA_VERSION_STRING}")
+    add_compile_definitions(LUA_ENABLED)
+  endif (LUA_FOUND)
+endif (ENABLE_LUA)
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
 	message(STATUS ">>> Linux, using pkg-config since vcpkg is broken")

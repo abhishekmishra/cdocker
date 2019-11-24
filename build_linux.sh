@@ -6,7 +6,7 @@ cd ./build
 
 # generate the build files
 #cmake .. -DCMAKE_TOOLCHAIN_FILE=../../vcpkg/scripts/buildsystems/vcpkg.cmake -DENABLE_TESTS=On
-cmake .. -DENABLE_TESTS=On
+cmake .. -DENABLE_TESTS=On -DENABLE_LUA=On
 
 # run build
 make clean all

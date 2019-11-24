@@ -27,6 +27,7 @@
  *  Created on: 11-Dec-2018
  *      Author: abhishek
  */
+#include "docker_util.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,7 +35,6 @@
 #include <docker_log.h>
 #include "docker_result.h"
 #include "docker_connection_util.h"
-#include "docker_util.h"
 #include <json-c/json_object.h>
 #include <json-c/json_tokener.h>
 #include <json-c/linkhash.h>
@@ -173,14 +173,14 @@ char* build_url(CURL *curl, char* base_url, arraylist* url_params)
 	}
 	else
 	{
-		int num_params = arraylist_length(url_params);
+		size_t num_params = arraylist_length(url_params);
 		if (num_params <= 0)
 		{
 			return base_url;
 		}
 		else
 		{
-			int size_toalloc = strlen(base_url) + 1;
+			size_t size_toalloc = strlen(base_url) + 1;
 			char** allkeys = (char**) malloc(num_params * sizeof(char*));
 			char** allvals = (char**) malloc(num_params * sizeof(char*));
 			for (int i = 0; i < num_params; i++)

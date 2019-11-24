@@ -38,6 +38,10 @@
 extern "C" {
 #endif
 
+// Do not warn about strcpy_s, sprintf_s and sscanf_s on windows build
+#define _CRT_SECURE_NO_WARNINGS
+
+
 #include <json-c/json_object.h>
 #include "docker_result.h"
 

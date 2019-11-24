@@ -207,7 +207,7 @@ int docker_containers_list_add(docker_containers_list* list,
 		docker_container_list_item* item);
 docker_container_list_item* docker_containers_list_get_idx(
 		docker_containers_list* list, int i);
-int docker_containers_list_length(docker_containers_list* list);
+size_t docker_containers_list_length(docker_containers_list* list);
 
 typedef struct health_config_t {
 	char** test;
@@ -337,7 +337,7 @@ int docker_changes_list_add(docker_changes_list* list,
 		docker_container_change* item);
 docker_container_change* docker_changes_list_get_idx(docker_changes_list* list,
 		int i);
-int docker_changes_list_length(docker_changes_list* list);
+size_t docker_changes_list_length(docker_changes_list* list);
 
 /**
  * Get the file system changes for the docker container.

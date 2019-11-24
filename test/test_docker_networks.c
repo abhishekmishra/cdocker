@@ -55,7 +55,7 @@ static void test_list_networks(void **state) {
 	arraylist* networks;
 	docker_networks_list(ctx, &res, &networks, NULL, NULL, NULL, NULL, NULL, NULL);
 	handle_error(res);
-	int len_nets = arraylist_length(networks);
+	size_t len_nets = arraylist_length(networks);
 	for(int i = 0; i < len_nets; i++) {
 		docker_network* ni = (docker_network*)arraylist_get(networks, i);
 		assert_non_null(ni->name);

@@ -5,6 +5,7 @@
  *      Author: abhishek
  */
 
+#include "docker_util.h"
 #include <arraylist.h>
 #include <docker_log.h>
 #include "docker_containers.h"
@@ -15,9 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
- //#include <strings.h>
 #include "docker_connection_util.h"
-#include "docker_util.h"
 
 /**
  * Create a docker_container_ports instance.
@@ -257,7 +256,7 @@ docker_container_list_item* docker_containers_list_get_idx(
 	return (docker_container_list_item*)arraylist_get(list, i);
 }
 
-int docker_containers_list_length(docker_containers_list* list) {
+size_t docker_containers_list_length(docker_containers_list* list) {
 	return arraylist_length(list);
 }
 
@@ -328,7 +327,7 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 	free(params);
 
 	//	arraylist* containers_arr = json_object_get_array(containers_arr_obj);
-	int len = json_object_array_length(containers_arr_obj);
+	size_t len = json_object_array_length(containers_arr_obj);
 
 	arraylist_new(container_list,
 		(void (*)(void*)) & free_docker_container_list_item);
@@ -553,7 +552,7 @@ d_err_t docker_process_list_container(docker_context* ctx,
 		}
 		json_object* titles_obj;
 		json_object_object_get_ex(response_obj, "Titles", &titles_obj);
-		int num_titles = json_object_array_length(titles_obj);
+		size_t num_titles = json_object_array_length(titles_obj);
 		arraylist_new(&p->titles, &free);
 		for (int i = 0; i < num_titles; i++) {
 			arraylist_add(p->titles,
@@ -563,14 +562,14 @@ d_err_t docker_process_list_container(docker_context* ctx,
 
 		json_object* processes_obj;
 		json_object_object_get_ex(response_obj, "Processes", &processes_obj);
-		int num_processes = json_object_array_length(processes_obj);
+		size_t num_processes = json_object_array_length(processes_obj);
 		arraylist_new(&p->processes, (void (*)(void*)) & arraylist_free);
 		for (int i = 0; i < num_processes; i++) {
 			json_object* process_obj = json_object_array_get_idx(processes_obj,
 				i);
 			arraylist* process_arr;
 			arraylist_new(&process_arr, &free);
-			int num_vals = json_object_array_length(process_obj);
+			size_t num_vals = json_object_array_length(process_obj);
 			for (int j = 0; j < num_vals; j++) {
 				arraylist_add(process_arr,
 					(char*)json_object_get_string(
@@ -717,7 +716,7 @@ docker_container_change* docker_changes_list_get_idx(docker_changes_list* list,
 	int i) {
 	return (docker_container_change*)arraylist_get(list, i);
 }
-int docker_changes_list_length(docker_changes_list* list) {
+size_t docker_changes_list_length(docker_changes_list* list) {
 	return arraylist_length(list);
 }
 
@@ -901,10 +900,10 @@ void get_cpu_stats_for_name(json_object* response_obj, char* stats_obj_name,
 			json_object_object_get_ex(cpu_stats_cpu_usage_obj, "percpu_usage",
 				&percpu_usage_obj);
 			if (percpu_usage_obj) {
-				int percpu_usage_len = json_object_array_length(
+				size_t percpu_usage_len = json_object_array_length(
 					percpu_usage_obj);
 				for (int i = 0; i < percpu_usage_len; i++) {
-					unsigned long* pcpu_usg = calloc(1, sizeof(pcpu_usg));
+					int64_t* pcpu_usg = calloc(1, sizeof(pcpu_usg));
 					*pcpu_usg = json_object_get_int64(
 						(json_object_array_get_idx(percpu_usage_obj, i)));
 					arraylist_add(cpu_stats->percpu_usage, pcpu_usg);
@@ -1126,7 +1125,7 @@ float docker_container_stats_get_cpu_usage_percent(
 	unsigned long sys_delta = cpu_stats->system_cpu_usage
 		- precpu_stats->system_cpu_usage;
 	if (sys_delta > 0) {
-		cpu_percent = (100.0 * cpu_delta * cpu_count) / sys_delta;
+		cpu_percent = (float)((100.0 * cpu_delta * cpu_count) / sys_delta);
 	}
 	return cpu_percent;
 }
@@ -1413,7 +1412,6 @@ d_err_t docker_remove_container(docker_context* ctx, docker_result** result,
 	arraylist* params;
 	arraylist_new(&params,
 		(void (*)(void*)) & free_url_param);
-	url_param* p;
 
 	json_object* response_obj = NULL;
 	struct http_response_memory chunk;

@@ -25,6 +25,7 @@
  * SOFTWARE.
  *
  */
+#include "docker_util.h"
 #include <docker_log.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,7 +33,6 @@
 #include <json-c/json_tokener.h>
 
 #include "docker_system.h"
-#include "docker_util.h"
 #include "docker_connection_util.h"
 
 /**
@@ -297,10 +297,10 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 
 	if ((*result)->http_error_code >= 200) {
 		if (chunk.memory && strlen(chunk.memory) > 0) {
-			int len = strlen(chunk.memory);
-			int start = 0;
-			int end = 0;
-			for (int i = 0; i < len; i++) {
+			size_t len = strlen(chunk.memory);
+			size_t start = 0;
+			size_t end = 0;
+			for (size_t i = 0; i < len; i++) {
 				if (chunk.memory[i] == '\n') {
 					chunk.memory[i] = '\0';
 					json_object* item = json_tokener_parse(
@@ -312,14 +312,14 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 			}
 		}
 
-		int num_events = arraylist_length(json_arr);
+		size_t num_events = arraylist_length(json_arr);
 		docker_log_debug("Read %d items.", num_events);
 
 		arraylist* evtls;
 		arraylist_new(&evtls,
 				(void (*)(void *)) &free_docker_event);
 
-		for (int j = 0; j < num_events; j++) {
+		for (size_t j = 0; j < num_events; j++) {
 			json_object* evt_obj = arraylist_get(json_arr, j);
 			docker_event* evt;
 			json_object* extractObj;

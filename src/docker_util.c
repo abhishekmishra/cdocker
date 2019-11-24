@@ -25,18 +25,19 @@
  * SOFTWARE.
  *
  */
-
+#include "docker_util.h"
 #include <docker_log.h>
 #include <stdlib.h>
 #include <string.h>
 #include <json-c/json_object.h>
-#include "docker_util.h"
 
 char* str_clone(const char* from) {
 	char* to = NULL;
 	if ((from != NULL) && (strlen(from) > 0)) {
 		to = (char*) malloc((strlen(from) + 1) * sizeof(char));
-		strcpy(to, from);
+		if (to != NULL) {
+			strcpy(to, from);
+		}
 	}
 	return to;
 }
@@ -47,7 +48,6 @@ char* get_attr_str(json_object* obj, char* name) {
 	if (json_object_object_get_ex(obj, name, &extractObj)) {
 		attr = (char*) json_object_get_string(extractObj);
 	}
-//	docker_log_debug("%s is |%s|.", name, attr);
 	return attr;
 }
 
@@ -84,7 +84,6 @@ long get_attr_long(json_object* obj, char* name) {
 		sscanf(json_object_get_string(extractObj), "%ld", &attr);
 		free(extractObj);
 	}
-//	docker_log_debug("%s is |%ld|.", name, attr);
 	return attr;
 }
 
@@ -95,7 +94,6 @@ unsigned long get_attr_unsigned_long(json_object* obj, char* name) {
 		sscanf(json_object_get_string(extractObj), "%lu", &attr);
 		free(extractObj);
 	}
-//	docker_log_debug("%s is |%lu|.", name, attr);
 	return attr;
 }
 
@@ -106,7 +104,6 @@ long long get_attr_long_long(json_object* obj, char* name) {
 		sscanf(json_object_get_string(extractObj), "%lld", &attr);
 		free(extractObj);
 	}
-//	docker_log_debug("%s is |%lld|.", name, attr);
 	return attr;
 }
 
@@ -215,20 +212,22 @@ char* calculate_size(uint64_t size)
     uint64_t  multiplier = exbibytes;
     int i;
 
-    for (i = 0; i < DIM(sizes); i++, multiplier /= 1024)
-    {
-        if (size < multiplier)
-            continue;
-		if (size % multiplier == 0) {
-			//changed this line to use %llu instead of PRIu64
-			sprintf(result, "%llu %s", size / multiplier, sizes[i]);
+	if (result != NULL) {
+		for (i = 0; i < DIM(sizes); i++, multiplier /= 1024)
+		{
+			if (size < multiplier)
+				continue;
+			if (size % multiplier == 0) {
+				//changed this line to use %llu instead of PRIu64
+				sprintf(result, "%llu %s", size / multiplier, sizes[i]);
+			}
+			else {
+				sprintf(result, "%.1f %s", (float)size / multiplier, sizes[i]);
+			}
+			return result;
 		}
-		else {
-			sprintf(result, "%.1f %s", (float)size / multiplier, sizes[i]);
-		}
-        return result;
-    }
-    strcpy(result, "0");
+		strcpy(result, "0");
+	}
     return result;
 }
 

@@ -19,8 +19,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "docker_networks.h"
 #include "docker_util.h"
+#include "docker_networks.h"
 
 d_err_t make_docker_network_ipam_config(docker_network_ipam_config** config,
 		char* subnet, char* gateway) {

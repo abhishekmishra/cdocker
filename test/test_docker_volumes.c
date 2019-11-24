@@ -82,7 +82,7 @@ static void test_list_volumes(void **state) {
 	arraylist* warnings;
 	docker_volumes_list(ctx, &res, &volumes, &warnings, 1, NULL, "clibdocker_test_label=clibdocker_test_value", NULL);
 	handle_error(res);
-	int len_vols = arraylist_length(volumes);
+	size_t len_vols = arraylist_length(volumes);
 	assert_int_equal(res->http_error_code, 200);
 	assert_int_equal(len_vols, 2);
 }

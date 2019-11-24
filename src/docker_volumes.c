@@ -25,12 +25,12 @@
  * SOFTWARE.
  *
  */
+#include "docker_util.h"
 #include <docker_log.h>
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
 #include "docker_volumes.h"
-#include "docker_util.h"
 
 d_err_t make_docker_volume(docker_volume** volume, time_t created_at,
 		char* name, char* driver, char* mountpoint, char* scope) {
@@ -111,7 +111,7 @@ d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
 	json_object* volumes_obj;
 	json_object_object_get_ex(response_obj, "Volumes", &volumes_obj);
 	if (volumes_obj) {
-		int num_vols = json_object_array_length(volumes_obj);
+		size_t num_vols = json_object_array_length(volumes_obj);
 		for (int i = 0; i < num_vols; i++) {
 			json_object* current_obj = json_object_array_get_idx(volumes_obj,
 					i);
@@ -154,7 +154,7 @@ d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
 	json_object* warnings_obj;
 	json_object_object_get_ex(response_obj, "Warnings", &warnings_obj);
 	if (warnings_obj) {
-		int num_warns = json_object_array_length(warnings_obj);
+		size_t num_warns = json_object_array_length(warnings_obj);
 		for (int i = 0; i < num_warns; i++) {
 			json_object* current_obj = json_object_array_get_idx(warnings_obj,
 					i);
@@ -394,7 +394,7 @@ d_err_t docker_volumes_delete_unused(docker_context* ctx,
 			json_object_object_get_ex(response_obj, "VolumesDeleted",
 					&vols_obj);
 			if (vols_obj) {
-				int vols_len = json_object_array_length(vols_obj);
+				size_t vols_len = json_object_array_length(vols_obj);
 				for (int i = 0; i < vols_len; i++) {
 					arraylist_add(vols_del,
 							str_clone(

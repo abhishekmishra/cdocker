@@ -19,6 +19,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "docker_util.h"
 #include <docker_log.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -90,7 +91,7 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 {
 	char* url = create_service_url_id_method(IMAGE, NULL, "json");
 
-	struct arraylist* params;
+	arraylist* params;
 	arraylist_new(&params, (void (*)(void *)) &free_url_param);
 
 	url_param* p;
@@ -135,9 +136,9 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
 
 	arraylist_new(images, (void (*)(void *)) &free_docker_image);
-	int num_imgs = json_object_array_length(response_obj);
+	size_t num_imgs = json_object_array_length(response_obj);
 
-	for (int i = 0; i < num_imgs; i++)
+	for (size_t i = 0; i < num_imgs; i++)
 	{
 		json_object* current_obj = json_object_array_get_idx(response_obj, i);
 		docker_image* img;
@@ -165,8 +166,8 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 		json_object_object_get_ex(current_obj, "RepoTags", &repo_tags_obj);
 		if (repo_tags_obj != NULL)
 		{
-			int num_repo_tags = json_object_array_length(repo_tags_obj);
-			for (int j = 0; j < num_repo_tags; j++)
+			size_t num_repo_tags = json_object_array_length(repo_tags_obj);
+			for (size_t j = 0; j < num_repo_tags; j++)
 			{
 				arraylist_add(img->repo_tags,
 						(char*) json_object_get_string(
@@ -178,8 +179,8 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 				&repo_digests_obj);
 		if (repo_digests_obj != NULL)
 		{
-			int num_repo_digests = json_object_array_length(repo_digests_obj);
-			for (int j = 0; j < num_repo_digests; j++)
+			size_t num_repo_digests = json_object_array_length(repo_digests_obj);
+			for (size_t j = 0; j < num_repo_digests; j++)
 			{
 				arraylist_add(img->repo_digests,
 						(char*) json_object_get_string(
@@ -347,8 +348,8 @@ arraylist* list_dir(char* folder_path)
 			{
 //				printf("/\n");
 				arraylist* sub_dir_ls = list_dir(sub_dir_path);
-				int ls_count = arraylist_length(sub_dir_ls);
-				for (int i = 0; i < ls_count; i++)
+				size_t ls_count = arraylist_length(sub_dir_ls);
+				for (size_t i = 0; i < ls_count; i++)
 				{
 					arraylist_add(paths,
 							str_clone(arraylist_get(sub_dir_ls, i)));
@@ -420,7 +421,6 @@ d_err_t docker_image_build_cb(docker_context* ctx, docker_result** result,
 
 	arraylist* params;
 	arraylist_new(&params, (void (*)(void *)) &free_url_param);
-	url_param* p;
 
 	//Get folder and dockerfile name
 	if (folder != NULL)
@@ -453,8 +453,8 @@ d_err_t docker_image_build_cb(docker_context* ctx, docker_result** result,
 	archive_write_set_format_pax_restricted(a); // Note 1
 	archive_write_open_memory(a, out_buf, out_buf_len, &archive_size);
 	arraylist* sub_dir_ls = list_dir(folder_path);
-	int ls_count = arraylist_length(sub_dir_ls);
-	for (int i = 0; i < ls_count; i++)
+	size_t ls_count = arraylist_length(sub_dir_ls);
+	for (size_t i = 0; i < ls_count; i++)
 	{
 		char* filename = arraylist_get(sub_dir_ls, i);
 //		printf("%s\n", filename);

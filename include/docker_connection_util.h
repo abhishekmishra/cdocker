@@ -114,7 +114,7 @@ MODULE_API d_err_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 struct http_response_memory {
 	char *memory;
 	size_t size;
-	int flush_end;
+	size_t flush_end;
 	void (*status_callback)(char* msg, void* cbargs, void* client_cbargs);
 	void* cbargs;
 	void* client_cbargs;

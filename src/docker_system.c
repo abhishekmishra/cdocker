@@ -44,7 +44,9 @@
  */
 d_err_t docker_ping(docker_context* ctx, docker_result** result) {
 	char* url = create_service_url_id_method(SYSTEM, NULL, "_ping");
-
+	if(url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
@@ -57,6 +59,7 @@ d_err_t docker_ping(docker_context* ctx, docker_result** result) {
 	if (chunk.memory != NULL) {
 		free(chunk.memory);
 	}
+	free(url);
 	return E_SUCCESS;
 }
 
@@ -108,6 +111,9 @@ void free_docker_version(docker_version*dv) {
 d_err_t docker_system_version(docker_context* ctx, docker_result** result,
 		docker_version** version) {
 	char* url = create_service_url_id_method(SYSTEM, NULL, "version");
+	if(url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 
 	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
@@ -130,6 +136,7 @@ d_err_t docker_system_version(docker_context* ctx, docker_result** result,
 	if (chunk.memory != NULL) {
 		free(chunk.memory);
 	}
+	free(url);
 	return E_SUCCESS;
 }
 

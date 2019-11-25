@@ -702,9 +702,9 @@ char* create_service_url_id_method(docker_object_type object, const char* id,
 	{
 		if (id)
 		{
-			url = (char*)malloc(
-				(strlen(object_url) + strlen(id) + strlen(method) + 3)
-				* sizeof(char));
+			url = (char*)calloc(
+				(strlen(object_url) + strlen(id) + strlen(method) + 3),
+				sizeof(char));
 			if (url != NULL) {
 				sprintf(url, "%s/%s/%s", object_url, id, method);
 				docker_log_debug("%s url is %s", method, url);
@@ -712,8 +712,8 @@ char* create_service_url_id_method(docker_object_type object, const char* id,
 		}
 		else if (method)
 		{
-			url = (char*)malloc(
-				(strlen(object_url) + strlen(method) + 3) * sizeof(char));
+			url = (char*)calloc(
+				(strlen(object_url) + strlen(method) + 3), sizeof(char));
 			if (url != NULL) {
 				sprintf(url, "%s/%s", object_url, method);
 				docker_log_debug("%s url is %s", method, url);
@@ -721,7 +721,7 @@ char* create_service_url_id_method(docker_object_type object, const char* id,
 		}
 		else
 		{
-			url = (char*)malloc((strlen(object_url) + 1) * sizeof(char));
+			url = (char*)calloc((strlen(object_url) + 1), sizeof(char));
 			if (url != NULL) {
 				sprintf(url, "%s", object_url);
 				docker_log_debug("url is %s", url);
@@ -731,7 +731,7 @@ char* create_service_url_id_method(docker_object_type object, const char* id,
 	else
 	{
 		//when there is no object ignore both object and id
-		url = (char*)malloc((strlen(method) + 1) * sizeof(char));
+		url = (char*)calloc((strlen(method) + 1), sizeof(char));
 		if (url != NULL) {
 			sprintf(url, "%s", method);
 			docker_log_debug("%s url is %s", method, url);

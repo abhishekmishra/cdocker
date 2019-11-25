@@ -126,6 +126,7 @@ d_err_t docker_system_version(docker_context* ctx, docker_result** result,
 				get_attr_boolean(response_obj, "Experimental"));
 	}
 
+	json_object_put(response_obj);
 	if (chunk.memory != NULL) {
 		free(chunk.memory);
 	}

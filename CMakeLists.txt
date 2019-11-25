@@ -68,36 +68,39 @@ if (ENABLE_LUA)
   endif (LUA_FOUND)
 endif (ENABLE_LUA)
 
-if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-	message(STATUS ">>> Linux, using pkg-config since vcpkg is broken")
-	find_package(PkgConfig REQUIRED)
-	pkg_check_modules(json-c REQUIRED IMPORTED_TARGET json-c)
-	pkg_check_modules(curl REQUIRED IMPORTED_TARGET libcurl)
-	pkg_check_modules(archive REQUIRED IMPORTED_TARGET libarchive)
-endif()
+#if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+#	message(STATUS ">>> Linux, using pkg-config since vcpkg is broken")
+#	find_package(PkgConfig REQUIRED)
+#	pkg_check_modules(json-c REQUIRED IMPORTED_TARGET json-c)
+#	pkg_check_modules(curl REQUIRED IMPORTED_TARGET libcurl)
+#	pkg_check_modules(archive REQUIRED IMPORTED_TARGET libarchive)
+#endif()
 
 add_library ( ${PROJECT_NAME} ${CLIBDOCKER_SOURCES} )
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 11)
 
-if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-	target_link_libraries(${PROJECT_NAME} PUBLIC json-c)
-	target_link_libraries(${PROJECT_NAME} PUBLIC curl)
-	target_link_libraries(${PROJECT_NAME} PUBLIC archive)
-else()
-	find_package(json-c CONFIG REQUIRED)
-	target_link_libraries(${PROJECT_NAME} PUBLIC json-c::json-c)
+#if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+#	target_link_libraries(${PROJECT_NAME} PUBLIC json-c)
+#	target_link_libraries(${PROJECT_NAME} PUBLIC curl)
+#	target_link_libraries(${PROJECT_NAME} PUBLIC archive)
+#else()
+find_package(json-c CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC json-c::json-c)
 
-	find_package(CURL CONFIG REQUIRED)
-	target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
+find_package(CURL CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
 
-	# To find and use libarchive, as the vcpkg build does not have cmake config
-	find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
-	find_library(LIBARCHIVE_LIBRARY archive)
-	include_directories(${LIBARCHIVE_INCLUDE_DIR})
-	target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBARCHIVE_LIBRARY})
-endif()
+# To find and use libarchive, as the vcpkg build does not have cmake config
+# See https://github.com/microsoft/vcpkg/issues/8839#issuecomment-558066466
+# for additional lookup to ZLIB
+find_package(ZLIB REQUIRED)
+find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
+find_library(LIBARCHIVE_LIBRARY archive)
+include_directories(${LIBARCHIVE_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBARCHIVE_LIBRARY} ZLIB::ZLIB)
+#endif()
 set(CMAKE_FIND_USE_PACKAGE_REGISTRY ON)
 
 find_package(coll CONFIG REQUIRED)
@@ -120,20 +123,6 @@ if (ENABLE_TESTS)
 		target_include_directories(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_INCLUDE_DIR})
 		target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_LIBRARIES})
 	endif()
-
-	#  find_package(json-c CONFIG REQUIRED)
-	#  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC json-c::json-c)
-
-	#  find_package(CURL REQUIRED)
-	#  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC CURL::libcurl)
-
-  # To find and use libarchive, as the vcpkg build does not have cmake config
-  #  find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
-  #  find_library(LIBARCHIVE_LIBRARY archive)
-  #  include_directories(${LIBARCHIVE_INCLUDE_DIR})
-  #  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC ${LIBARCHIVE_LIBRARY})
-
-  #link_libraries(${LIBARCHIVE_LIBRARY})
 
   target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC ${PROJECT_NAME})
   add_test( all_docker_tests ${CLIBDOCKER_TEST_PROGRAM_NAME} )

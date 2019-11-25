@@ -48,6 +48,8 @@ MODULE_API bool is_http_url(char* url);
 
 MODULE_API bool is_unix_socket(char* url);
 
+MODULE_API bool is_npipe(char* url);
+
 typedef enum {
 	CONTAINER = 1, IMAGE = 2, SYSTEM = 3, NETWORK = 4, VOLUME = 5
 } docker_object_type;
@@ -56,7 +58,6 @@ typedef enum {
  * A docker context for a specific docker server.
  */
 typedef struct docker_context {
-	char* socket;
 	char* url;
 	char* api_version;
 } docker_context;
@@ -68,14 +69,6 @@ typedef struct docker_context {
  * be safely freed by the calling program.
  */
 MODULE_API d_err_t make_docker_context_url(docker_context** ctx, const char* url);
-
-/**
- * Create a new docker context with the given socket.
- *
- * The method makes a copy of the given string for use, so that it can
- * be safely freed by the calling program.
- */
-MODULE_API d_err_t make_docker_context_socket(docker_context** ctx, const char* socket);
 
 /**
  * Connect to the default local docker.

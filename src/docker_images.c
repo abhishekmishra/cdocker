@@ -36,7 +36,7 @@ d_err_t make_docker_image(docker_image** image, char* id, char* parent_id,
 		time_t created, unsigned long size, unsigned long virtual_size,
 		unsigned long shared_size, unsigned long containers)
 {
-	(*image) = (docker_image*) malloc(sizeof(docker_image));
+	(*image) = (docker_image*) calloc(1, sizeof(docker_image));
 	if ((*image) == NULL)
 	{
 		return E_ALLOC_FAILED;
@@ -90,6 +90,9 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 		char* filter_since)
 {
 	char* url = create_service_url_id_method(IMAGE, NULL, "json");
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 
 	arraylist* params;
 	arraylist_new(&params, (void (*)(void *)) &free_url_param);
@@ -191,6 +194,10 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 		arraylist_add((*images), img);
 	}
 
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -200,7 +207,6 @@ void parse_status_cb(char* msg, void* cb, void* cbargs)
 			void*) = (void (*)(docker_image_create_status*, void*))cb;
 	if (msg)
 	{
-//		printf("%s\n", msg);
 		if(status_cb)
 		{
 			json_object* response_obj = json_tokener_parse(msg);
@@ -216,27 +222,28 @@ void parse_status_cb(char* msg, void* cb, void* cbargs)
 				char* progress = get_attr_str(response_obj, "progress");
 
 				docker_image_create_status* status = (docker_image_create_status*)calloc(1, sizeof(docker_image_create_status));
-				if(status != NULL)
+				if (status != NULL)
 				{
 					status->status = status_msg;
 					status->id = id;
 					status->progress = progress;
-				}
 
-				json_object* progress_detail_obj;
-				if (json_object_object_get_ex(response_obj, "progressDetail", &progress_detail_obj) == 1)
-				{
-					long current = get_attr_long(progress_detail_obj, "current");
-					long total = get_attr_long(progress_detail_obj, "total");
-					docker_progress_detail* progress_detail = (docker_progress_detail*)calloc(1, sizeof(docker_progress_detail));
-					if(progress_detail != NULL)
+
+					json_object* progress_detail_obj;
+					if (json_object_object_get_ex(response_obj, "progressDetail", &progress_detail_obj) == 1)
 					{
-						progress_detail->current = current;
-						progress_detail->total = total;
-						status->progress_detail = progress_detail;
+						long current = get_attr_long(progress_detail_obj, "current");
+						long total = get_attr_long(progress_detail_obj, "total");
+						docker_progress_detail* progress_detail = (docker_progress_detail*)calloc(1, sizeof(docker_progress_detail));
+						if (progress_detail != NULL)
+						{
+							progress_detail->current = current;
+							progress_detail->total = total;
+							status->progress_detail = progress_detail;
+						}
 					}
+					status_cb(status, cbargs);
 				}
-				status_cb(status, cbargs);
 			}
 		}
 		else
@@ -291,6 +298,9 @@ d_err_t docker_image_create_from_image_cb(docker_context* ctx,
 	}
 
 	char* url = create_service_url_id_method(IMAGE, NULL, "create");
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 
 	arraylist* params;
 	arraylist_new(&params, (void (*)(void*)) & free_url_param);
@@ -319,6 +329,10 @@ d_err_t docker_image_create_from_image_cb(docker_context* ctx,
 		return E_UNKNOWN_ERROR;
 	}
 
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 

@@ -84,7 +84,7 @@ bool is_npipe(char* url)
 
 d_err_t make_url_param(url_param** p, char* key, char* value)
 {
-	(*p) = (url_param*)malloc(sizeof(url_param));
+	(*p) = (url_param*)calloc(1, sizeof(url_param));
 	if (!(*p))
 	{
 		return E_ALLOC_FAILED;
@@ -125,7 +125,6 @@ d_err_t make_docker_context_url(docker_context** ctx, const char* url)
 	}
 	strcpy(u, url);
 	(*ctx)->url = u;
-	//	(*ctx)->socket = NULL;
 	(*ctx)->api_version = DOCKER_API_VERSION_1_39;
 	return E_SUCCESS;
 }
@@ -146,16 +145,12 @@ d_err_t free_docker_context(docker_context** ctx)
 {
 	if ((*ctx))
 	{
-		//if ((*ctx)->socket)
-		//{
-		//	free((*ctx)->socket);
-		//}
 		if ((*ctx)->url)
 		{
 			free((*ctx)->url);
 		}
+		free((*ctx));
 	}
-	free((*ctx));
 	return E_SUCCESS;
 }
 
@@ -175,41 +170,56 @@ char* build_url(CURL* curl, char* base_url, arraylist* url_params)
 		else
 		{
 			size_t size_toalloc = strlen(base_url) + 1;
-			char** allkeys = (char**)malloc(num_params * sizeof(char*));
-			char** allvals = (char**)malloc(num_params * sizeof(char*));
-			for (int i = 0; i < num_params; i++)
-			{
-				url_param* param = (url_param*)arraylist_get(url_params,
-					i);
-				docker_log_debug("%s=%s\n", param->k, param->v);
-				allkeys[i] = curl_easy_escape(curl, param->k, 0);
-				allvals[i] = curl_easy_escape(curl, param->v, 0);
-			}
-			for (int i = 0; i < num_params; i++)
-			{
-				size_toalloc += strlen(allkeys[i]);
-				size_toalloc += strlen(allvals[i]);
-				size_toalloc += 2; //for ampersand and equals
-			}
-			char* url = (char*)malloc(sizeof(char) * size_toalloc);
-			url[0] = '\0';
-			strcat(url, base_url);
-			if (num_params > 0)
-			{
-				strcat(url, "?");
+			char** allkeys = (char**)calloc(num_params, sizeof(char*));
+			char** allvals = (char**)calloc(num_params, sizeof(char*));
+			if (allkeys != NULL && allvals != NULL) {
 				for (int i = 0; i < num_params; i++)
 				{
-					if (i > 0)
-					{
-						strcat(url, "&");
-					}
-					strcat(url, allkeys[i]);
-					strcat(url, "=");
-					strcat(url, allvals[i]);
+					url_param* param = (url_param*)arraylist_get(url_params,
+						i);
+					docker_log_debug("%s=%s\n", param->k, param->v);
+					allkeys[i] = curl_easy_escape(curl, param->k, 0);
+					allvals[i] = curl_easy_escape(curl, param->v, 0);
 				}
+				for (int i = 0; i < num_params; i++)
+				{
+					size_toalloc += strlen(allkeys[i]);
+					size_toalloc += strlen(allvals[i]);
+					size_toalloc += 2; //for ampersand and equals
+				}
+				char* url = (char*)calloc(size_toalloc, sizeof(char));
+				if (url != NULL) {
+					url[0] = '\0';
+					strcat(url, base_url);
+					if (num_params > 0)
+					{
+						strcat(url, "?");
+						for (int i = 0; i < num_params; i++)
+						{
+							if (i > 0)
+							{
+								strcat(url, "&");
+							}
+							strcat(url, allkeys[i]);
+							strcat(url, "=");
+							strcat(url, allvals[i]);
+						}
+					}
+
+					for (int i = 0; i < num_params; i++)
+					{
+						free(allkeys[i]);
+						free(allvals[i]);
+					}
+					free(allkeys);
+					free(allvals);
+
+					docker_log_debug("URL Created:\n%s", url);
+					return url;
+				}
+				return NULL;
 			}
-			docker_log_debug("URL Created:\n%s", url);
-			return url;
+			return NULL;
 		}
 	}
 }
@@ -234,9 +244,9 @@ static size_t write_memory_callback(void* contents, size_t size, size_t nmemb,
 	mem->memory[mem->size] = 0;
 	//	docker_log_debug("MEMORY-------\n%s\n", mem->memory);
 
-		/** if callback is not null, and current memory contents end with a newline,
-		 * then flush it to the callback, and empty the memory contents.
-		 */
+	/** if callback is not null, and current memory contents end with a newline,
+	* then flush it to the callback, and empty the memory contents.
+	*/
 	if (mem->status_callback != NULL && mem->memory)
 	{
 		char* flush_str = mem->memory + (mem->flush_end * sizeof(char));
@@ -264,6 +274,7 @@ d_err_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 				strcpy(base_url, local_url);
 				strcat(base_url, api_url);
 				char* url = build_url(curl, base_url, url_params);
+				free(base_url);
 				curl_easy_setopt(curl, CURLOPT_URL, url);
 				return E_SUCCESS;
 			}
@@ -279,6 +290,7 @@ d_err_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 				strcpy(base_url, ctx->url);
 				strcat(base_url, api_url);
 				char* url = build_url(curl, base_url, url_params);
+				free(base_url);
 				curl_easy_setopt(curl, CURLOPT_URL, url);
 				return E_SUCCESS;
 			}
@@ -693,29 +705,37 @@ char* create_service_url_id_method(docker_object_type object, const char* id,
 			url = (char*)malloc(
 				(strlen(object_url) + strlen(id) + strlen(method) + 3)
 				* sizeof(char));
-			sprintf(url, "%s/%s/%s", object_url, id, method);
-			docker_log_debug("%s url is %s", method, url);
+			if (url != NULL) {
+				sprintf(url, "%s/%s/%s", object_url, id, method);
+				docker_log_debug("%s url is %s", method, url);
+			}
 		}
 		else if (method)
 		{
 			url = (char*)malloc(
 				(strlen(object_url) + strlen(method) + 3) * sizeof(char));
-			sprintf(url, "%s/%s", object_url, method);
-			docker_log_debug("%s url is %s", method, url);
+			if (url != NULL) {
+				sprintf(url, "%s/%s", object_url, method);
+				docker_log_debug("%s url is %s", method, url);
+			}
 		}
 		else
 		{
 			url = (char*)malloc((strlen(object_url) + 1) * sizeof(char));
-			sprintf(url, "%s", object_url);
-			docker_log_debug("url is %s", url);
+			if (url != NULL) {
+				sprintf(url, "%s", object_url);
+				docker_log_debug("url is %s", url);
+			}
 		}
 	}
 	else
 	{
 		//when there is no object ignore both object and id
 		url = (char*)malloc((strlen(method) + 1) * sizeof(char));
-		sprintf(url, "%s", method);
-		docker_log_debug("%s url is %s", method, url);
+		if (url != NULL) {
+			sprintf(url, "%s", method);
+			docker_log_debug("%s url is %s", method, url);
+		}
 	}
 	return url;
 }

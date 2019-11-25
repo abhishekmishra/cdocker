@@ -33,36 +33,38 @@
 #include <string.h>
 #include "docker_result.h"
 
-/**
- * Utility method to create docker result, should be used by all API
- * implementations to create the result object to return.
- *
- * Makes a defensive copy of all provided data so that they can be
- * freed after creation of the result.
- */
+ /**
+  * Utility method to create docker result, should be used by all API
+  * implementations to create the result object to return.
+  *
+  * Makes a defensive copy of all provided data so that they can be
+  * freed after creation of the result.
+  */
 d_err_t make_docker_result(docker_result** result, d_err_t error_code,
-		long http_error_code, const char* url, const char* message) {
-	(*result) = (docker_result*) malloc(sizeof(docker_result));
+	long http_error_code, const char* url, const char* message) {
+	(*result) = (docker_result*)calloc(1, sizeof(docker_result));
 	if ((*result) == NULL) {
 		return E_ALLOC_FAILED;
 	}
 	(*result)->error_code = error_code;
 	(*result)->http_error_code = http_error_code;
 	if (message) {
-		(*result)->message = (char*) malloc(
-				sizeof(char) * (strlen(message) + 1));
+		(*result)->message = (char*)calloc((strlen(message) + 1),
+			sizeof(char));
 		if ((*result)->message != NULL) {
 			strcpy((*result)->message, message);
 		}
-	} else {
+	}
+	else {
 		(*result)->message = NULL;
 	}
 	if (url) {
-		(*result)->url = (char*) malloc(sizeof(char) * (strlen(url) + 1));
+		(*result)->url = (char*)calloc((strlen(url) + 1), sizeof(char));
 		if ((*result)->url != NULL) {
 			strcpy((*result)->url, url);
 		}
-	} else {
+	}
+	else {
 		(*result)->url = NULL;
 	}
 	(*result)->method = NULL;
@@ -109,11 +111,10 @@ int is_ok(docker_result* result) {
 void docker_simple_error_handler_print(docker_result* res) {
 	printf("DOCKER_RESULT: For URL: %s\n", res->url);
 	printf("DOCKER RESULT: Response error_code = %d, http_response = %ld\n",
-			res->error_code, res->http_error_code);
+		res->error_code, res->http_error_code);
 	if (!is_ok(res)) {
 		printf("DOCKER RESULT: %s\n", res->message);
 	}
-	//free_docker_result(&res);
 }
 
 /**
@@ -123,10 +124,9 @@ void docker_simple_error_handler_print(docker_result* res) {
 void docker_simple_error_handler_log(docker_result* res) {
 	docker_log_debug("DOCKER_RESULT: For URL: %s", res->url);
 	docker_log_debug(
-			"DOCKER RESULT: Response error_code = %d, http_response = %ld",
-			res->error_code, res->http_error_code);
+		"DOCKER RESULT: Response error_code = %d, http_response = %ld",
+		res->error_code, res->http_error_code);
 	if (!is_ok(res)) {
 		docker_log_error("DOCKER RESULT: %s", res->message);
 	}
-	//free_docker_result(&res);
 }

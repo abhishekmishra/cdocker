@@ -24,7 +24,7 @@
 
 d_err_t make_docker_network_ipam_config(docker_network_ipam_config** config,
 		char* subnet, char* gateway) {
-	(*config) = (docker_network_ipam_config*) malloc(
+	(*config) = (docker_network_ipam_config*) calloc(1, 
 			sizeof(docker_network_ipam_config*));
 	if ((*config) == NULL) {
 		return E_ALLOC_FAILED;
@@ -41,7 +41,7 @@ void free_docker_network_ipam_config(docker_network_ipam_config* config) {
 }
 
 d_err_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver) {
-	(*ipam) = (docker_network_ipam*) malloc(sizeof(docker_network_ipam));
+	(*ipam) = (docker_network_ipam*) calloc(1, sizeof(docker_network_ipam));
 	if ((*ipam) == NULL) {
 		return E_ALLOC_FAILED;
 	}
@@ -62,7 +62,7 @@ void free_docker_network_ipam(docker_network_ipam* ipam) {
 d_err_t make_docker_network_container(docker_network_container** container,
 		char* id, char* name, char* endpoint_id, char* mac_address,
 		char* ipv4_address, char* ipv6_address) {
-	(*container) = (docker_network_container*) malloc(
+	(*container) = (docker_network_container*) calloc(1, 
 			sizeof(docker_network_container));
 	if ((*container) == NULL) {
 		return E_ALLOC_FAILED;
@@ -89,7 +89,7 @@ void free_docker_network_container(docker_network_container* container) {
 d_err_t make_docker_network(docker_network** network, char* name, char* id,
 		time_t created, char* scope, char* driver, int enableIPv6,
 		docker_network_ipam* ipam, int internal, int attachable, int ingress) {
-	(*network) = (docker_network*) malloc(sizeof(docker_network));
+	(*network) = (docker_network*) calloc(1, sizeof(docker_network));
 	if ((*network) == NULL) {
 		return E_ALLOC_FAILED;
 	}
@@ -133,6 +133,9 @@ d_err_t docker_networks_list(docker_context* ctx, docker_result** result,
 		char* filter_label, char* filter_name, char* filter_scope,
 		char* filter_type) {
 	char* url = create_service_url_id_method(NETWORK, NULL, "");
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 
 	arraylist* params;
 	arraylist_new(&params, 
@@ -248,6 +251,9 @@ d_err_t docker_networks_list(docker_context* ctx, docker_result** result,
 		arraylist_add((*networks), ni);
 	}
 
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	arraylist_free(params);
 	return E_SUCCESS;
 }
@@ -371,6 +377,9 @@ d_err_t docker_network_inspect(docker_context* ctx, docker_result** result,
 		(*net) = ni;
 	}
 
-	free(params);
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }

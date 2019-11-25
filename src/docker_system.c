@@ -54,6 +54,9 @@ d_err_t docker_ping(docker_context* ctx, docker_result** result) {
 		return E_PING_FAILED;
 	}
 
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -64,7 +67,7 @@ d_err_t make_docker_version(docker_version** dv, char* version, char* os,
 		char* kernel_version, char* go_version, char* git_commit, char* arch,
 		char* api_version, char* min_api_version, char* build_time,
 		int experimental) {
-	(*dv) = (docker_version*) malloc(sizeof(docker_version));
+	(*dv) = (docker_version*) calloc(1, sizeof(docker_version));
 	if (!(*dv)) {
 		return E_ALLOC_FAILED;
 	}
@@ -123,14 +126,16 @@ d_err_t docker_system_version(docker_context* ctx, docker_result** result,
 				get_attr_boolean(response_obj, "Experimental"));
 	}
 
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
-
 }
 
 d_err_t make_docker_info(docker_info** info, unsigned long containers,
 		unsigned long containers_running, unsigned long containers_paused,
 		unsigned long containers_stopped, unsigned long images) {
-	(*info) = (docker_info*) malloc(sizeof(docker_info));
+	(*info) = (docker_info*) calloc(1, sizeof(docker_info));
 	if (!(*info)) {
 		return E_ALLOC_FAILED;
 	}
@@ -175,13 +180,15 @@ d_err_t docker_system_info(docker_context* ctx, docker_result** result,
 		(*info)->memtotal = get_attr_unsigned_long(response_obj, "MemTotal");
 	}
 
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
-
 }
 
 d_err_t make_docker_event(docker_event** event, char* type, char* action,
 		char* actor_id, json_object* actor_attributes, time_t time) {
-	(*event) = (docker_event*) malloc(sizeof(docker_event));
+	(*event) = (docker_event*) calloc(1, sizeof(docker_event));
 	if (!(*event)) {
 		return E_ALLOC_FAILED;
 	}
@@ -336,6 +343,8 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 		}
 	}
 
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
-
 }

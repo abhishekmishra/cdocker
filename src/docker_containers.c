@@ -18,18 +18,18 @@
 #include <string.h>
 #include "docker_connection_util.h"
 
-/**
- * Create a docker_container_ports instance.
- *
- * \param ports the instance to create.
- * \param priv the private port
- * \param pub the public port
- * \param type port type
- * \return error code
- */
+ /**
+  * Create a docker_container_ports instance.
+  *
+  * \param ports the instance to create.
+  * \param priv the private port
+  * \param pub the public port
+  * \param type port type
+  * \return error code
+  */
 d_err_t make_docker_container_ports(docker_container_ports** ports, long priv,
 	long pub, char* type) {
-	(*ports) = (docker_container_ports*)malloc(sizeof(docker_container_ports));
+	(*ports) = (docker_container_ports*)calloc(1, sizeof(docker_container_ports));
 	if (!(*ports)) {
 		return E_ALLOC_FAILED;
 	}
@@ -55,7 +55,7 @@ void free_docker_container_ports(docker_container_ports* ports) {
  */
 d_err_t make_docker_container_label(docker_container_label** label,
 	const char* key, const char* value) {
-	(*label) = (docker_container_label*)malloc(sizeof(docker_container_label));
+	(*label) = (docker_container_label*)calloc(1, sizeof(docker_container_label));
 	if (!(*label)) {
 		return E_ALLOC_FAILED;
 	}
@@ -84,7 +84,7 @@ void free_docker_container_label(docker_container_label* label) {
  */
 d_err_t make_docker_container_host_config(
 	docker_container_host_config** host_config, const char* network_mode) {
-	(*host_config) = (docker_container_host_config*)malloc(
+	(*host_config) = (docker_container_host_config*)calloc(1,
 		sizeof(docker_container_host_config));
 	if (!(*host_config)) {
 		return E_ALLOC_FAILED;
@@ -108,8 +108,11 @@ d_err_t make_docker_container_network_settings_item(
 	const char* ip_address, int ip_prefix_len, const char* ipv6_gateway,
 	const char* global_ipv6_address, int global_ipv6_prefix_len,
 	const char* mac_address) {
-	(*item) = (docker_container_network_settings_item*)malloc(
+	(*item) = (docker_container_network_settings_item*)calloc(1,
 		sizeof(docker_container_network_settings_item));
+	if ((*item) == NULL) {
+		return E_ALLOC_FAILED;
+	}
 	docker_container_network_settings_item* si = (*item);
 	si->name = str_clone(name);
 	si->network_id = str_clone(network_id);
@@ -144,7 +147,10 @@ d_err_t make_docker_container_mount(docker_container_mount** mount,
 	const char* name, const char* type, const char* source,
 	const char* destination, const char* driver, const char* mode,
 	const int rw, const char* propagation) {
-	(*mount) = (docker_container_mount*)malloc(sizeof(docker_container_mount));
+	(*mount) = (docker_container_mount*)calloc(1, sizeof(docker_container_mount));
+	if (*mount == NULL) {
+		return E_ALLOC_FAILED;
+	}
 	docker_container_mount* m = (*mount);
 	m->name = str_clone(name);
 	m->type = str_clone(type);
@@ -177,8 +183,11 @@ d_err_t make_docker_containers_list_item(docker_container_list_item** item,
 	const char* status, const long long size_rw,
 	const long long size_root_fs,
 	const docker_container_host_config* hostConfig) {
-	(*item) = (docker_container_list_item*)malloc(
+	(*item) = (docker_container_list_item*)calloc(1,
 		sizeof(docker_container_list_item));
+	if (*item == NULL) {
+		return E_ALLOC_FAILED;
+	}
 	docker_container_list_item* li = (*item);
 
 	li->id = str_clone(id);
@@ -277,8 +286,11 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 	...) {
 	char* method = "json";
 	char* containers = "containers/";
-	char* url = (char*)malloc(
-		(strlen(containers) + strlen(method) + 1) * sizeof(char));
+	char* url = (char*)calloc(
+		(strlen(containers) + strlen(method) + 1), sizeof(char));
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 	sprintf(url, "%s%s", containers, method);
 	docker_log_debug("List url is %s\n", url);
 
@@ -445,47 +457,58 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 		docker_containers_list_add(clist, listItem);
 	}
 
+	//Free url, params list, chunk memory
 	free(url);
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
+
 }
 
 d_err_t make_docker_create_container_params(
 	docker_create_container_params** params) {
 	docker_create_container_params* p =
-		(docker_create_container_params*)malloc(
+		(docker_create_container_params*)calloc(1,
 			sizeof(docker_create_container_params));
-	p->hostname = NULL;
-	p->domainname = NULL;
-	p->user = NULL;
-	p->attach_stdin = -1;
-	p->attach_stdout = -1;
-	p->attach_stderr = -1;
-	p->exposed_ports = NULL;
-	p->tty = -1;
-	p->open_stdin = -1;
-	p->stdin_once = -1;
-	p->env = NULL;
-	p->num_env = -1;
-	p->cmd = NULL;
-	p->num_cmd = -1;
-	p->health_check = NULL;
-	p->args_escaped = -1;
-	p->image = NULL;
-	p->volumes = NULL;
-	p->working_dir = NULL;
-	p->entrypoint = NULL;
-	p->network_disabled = -1;
-	p->mac_address = NULL;
-	p->on_build = NULL;
-	p->num_on_build = -1;
-	p->labels = NULL;
-	p->stop_signal = NULL;
-	p->stop_timeout = -1;
-	p->shell = NULL;
-	p->host_config = NULL;
-	p->network_config = NULL;
-	(*params) = p;
-	return E_SUCCESS;
+	if (p != NULL) {
+		p->hostname = NULL;
+		p->domainname = NULL;
+		p->user = NULL;
+		p->attach_stdin = -1;
+		p->attach_stdout = -1;
+		p->attach_stderr = -1;
+		p->exposed_ports = NULL;
+		p->tty = -1;
+		p->open_stdin = -1;
+		p->stdin_once = -1;
+		p->env = NULL;
+		p->num_env = -1;
+		p->cmd = NULL;
+		p->num_cmd = -1;
+		p->health_check = NULL;
+		p->args_escaped = -1;
+		p->image = NULL;
+		p->volumes = NULL;
+		p->working_dir = NULL;
+		p->entrypoint = NULL;
+		p->network_disabled = -1;
+		p->mac_address = NULL;
+		p->on_build = NULL;
+		p->num_on_build = -1;
+		p->labels = NULL;
+		p->stop_signal = NULL;
+		p->stop_timeout = -1;
+		p->shell = NULL;
+		p->host_config = NULL;
+		p->network_config = NULL;
+		(*params) = p;
+		return E_SUCCESS;
+	}
+	else {
+		return E_ALLOC_FAILED;
+	}
 }
 
 d_err_t docker_create_container(docker_context* ctx, docker_result** result,
@@ -522,7 +545,11 @@ d_err_t docker_create_container(docker_context* ctx, docker_result** result,
 	else {
 		docker_log_debug("Id not found.");
 	}
-	free(chunk.memory);
+
+	//Free chunk memory
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -538,6 +565,9 @@ d_err_t docker_process_list_container(docker_context* ctx,
 	docker_result** result, docker_container_ps** ps, char* id,
 	char* process_args) {
 	char* url = create_service_url_id_method(CONTAINER, id, "top");
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 	docker_log_debug("Top url is %s", url);
 
 	json_object* response_obj = NULL;
@@ -584,7 +614,12 @@ d_err_t docker_process_list_container(docker_context* ctx,
 		json_object_object_get_ex(response_obj, "message", &msg_obj);
 		(*result)->message = (char*)json_object_to_json_string(msg_obj);
 	}
-	free(chunk.memory);
+
+	//Free url, chunk memory
+	free(url);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -608,9 +643,11 @@ d_err_t docker_container_logs(docker_context* ctx, docker_result** result,
 	long until, int timestamps, int tail) {
 	char* method = "/logs";
 	char* containers = "containers/";
-	char* url = (char*)malloc(
-		(strlen(containers) + strlen(id) + strlen(method) + 1)
-		* sizeof(char));
+	char* url = (char*)calloc(
+		(strlen(containers) + strlen(id) + strlen(method) + 1), sizeof(char));
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 	sprintf(url, "%s%s%s", containers, id, method);
 	docker_log_debug("Stdout url is %s", url);
 
@@ -661,7 +698,14 @@ d_err_t docker_container_logs(docker_context* ctx, docker_result** result,
 
 	free(params);
 
-	(*log) = chunk.memory + 8;
+	(*log) = str_clone(chunk.memory + 8);
+
+	//Free url, params list, chunk memory
+	free(url);
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -672,7 +716,7 @@ d_err_t docker_container_logs(docker_context* ctx, docker_result** result,
  */
 d_err_t make_docker_container_change(docker_container_change** item,
 	const char* path, const char* kind) {
-	(*item) = (docker_container_change*)malloc(
+	(*item) = (docker_container_change*)calloc(1,
 		sizeof(docker_container_change));
 	if (!(*item)) {
 		return E_ALLOC_FAILED;
@@ -732,6 +776,7 @@ size_t docker_changes_list_length(docker_changes_list* list) {
 d_err_t docker_container_changes(docker_context* ctx, docker_result** result,
 	docker_changes_list** changes, char* id) {
 	char* url = create_service_url_id_method(CONTAINER, id, "changes");
+	if (url == NULL) { return E_ALLOC_FAILED; }
 
 	json_object* response_obj = NULL;
 	struct http_response_memory chunk;
@@ -758,6 +803,12 @@ d_err_t docker_container_changes(docker_context* ctx, docker_result** result,
 
 		(*changes) = NULL;
 	}
+
+	//Free url, chunk memory
+	free(url);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -765,7 +816,7 @@ d_err_t docker_container_changes(docker_context* ctx, docker_result** result,
 
 d_err_t make_docker_container_pids_stats(
 	docker_container_pids_stats** pids_stats, int current) {
-	(*pids_stats) = (docker_container_pids_stats*)malloc(
+	(*pids_stats) = (docker_container_pids_stats*)calloc(1,
 		sizeof(docker_container_pids_stats));
 	if (!(*pids_stats)) {
 		return E_ALLOC_FAILED;
@@ -783,7 +834,7 @@ d_err_t make_docker_container_net_stats(docker_container_net_stats** net_stats,
 	unsigned long rx_errors, unsigned long rx_packets,
 	unsigned long tx_bytes, unsigned long tx_dropped,
 	unsigned long tx_errors, unsigned long tx_packets) {
-	(*net_stats) = (docker_container_net_stats*)malloc(
+	(*net_stats) = (docker_container_net_stats*)calloc(1,
 		sizeof(docker_container_net_stats));
 	if (!(*net_stats)) {
 		return E_ALLOC_FAILED;
@@ -808,7 +859,7 @@ void free_docker_container_net_stats(docker_container_net_stats* net_stats) {
 d_err_t make_docker_container_mem_stats(docker_container_mem_stats** mem_stats,
 	unsigned long max_usage, unsigned long usage, unsigned long failcnt,
 	unsigned long limit) {
-	(*mem_stats) = (docker_container_mem_stats*)malloc(
+	(*mem_stats) = (docker_container_mem_stats*)calloc(1,
 		sizeof(docker_container_mem_stats));
 	if (!(*mem_stats)) {
 		return E_ALLOC_FAILED;
@@ -828,7 +879,7 @@ d_err_t make_docker_container_cpu_stats(docker_container_cpu_stats** cpu_stats,
 	unsigned long total_usage, unsigned long usage_in_usermode,
 	unsigned long usage_in_kernelmode, unsigned long system_cpu_usage,
 	int online_cpus) {
-	(*cpu_stats) = (docker_container_cpu_stats*)malloc(
+	(*cpu_stats) = (docker_container_cpu_stats*)calloc(1,
 		sizeof(docker_container_cpu_stats));
 	if (!(*cpu_stats)) {
 		return E_ALLOC_FAILED;
@@ -852,7 +903,7 @@ d_err_t make_docker_container_stats(docker_container_stats** stats,
 	docker_container_mem_stats* mem_stats,
 	docker_container_cpu_stats* cpu_stats,
 	docker_container_cpu_stats* precpu_stats) {
-	(*stats) = (docker_container_stats*)malloc(sizeof(docker_container_stats));
+	(*stats) = (docker_container_stats*)calloc(1, sizeof(docker_container_stats));
 	if (!(*stats)) {
 		return E_ALLOC_FAILED;
 	}
@@ -904,14 +955,18 @@ void get_cpu_stats_for_name(json_object* response_obj, char* stats_obj_name,
 					percpu_usage_obj);
 				for (int i = 0; i < percpu_usage_len; i++) {
 					int64_t* pcpu_usg = calloc(1, sizeof(pcpu_usg));
-					*pcpu_usg = json_object_get_int64(
-						(json_object_array_get_idx(percpu_usage_obj, i)));
-					arraylist_add(cpu_stats->percpu_usage, pcpu_usg);
+					if (pcpu_usg != NULL) {
+						*pcpu_usg = json_object_get_int64(
+							(json_object_array_get_idx(percpu_usage_obj, i)));
+						arraylist_add(cpu_stats->percpu_usage, pcpu_usg);
+					}
 				}
 			}
 		}
 	}
-	(*cpu_stats_ret) = cpu_stats;
+	if (cpu_stats != NULL) {
+		(*cpu_stats_ret) = cpu_stats;
+	}
 }
 
 /**
@@ -930,6 +985,7 @@ d_err_t docker_container_get_stats(docker_context* ctx, docker_result** result,
 	}
 
 	char* url = create_service_url_id_method(CONTAINER, id, "stats");
+	if (url == NULL) { return E_ALLOC_FAILED; }
 	arraylist* params;
 	arraylist_new(&params,
 		(void (*)(void*)) & free_url_param);
@@ -1005,6 +1061,12 @@ d_err_t docker_container_get_stats(docker_context* ctx, docker_result** result,
 		}
 	}
 
+	//Free url, params list, chunk memory
+	free(url);
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -1098,6 +1160,9 @@ d_err_t docker_container_get_stats_cb(docker_context* ctx,
 	}
 
 	char* url = create_service_url_id_method(CONTAINER, id, "stats");
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 	arraylist* params;
 	arraylist_new(&params,
 		(void (*)(void*)) & free_url_param);
@@ -1110,6 +1175,12 @@ d_err_t docker_container_get_stats_cb(docker_context* ctx,
 	docker_api_get_cb(ctx, result, url, params, &chunk, &response_obj,
 		&parse_container_stats_cb, docker_container_stats_cb, cbargs);
 
+	//Free url, params list, chunk memory
+	free(url);
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -1142,7 +1213,9 @@ float docker_container_stats_get_cpu_usage_percent(
 d_err_t docker_start_container(docker_context* ctx, docker_result** result,
 	char* id, char* detachKeys) {
 	char* url = create_service_url_id_method(CONTAINER, id, "start");
-
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 	arraylist* params;
 	arraylist_new(&params,
 		(void (*)(void*)) & free_url_param);
@@ -1157,7 +1230,12 @@ d_err_t docker_start_container(docker_context* ctx, docker_result** result,
 	struct http_response_memory chunk;
 	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
 
-	free(params);
+	//Free url, params list, chunk memory
+	free(url);
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -1173,6 +1251,9 @@ d_err_t docker_start_container(docker_context* ctx, docker_result** result,
 d_err_t docker_stop_container(docker_context* ctx, docker_result** result,
 	char* id, int t) {
 	char* url = create_service_url_id_method(CONTAINER, id, "stop");
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 
 	arraylist* params;
 	arraylist_new(&params,
@@ -1180,7 +1261,10 @@ d_err_t docker_stop_container(docker_context* ctx, docker_result** result,
 	url_param* p;
 
 	if (t > 0) {
-		char* tstr = (char*)malloc(sizeof(char) * 128);
+		char* tstr = (char*)calloc(128, sizeof(char));
+		if (tstr == NULL) {
+			return E_ALLOC_FAILED;
+		}
 		sprintf(tstr, "%d", t);
 		make_url_param(&p, "t", tstr);
 		arraylist_add(params, p);
@@ -1199,7 +1283,12 @@ d_err_t docker_stop_container(docker_context* ctx, docker_result** result,
 		(*result)->message = str_clone("container not found.");
 	}
 
-	free(params);
+	//Free url, params list, chunk memory
+	free(url);
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -1215,6 +1304,9 @@ d_err_t docker_stop_container(docker_context* ctx, docker_result** result,
 d_err_t docker_restart_container(docker_context* ctx, docker_result** result,
 	char* id, int t) {
 	char* url = create_service_url_id_method(CONTAINER, id, "restart");
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 
 	arraylist* params;
 	arraylist_new(&params,
@@ -1222,7 +1314,10 @@ d_err_t docker_restart_container(docker_context* ctx, docker_result** result,
 	url_param* p;
 
 	if (t > 0) {
-		char* tstr = (char*)malloc(sizeof(char) * 128);
+		char* tstr = (char*)calloc(128, sizeof(char));
+		if (tstr == NULL) {
+			return E_ALLOC_FAILED;
+		}
 		sprintf(tstr, "%d", t);
 		make_url_param(&p, "t", tstr);
 		arraylist_add(params, p);
@@ -1236,7 +1331,12 @@ d_err_t docker_restart_container(docker_context* ctx, docker_result** result,
 		(*result)->message = str_clone("container not found.");
 	}
 
-	free(params);
+	//Free url, params list, chunk memory
+	free(url);
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -1252,6 +1352,9 @@ d_err_t docker_restart_container(docker_context* ctx, docker_result** result,
 d_err_t docker_kill_container(docker_context* ctx, docker_result** result,
 	char* id, char* signal) {
 	char* url = create_service_url_id_method(CONTAINER, id, "kill");
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 
 	arraylist* params;
 	arraylist_new(&params,
@@ -1275,7 +1378,12 @@ d_err_t docker_kill_container(docker_context* ctx, docker_result** result,
 		(*result)->message = str_clone("container is not running.");
 	}
 
-	free(params);
+	//Free url, params list, chunk memory
+	free(url);
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -1291,7 +1399,9 @@ d_err_t docker_kill_container(docker_context* ctx, docker_result** result,
 d_err_t docker_rename_container(docker_context* ctx, docker_result** result,
 	char* id, char* name) {
 	char* url = create_service_url_id_method(CONTAINER, id, "rename");
-
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 	arraylist* params;
 	arraylist_new(&params,
 		(void (*)(void*)) & free_url_param);
@@ -1314,7 +1424,12 @@ d_err_t docker_rename_container(docker_context* ctx, docker_result** result,
 		(*result)->message = str_clone("name is already in use");
 	}
 
-	free(params);
+	//Free url, params list, chunk memory
+	free(url);
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -1329,13 +1444,21 @@ d_err_t docker_rename_container(docker_context* ctx, docker_result** result,
 d_err_t docker_pause_container(docker_context* ctx, docker_result** result,
 	char* id) {
 	char* url = create_service_url_id_method(CONTAINER, id, "pause");
-
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 	json_object* response_obj = NULL;
 	struct http_response_memory chunk;
 	docker_api_post(ctx, result, url, NULL, "", &chunk, &response_obj);
 
 	if ((*result)->http_error_code == 404) {
 		(*result)->message = str_clone("container not found.");
+	}
+
+	//Free url, params list, chunk memory
+	free(url);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
 	}
 	return E_SUCCESS;
 }
@@ -1351,6 +1474,9 @@ d_err_t docker_pause_container(docker_context* ctx, docker_result** result,
 d_err_t docker_unpause_container(docker_context* ctx, docker_result** result,
 	char* id) {
 	char* url = create_service_url_id_method(CONTAINER, id, "unpause");
+	if (url == NULL) {
+		E_ALLOC_FAILED;
+	}
 
 	json_object* response_obj = NULL;
 	struct http_response_memory chunk;
@@ -1358,6 +1484,12 @@ d_err_t docker_unpause_container(docker_context* ctx, docker_result** result,
 
 	if ((*result)->http_error_code == 404) {
 		(*result)->message = str_clone("container not found.");
+	}
+
+	//Free url, params list, chunk memory
+	free(url);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
 	}
 	return E_SUCCESS;
 }
@@ -1374,7 +1506,9 @@ d_err_t docker_unpause_container(docker_context* ctx, docker_result** result,
 d_err_t docker_wait_container(docker_context* ctx, docker_result** result,
 	char* id, char* condition) {
 	char* url = create_service_url_id_method(CONTAINER, id, "wait");
-
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 	arraylist* params;
 	arraylist_new(&params,
 		(void (*)(void*)) & free_url_param);
@@ -1389,7 +1523,12 @@ d_err_t docker_wait_container(docker_context* ctx, docker_result** result,
 	struct http_response_memory chunk;
 	docker_api_post(ctx, result, url, NULL, "", &chunk, &response_obj);
 
-	//TODO free response_obj
+	//Free url, params list, chunk memory
+	free(url);
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -1407,7 +1546,9 @@ d_err_t docker_wait_container(docker_context* ctx, docker_result** result,
 d_err_t docker_remove_container(docker_context* ctx, docker_result** result,
 	char* id, int v, int force, int link) {
 	char* url = create_service_url_id_method(CONTAINER, NULL, id);
-	printf("%s\n", url);
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 
 	arraylist* params;
 	arraylist_new(&params,
@@ -1417,5 +1558,11 @@ d_err_t docker_remove_container(docker_context* ctx, docker_result** result,
 	struct http_response_memory chunk;
 	docker_api_delete(ctx, result, url, params, &chunk, &response_obj);
 
+	//Free url, params list, chunk memory
+	free(url);
+	arraylist_free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }

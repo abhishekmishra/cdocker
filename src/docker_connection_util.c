@@ -89,8 +89,8 @@ d_err_t make_url_param(url_param** p, char* key, char* value)
 	{
 		return E_ALLOC_FAILED;
 	}
-	(*p)->k = key;
-	(*p)->v = value;
+	(*p)->k = str_clone(key);
+	(*p)->v = str_clone(value);
 	return E_SUCCESS;
 }
 
@@ -106,7 +106,7 @@ char* url_param_value(url_param* p)
 
 void free_url_param(url_param* p)
 {
-	//we do not free k as it is always a constant string.
+	free(p->k);
 	free(p->v);
 	free(p);
 }
@@ -208,8 +208,8 @@ char* build_url(CURL* curl, char* base_url, arraylist* url_params)
 
 					for (int i = 0; i < num_params; i++)
 					{
-						free(allkeys[i]);
-						free(allvals[i]);
+						//free(allkeys[i]);
+						//free(allvals[i]);
 					}
 					free(allkeys);
 					free(allvals);

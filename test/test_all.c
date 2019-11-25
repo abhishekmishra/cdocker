@@ -20,7 +20,7 @@
 
 int main(int argc, char **argv) {
 	int res;
-	docker_log_set_level(LOG_INFO);
+	docker_log_set_level(LOG_DEBUG);
 	docker_log_info("#### Starting clibdocker tests ####");
 
 	docker_log_info("#### Docker container API      ####");

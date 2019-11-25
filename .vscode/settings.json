@@ -16,6 +16,7 @@
         "docker_common.h": "c",
         "linkhash.h": "c",
         "json_tokener.h": "c",
-        "json_object.h": "c"
+        "json_object.h": "c",
+        "string.h": "c"
     }
 }

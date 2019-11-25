@@ -95,7 +95,7 @@ static void test_delete_volume(void **state) {
 
 static void test_prune_unused_volumes(void **state) {
 	arraylist* volumes_deleted;
-	long space_reclaimed;
+	unsigned long space_reclaimed;
 	docker_volumes_delete_unused(ctx, &res, &volumes_deleted, &space_reclaimed, 0, "clibdocker_test_label", "clibdocker_test_value");
 	handle_error(res);
 	for (int i = 0; i < arraylist_length(volumes_deleted); i++) {

@@ -1475,7 +1475,7 @@ d_err_t docker_unpause_container(docker_context* ctx, docker_result** result,
 	char* id) {
 	char* url = create_service_url_id_method(CONTAINER, id, "unpause");
 	if (url == NULL) {
-		E_ALLOC_FAILED;
+		return E_ALLOC_FAILED;
 	}
 
 	json_object* response_obj = NULL;

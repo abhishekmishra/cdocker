@@ -133,7 +133,7 @@ d_err_t make_docker_context_default_local(docker_context** ctx) {
 #if defined(_WIN32)
 	return make_docker_context_url(ctx, DOCKER_DEFAULT_LOCALHOST_URL);
 #endif
-#if defined(unix) || defined(__unix__) || defined(__unix)
+#if defined(unix) || defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__MAC__)
 	return make_docker_context_url(ctx, DOCKER_DEFAULT_UNIX_SOCKET);
 #endif
 }

@@ -305,7 +305,10 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 	}
 
 	if (limit > 0) {
-		char* lim_val = (char*)malloc(128 * sizeof(char));
+		char* lim_val = (char*)calloc(128, sizeof(char));
+		if(lim_val == NULL) {
+			return E_ALLOC_FAILED;
+		}
 		sprintf(lim_val, "%d", limit);
 		make_url_param(&p, "limit", lim_val);
 		arraylist_add(params, p);
@@ -336,7 +339,6 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 	json_object* containers_arr_obj = NULL;
 	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, params, &chunk, &containers_arr_obj);
-	free(params);
 
 	//	arraylist* containers_arr = json_object_get_array(containers_arr_obj);
 	size_t len = json_object_array_length(containers_arr_obj);
@@ -696,9 +698,9 @@ d_err_t docker_container_logs(docker_context* ctx, docker_result** result,
 	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
 
-	free(params);
-
-	(*log) = str_clone(chunk.memory + 8);
+	if(chunk.memory != NULL) {
+		(*log) = str_clone(chunk.memory + 8);
+	}
 
 	//Free url, params list, chunk memory
 	free(url);

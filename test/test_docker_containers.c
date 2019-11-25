@@ -196,7 +196,8 @@ int docker_container_tests() {
 			cmocka_unit_test(test_pause_stopped_container),
 			cmocka_unit_test(test_unpause_stopped_container),
 			cmocka_unit_test(test_restart_container),
-			cmocka_unit_test(test_stats_container) };
+			cmocka_unit_test(test_stats_container)
+		};
 	return cmocka_run_group_tests_name("docker container tests", tests,
 			group_setup, group_teardown);
 }

@@ -274,8 +274,8 @@ d_err_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 				strcpy(base_url, local_url);
 				strcat(base_url, api_url);
 				char* url = build_url(curl, base_url, url_params);
-				free(base_url);
 				curl_easy_setopt(curl, CURLOPT_URL, url);
+				free(base_url);
 				return E_SUCCESS;
 			}
 			else {
@@ -290,8 +290,8 @@ d_err_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 				strcpy(base_url, ctx->url);
 				strcat(base_url, api_url);
 				char* url = build_url(curl, base_url, url_params);
-				free(base_url);
 				curl_easy_setopt(curl, CURLOPT_URL, url);
+				free(base_url);
 				return E_SUCCESS;
 			}
 			else {

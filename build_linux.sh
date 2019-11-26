@@ -5,8 +5,7 @@ mkdir -p ./build
 cd ./build
 
 # generate the build files
-cmake .. -DCMAKE_TOOLCHAIN_FILE=../../vcpkg/scripts/buildsystems/vcpkg.cmake -DENABLE_TESTS=On -DENABLE_LUA=On
-#cmake .. -DENABLE_TESTS=On -DENABLE_LUA=On
+cmake .. -DCMAKE_TOOLCHAIN_FILE=${VCPKG_HOME}/scripts/buildsystems/vcpkg.cmake -DENABLE_TESTS=On -DENABLE_LUA=On
 
 # run build
 make clean all

@@ -36,14 +36,35 @@
  /**
   * Utility method to create docker result, should be used by all API
   * implementations to create the result object to return.
+  */
+MODULE_API d_err_t new_docker_result(docker_result** result) {
+	(*result) = (docker_result*)calloc(1, sizeof(docker_result));
+	if ((*result) == NULL) {
+		return E_ALLOC_FAILED;
+	}
+	(*result)->error_code = E_SUCCESS;
+	(*result)->http_error_code = 0L;
+	(*result)->start_time = 0;
+	(*result)->end_time = 0;
+	(*result)->url = NULL;
+	(*result)->method = NULL;
+	(*result)->request_json_str = NULL;
+	(*result)->response_json_str = NULL;
+	(*result)->message = NULL;
+	return E_SUCCESS;
+}
+
+
+ /**
+  * Utility method to create docker result, should be used by all API
+  * implementations to create the result object to return.
   *
   * Makes a defensive copy of all provided data so that they can be
   * freed after creation of the result.
   */
 d_err_t make_docker_result(docker_result** result, d_err_t error_code,
 	long http_error_code, const char* url, const char* message) {
-	(*result) = (docker_result*)calloc(1, sizeof(docker_result));
-	if ((*result) == NULL) {
+	if (new_docker_result(result) != E_SUCCESS) {
 		return E_ALLOC_FAILED;
 	}
 	(*result)->error_code = error_code;
@@ -94,6 +115,87 @@ void free_docker_result(docker_result** result) {
 			}
 			free(*result);
 		}
+	}
+}
+
+d_err_t docker_result_get_error_code(docker_result* result) {
+	if (result != NULL) {
+		return result->error_code;
+	}
+	else {
+		return E_UNKNOWN_ERROR;
+	}
+}
+
+time_t docker_result_get_start_time(docker_result* result) {
+	if (result != NULL) {
+		return result->start_time;
+	}
+	else {
+		return 0;
+	}
+}
+
+time_t docker_result_get_end_time(docker_result* result) {
+	if (result != NULL) {
+		return result->end_time;
+	}
+	else {
+		return 0;
+	}
+}
+
+char* docker_result_get_url(docker_result* result) {
+	if (result != NULL) {
+		return result->url;
+	}
+	else {
+		return NULL;
+	}
+}
+
+char* docker_result_get_method(docker_result* result) {
+	if (result != NULL) {
+		return result->method;
+	}
+	else {
+		return NULL;
+	}
+}
+
+char* docker_result_get_request_json_str(docker_result* result) {
+	if (result != NULL) {
+		return result->request_json_str;
+	}
+	else {
+		return NULL;
+	}
+}
+
+char* docker_result_get_response_json_str(docker_result* result) {
+	if (result != NULL) {
+		return result->response_json_str;
+	}
+	else {
+		return NULL;
+	}
+}
+
+long docker_result_get_http_error_code(docker_result* result) {
+	if (result != NULL) {
+		return result->http_error_code;
+	}
+	else {
+		return 0L;
+	}
+}
+
+char* docker_result_get_message(docker_result* result) {
+	if (result != NULL) {
+		return result->message;
+	}
+	else {
+		return NULL;
 	}
 }
 

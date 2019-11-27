@@ -87,19 +87,25 @@ typedef struct docker_result_t {
 	d_err_t error_code;
 	time_t start_time;
 	time_t end_time;
+	char* url;
 	char* method;
 	char* request_json_str;
 	char* response_json_str;
 	long http_error_code;
-	char* url;
 	char* message;
 } docker_result;
 
 /**
  * Utility method to create docker result, should be used by all API
  * implementations to create the result object to return.
+ */
+MODULE_API d_err_t new_docker_result(docker_result** result);
+
+/**
+ * Utility method to create docker result, should be used by all API
+ * implementations to create the result object to return.
  *
- * Makes a defensive copy of all provided data so that they can be
+ * Makes a copy of all provided data so that they can be
  * freed after creation of the result.
  */
 MODULE_API d_err_t make_docker_result(docker_result** result, d_err_t error_code,
@@ -110,6 +116,16 @@ MODULE_API d_err_t make_docker_result(docker_result** result, d_err_t error_code
  * called for all result objects as soon as they are no longer needed.
  */
 MODULE_API void free_docker_result(docker_result** result);
+
+d_err_t docker_result_get_error_code(docker_result* result);
+time_t docker_result_get_start_time(docker_result* result);
+time_t docker_result_get_end_time(docker_result* result);
+char* docker_result_get_url(docker_result* result);
+char* docker_result_get_method(docker_result* result);
+char* docker_result_get_request_json_str(docker_result* result);
+char* docker_result_get_response_json_str(docker_result* result);
+long docker_result_get_http_error_code(docker_result* result);
+char* docker_result_get_message(docker_result* result);
 
 /**
  * Check if the error_code is E_SUCCESS

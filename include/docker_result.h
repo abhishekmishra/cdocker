@@ -108,14 +108,14 @@ MODULE_API d_err_t new_docker_result(docker_result** result);
  * Makes a copy of all provided data so that they can be
  * freed after creation of the result.
  */
-MODULE_API d_err_t make_docker_result(docker_result** result, d_err_t error_code,
-		long http_error_code, const char* url, const char* msg);
+//MODULE_API d_err_t make_docker_result(docker_result** result, d_err_t error_code,
+//		long http_error_code, const char* url, const char* msg);
 
 /**
  * Frees all internal memory used in the docker_result, should be
  * called for all result objects as soon as they are no longer needed.
  */
-MODULE_API void free_docker_result(docker_result** result);
+MODULE_API void free_docker_result(docker_result* result);
 
 d_err_t docker_result_get_error_code(docker_result* result);
 time_t docker_result_get_start_time(docker_result* result);

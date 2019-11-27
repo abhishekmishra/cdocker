@@ -324,8 +324,10 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 	{
 		fprintf(stderr, "curl_easy_perform() failed: %s\n",
 			curl_easy_strerror(res));
-		make_docker_result(result, E_CONNECTION_FAILED, -1, NULL,
-			NULL);
+		new_docker_result(result);
+		(*result)->error_code = E_CONNECTION_FAILED;
+		//make_docker_result(result, E_CONNECTION_FAILED, -1, NULL,
+		//	NULL);
 	}
 	else
 	{
@@ -336,13 +338,21 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 		if (response_code == 200 || response_code == 201
 			|| response_code == 204)
 		{
-			make_docker_result(result, E_SUCCESS, response_code, effective_url,
-				NULL);
+			new_docker_result(result);
+			(*result)->error_code = E_SUCCESS;
+			(*result)->http_error_code = response_code;
+			(*result)->url = effective_url;
+			//make_docker_result(result, E_SUCCESS, response_code, effective_url,
+			//	NULL);
 		}
 		else
 		{
-			make_docker_result(result, E_INVALID_INPUT, response_code,
-				effective_url, "error");
+			(*result)->error_code = E_INVALID_INPUT;
+			(*result)->http_error_code = response_code;
+			(*result)->url = effective_url;
+			(*result)->message = "error";
+			//make_docker_result(result, E_INVALID_INPUT, response_code,
+			//	effective_url, "error");
 		}
 		if ((*result)->http_error_code >= 400)
 		{

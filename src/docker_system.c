@@ -56,6 +56,7 @@ d_err_t docker_ping(docker_context* ctx, docker_result** result) {
 		return E_PING_FAILED;
 	}
 
+	json_object_put(response_obj);
 	if (chunk.memory != NULL) {
 		free(chunk.memory);
 	}
@@ -188,6 +189,7 @@ d_err_t docker_system_info(docker_context* ctx, docker_result** result,
 		(*info)->memtotal = get_attr_unsigned_long(response_obj, "MemTotal");
 	}
 
+	json_object_put(response_obj);
 	if (chunk.memory != NULL) {
 		free(chunk.memory);
 	}
@@ -235,6 +237,7 @@ void parse_events_cb(char* msg, void* cb, void* cbargs) {
 				}
 				events_cb(evt, cbargs);
 			}
+			json_object_put(evt_obj);
 		} else {
 			docker_log_debug("Message = Empty");
 		}
@@ -280,22 +283,34 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 		void (*docker_events_cb)(docker_event* evt, void* cbargs), void* cbargs,
 		arraylist** events, time_t start_time, time_t end_time) {
 	char* url = create_service_url_id_method(SYSTEM, NULL, "events");
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 
 	arraylist* params;
 	arraylist_new(&params,
 			(void (*)(void *)) &free_url_param);
 	url_param* p;
 	char* start_time_str = (char*) calloc(128, sizeof(char));
-
+	if (start_time_str == NULL) 
+	{ 
+		return E_ALLOC_FAILED; 
+	}
 	sprintf(start_time_str, "%lu", start_time);
 	make_url_param(&p, "since", start_time_str);
 	arraylist_add(params, p);
+	free(start_time_str);
 
 	if (end_time != 0) {
 		char* end_time_str = (char*) calloc(128, sizeof(char));
+		if (end_time_str == NULL)
+		{
+			return E_ALLOC_FAILED;
+		}
 		sprintf(end_time_str, "%lu", end_time);
 		make_url_param(&p, "until", end_time_str);
 		arraylist_add(params, p);
+		free(end_time_str);
 	}
 
 	json_object *response_obj = NULL;
@@ -351,8 +366,10 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 		}
 	}
 
+	json_object_put(response_obj);
 	if (chunk.memory != NULL) {
 		free(chunk.memory);
 	}
+	free(url);
 	return E_SUCCESS;
 }

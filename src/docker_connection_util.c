@@ -138,6 +138,13 @@ d_err_t make_docker_context_default_local(docker_context** ctx) {
 #endif
 }
 
+d_err_t docker_context_set_result_handler(docker_context* ctx, docker_result_handler_fn* result_handler_fn) {
+	if(ctx != NULL) {
+		ctx->result_handler_fn = result_handler_fn;
+	}
+	return E_SUCCESS;
+}
+
 /**
  * Free docker context memory.
  */

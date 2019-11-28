@@ -54,12 +54,15 @@ typedef enum {
 	CONTAINER = 1, IMAGE = 2, SYSTEM = 3, NETWORK = 4, VOLUME = 5
 } docker_object_type;
 
+typedef void (docker_result_handler_fn) (docker_result* result);
+
 /**
  * A docker context for a specific docker server.
  */
 typedef struct docker_context {
 	char* url;
 	char* api_version;
+	docker_result_handler_fn* result_handler_fn;
 } docker_context;
 
 /**
@@ -77,6 +80,20 @@ MODULE_API d_err_t make_docker_context_url(docker_context** ctx, const char* url
  * @return error code
  */
 MODULE_API d_err_t make_docker_context_default_local(docker_context** ctx);
+
+/**
+ * Set the result handler function for the docker context.
+ * Every API call's result will be passed to the result handler,
+ * once the call is complete. 
+ * NOTE: the result handler will be freed before the API call returns,
+ * so if a copy of any of the data in the result is to be retained,
+ * caller must make a copy.
+ * 
+ * @param ctx the docker context
+ * @param result_handler_fn callback which receives the docker_result object.
+ * @return error code
+ */
+MODULE_API d_err_t docker_context_set_result_handler(docker_context* ctx, docker_result_handler_fn* result_handler_fn);
 
 /**
  * Free docker context memory.

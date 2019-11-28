@@ -104,3 +104,26 @@
 |Ping   	          |            :ok: |          :ok: |  :ok: |                          |
 |Monitor events       |            :ok: |          :ok: |  :ok: | Callback mode for continous listening.                         |
 |Get Data Usage Info  |             :x: |           :x: |   :x: |                          |
+
+## Docker API Call Mechanism
+
+Anatomy of a basic docker call has the following data structures involved:
+
+1. A URL struct with the following:
+    * The base url (obtained from docker context) 
+    * method url, parameterized for e.g. /containers/{id}/json
+    * url parameters (dictionary like)
+2. A request body (for POST calls):
+    * request parameters (dictionary like)
+3. Internal storage for CURL request/response data
+    * Associated with a specific handler function which parses response
+    * The handler function creates either a struct specific to the call or
+        a dictionary like object containing the response.
+    * This struct or dictionary is returned to the client.
+    * Some calls return the struct/dict, and some provide them via a callback, if the call has mutliple responses.
+4. Since the internal raw request/response object is cleaned-up, any caller
+    that needs access to this info, can set a global API level callback on the docker context to handler the result object, for e.g. to get the start time,
+    end time, raw request string, raw response string, and the URL. This callback will be called before the bookkeeping data is cleaned up.
+
+NOTE: All internal datastructures except the response objects are owned/freed by the API call. Only the response struct/dict is returned. It is the responsibility of caller to free this object when it is no longer used.
+

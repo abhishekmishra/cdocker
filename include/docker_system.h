@@ -53,8 +53,7 @@ extern "C" {
  */
 MODULE_API d_err_t docker_ping(docker_context* ctx, docker_result** result);
 
-typedef json_object docker_version;
-
+typedef json_object									docker_version;
 #define free_docker_version(version)				json_object_put((json_object*) version)
 #define docker_version_version_get(version)			get_attr_str((json_object*)version, "Version")
 #define docker_version_os_get(version)				get_attr_str((json_object*)version, "Os")
@@ -78,24 +77,16 @@ typedef json_object docker_version;
 MODULE_API d_err_t docker_system_version(docker_context* ctx, docker_result** result,
 		docker_version** version);
 
-// Docker System Info
-
-typedef struct docker_info_t {
-	unsigned long containers;
-	unsigned long containers_running;
-	unsigned long containers_paused;
-	unsigned long containers_stopped;
-	unsigned long images;
-	char* name;
-	int ncpu;
-	unsigned long memtotal;
-} docker_info;
-
-d_err_t make_docker_info(docker_info** info, unsigned long containers,
-		unsigned long containers_running, unsigned long containers_paused,
-		unsigned long containers_stopped, unsigned long images);
-
-void free_docker_info(docker_info* info);
+typedef json_object									docker_info;
+#define free_docker_info(info)						json_object_put((json_object*) info)
+#define docker_info_containers_get(info)			get_attr_unsigned_long((json_object*)info, "Containers")
+#define docker_info_containers_running_get(info)	get_attr_unsigned_long((json_object*)info, "ContainersRunning")
+#define docker_info_containers_paused_get(info)		get_attr_unsigned_long((json_object*)info, "ContainersPaused")
+#define docker_info_containers_stopped_get(info)	get_attr_unsigned_long((json_object*)info, "ContainersStopped")
+#define docker_info_images_get(info)				get_attr_unsigned_long((json_object*)info, "Images")
+#define docker_info_name_get(info)					get_attr_str((json_object*)info, "Name")
+#define docker_info_ncpu_get(info)					get_attr_int((json_object*)info, "NCPU")
+#define docker_info_mem_total_get(info)				get_attr_unsigned_long((json_object*)info, "MemTotal")
 
 /**
  * Gets the docker system information
@@ -110,18 +101,19 @@ d_err_t docker_system_info(docker_context* ctx, docker_result** result,
 
 // Docker System Events API
 
-typedef struct docker_event_t {
-	char* type;
-	char* action;
-	char* actor_id;
-	json_object* actor_attributes;
-	time_t time;
-} docker_event;
+typedef arraylist									docker_event_list;
+#define free_docker_event_list(event_ls)			arraylist_free(event_ls)
+#define docker_event_list_length(event_ls)			arraylist_length(event_ls)
+#define docker_event_list_get(event_ls, i)			arraylist_get(event_ls, i)
 
-d_err_t make_docker_event(docker_event** event, char* type, char* action,
-		char* actor_id, json_object* actor_attributes, time_t time);
-
-void free_docker_event(docker_event* event);
+typedef json_object									docker_event;
+#define free_docker_event(event)					json_object_put((json_object*) event)
+#define docker_event_type_get(event)				get_attr_str((json_object*)event, "Type")
+#define docker_event_action_get(event)				get_attr_str((json_object*)event, "Action")
+#define docker_event_time_get(event)				get_attr_unsigned_long((json_object*)event, "time")
+#define docker_event_actor_id_get(event)			get_attr_str(get_json_object((json_object*)event, "Actor"), "ID")
+#define docker_event_attributes_get(event)			get_json_object(get_json_object((json_object*)event, "Actor"), "Attributes")
+#define docker_event_attributes_foreach(event)		json_object_object_foreach(docker_event_attributes_get(event), key, val)
 
 /**
  * Get the docker events in a time range.

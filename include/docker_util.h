@@ -186,6 +186,15 @@ unsigned long get_attr_unsigned_long(json_object* obj, char* name);
  */
 long long get_attr_long_long(json_object* obj, char* name);
 
+/**
+ * Get a long long object with the given key from a json_object
+ *
+ * \param obj the json object
+ * \param name of the object attribute
+ * \return long long value of attribute
+ */
+json_object* get_json_object(json_object* obj, char* name);
+
 void parse_iso_datetime(char* date_str, struct tm* tm);
 
 void parse_docker_stats_readtime(char* date_str, struct tm* tm);

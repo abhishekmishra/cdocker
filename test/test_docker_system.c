@@ -81,17 +81,24 @@ static void test_info(void **state) {
 	handle_error(res);
 	assert_int_equal(res->http_error_code, 200);
 	assert_non_null(info);
-	assert_non_null(info->containers);
+	unsigned long num_ctrs = docker_info_containers_get(info);
+	docker_log_info("# of containers is %lu", num_ctrs);
+	free_docker_version(info);
 }
 
 static void test_events(void **state) {
-	arraylist* events;
+	docker_event_list* events;
 	time_t now = time(NULL);
 	docker_system_events(ctx, &res, &events, now - 360000, now);
 	handle_error(res);
 	assert_int_equal(res->http_error_code, 200);
 	assert_non_null(events);
-	assert_int_not_equal(arraylist_length(events), 0);
+	assert_int_not_equal(docker_event_list_length(events), 0);
+	for (size_t i = 0; i < docker_event_list_length(events); i++) {
+		docker_event* evt = docker_event_list_get(events, i);
+		assert_non_null(docker_event_action_get(evt));
+		docker_log_info("Event action is %s", docker_event_action_get(evt));
+	}
 }
 
 

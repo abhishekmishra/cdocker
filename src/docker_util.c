@@ -107,6 +107,12 @@ long long get_attr_long_long(json_object* obj, char* name) {
 	return attr;
 }
 
+json_object* get_json_object(json_object* obj, char* name) {
+	json_object* extractObj = NULL;
+	json_object_object_get_ex(obj, name, &extractObj);
+	return extractObj;
+}
+
 d_err_t make_pair(pair** p, char* key, char* value) {
 	pair* p1 = (pair*) calloc(1, sizeof(pair));
 	if (p1 == NULL) {

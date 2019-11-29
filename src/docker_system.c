@@ -64,44 +64,6 @@ d_err_t docker_ping(docker_context* ctx, docker_result** result) {
 }
 
 /**
- * Construct a new docker_version object.
- */
-//d_err_t make_docker_version(docker_version** dv, char* version, char* os,
-//		char* kernel_version, char* go_version, char* git_commit, char* arch,
-//		char* api_version, char* min_api_version, char* build_time,
-//		int experimental) {
-//	(*dv) = (docker_version*) calloc(1, sizeof(docker_version));
-//	if (!(*dv)) {
-//		return E_ALLOC_FAILED;
-//	}
-//	(*dv)->version = str_clone(version);
-//	(*dv)->os = str_clone(os);
-//	(*dv)->kernel_version = str_clone(kernel_version);
-//	(*dv)->go_version = str_clone(go_version);
-//	(*dv)->git_commit = str_clone(git_commit);
-//	(*dv)->arch = str_clone(arch);
-//	(*dv)->api_version = str_clone(api_version);
-//	(*dv)->min_api_version = str_clone(min_api_version);
-//	(*dv)->build_time = str_clone(build_time);
-//	(*dv)->experimental = experimental;
-//	return E_SUCCESS;
-//}
-
-//void free_docker_version(docker_version *dv) {
-//	json_object_put((json_object*) dv);
-	//free(dv->version);
-	//free(dv->os);
-	//free(dv->kernel_version);
-	//free(dv->go_version);
-	//free(dv->git_commit);
-	//free(dv->arch);
-	//free(dv->api_version);
-	//free(dv->min_api_version);
-	//free(dv->build_time);
-	//free(dv);
-//}
-
-/**
  * Gets the docker version information
  *
  * \param ctx docker context
@@ -126,26 +88,6 @@ d_err_t docker_system_version(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
-d_err_t make_docker_info(docker_info** info, unsigned long containers,
-		unsigned long containers_running, unsigned long containers_paused,
-		unsigned long containers_stopped, unsigned long images) {
-	(*info) = (docker_info*) calloc(1, sizeof(docker_info));
-	if (!(*info)) {
-		return E_ALLOC_FAILED;
-	}
-	(*info)->containers = containers;
-	(*info)->containers_running = containers_running;
-	(*info)->containers_paused = containers_paused;
-	(*info)->containers_stopped = containers_stopped;
-	(*info)->images = images;
-	return E_SUCCESS;
-}
-
-void free_docker_info(docker_info* info) {
-	free(info->name);
-	free(info);
-}
-
 /**
  * Gets the docker system information
  *
@@ -157,50 +99,17 @@ void free_docker_info(docker_info* info) {
 d_err_t docker_system_info(docker_context* ctx, docker_result** result,
 		docker_info** info) {
 	char* url = create_service_url_id_method(SYSTEM, NULL, "info");
-
-	json_object *response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
-
-	if ((*result)->http_error_code >= 200) {
-		make_docker_info(info,
-				get_attr_unsigned_long(response_obj, "Containers"),
-				get_attr_unsigned_long(response_obj, "ContainersRunning"),
-				get_attr_unsigned_long(response_obj, "ContainersPaused"),
-				get_attr_unsigned_long(response_obj, "ContainersStopped"),
-				get_attr_unsigned_long(response_obj, "Images"));
-		(*info)->name = get_attr_str(response_obj, "Name");
-		(*info)->ncpu = get_attr_int(response_obj, "NCPU");
-		(*info)->memtotal = get_attr_unsigned_long(response_obj, "MemTotal");
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
 	}
 
-	json_object_put(response_obj);
+	struct http_response_memory chunk;
+	docker_api_get(ctx, result, url, NULL, &chunk, (json_object**)info);
+
 	if (chunk.memory != NULL) {
 		free(chunk.memory);
 	}
 	return E_SUCCESS;
-}
-
-d_err_t make_docker_event(docker_event** event, char* type, char* action,
-		char* actor_id, json_object* actor_attributes, time_t time) {
-	(*event) = (docker_event*) calloc(1, sizeof(docker_event));
-	if (!(*event)) {
-		return E_ALLOC_FAILED;
-	}
-	(*event)->type = str_clone(type);
-	(*event)->action = str_clone(action);
-	(*event)->actor_id = str_clone(actor_id);
-	(*event)->actor_attributes = actor_attributes;
-	(*event)->time = time;
-	return E_SUCCESS;
-}
-
-void free_docker_event(docker_event* event) {
-	free(event->type);
-	free(event->action);
-	free(event->actor_id);
-	free(event->actor_attributes);
-	free(event);
 }
 
 void parse_events_cb(char* msg, void* cb, void* cbargs) {
@@ -208,20 +117,7 @@ void parse_events_cb(char* msg, void* cb, void* cbargs) {
 	if (msg) {
 		if(events_cb) {
 			json_object* evt_obj = json_tokener_parse(msg);
-			docker_event* evt = (docker_event*)calloc(1, sizeof(docker_event));
-			if(evt != NULL) {
-				json_object* extractObj;
-				char* attr = NULL;
-				if (json_object_object_get_ex(evt_obj, "Actor", &extractObj)) {
-					json_object* attrs_obj;
-					json_object_object_get_ex(extractObj, "Attributes", &attrs_obj);
-					make_docker_event(&evt, get_attr_str(evt_obj, "Type"),
-							get_attr_str(evt_obj, "Action"),
-							get_attr_str(extractObj, "ID"), attrs_obj,
-							get_attr_unsigned_long(evt_obj, "time"));
-				}
-				events_cb(evt, cbargs);
-			}
+			events_cb(evt_obj, cbargs);
 			json_object_put(evt_obj);
 		} else {
 			docker_log_debug("Message = Empty");
@@ -306,9 +202,7 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 
 	//cannot use the default response object, as that parses only one object from the response
 
-	arraylist_new(events, (void (*)(void *)) &free_docker_event);
-	arraylist* json_arr;
-	arraylist_new(&json_arr, &free);
+	arraylist_new(events, (void (*)(void *)) &json_object_put);
 
 	if ((*result)->http_error_code >= 200) {
 		if (chunk.memory && strlen(chunk.memory) > 0) {
@@ -320,34 +214,11 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 					chunk.memory[i] = '\0';
 					json_object* item = json_tokener_parse(
 							chunk.memory + start);
-					arraylist_add(json_arr, item);
+					arraylist_add(*events, item);
 					chunk.memory[i] = '\n';
 					start = i;
 				}
 			}
-		}
-
-		size_t num_events = arraylist_length(json_arr);
-		docker_log_debug("Read %d items.", num_events);
-
-		arraylist* evtls;
-		arraylist_new(&evtls,
-				(void (*)(void *)) &free_docker_event);
-
-		for (size_t j = 0; j < num_events; j++) {
-			json_object* evt_obj = arraylist_get(json_arr, j);
-			docker_event* evt;
-			json_object* extractObj;
-			char* attr = NULL;
-			if (json_object_object_get_ex(evt_obj, "Actor", &extractObj)) {
-				json_object* attrs_obj;
-				json_object_object_get_ex(extractObj, "Attributes", &attrs_obj);
-				make_docker_event(&evt, get_attr_str(evt_obj, "Type"),
-						get_attr_str(evt_obj, "Action"),
-						get_attr_str(extractObj, "ID"), attrs_obj,
-						get_attr_unsigned_long(evt_obj, "time"));
-			}
-			arraylist_add((*events), evt);
 		}
 	}
 

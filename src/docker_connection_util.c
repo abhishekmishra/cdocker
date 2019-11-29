@@ -139,7 +139,7 @@ d_err_t make_docker_context_default_local(docker_context** ctx) {
 }
 
 d_err_t docker_context_set_result_handler(docker_context* ctx, docker_result_handler_fn* result_handler_fn) {
-	if(ctx != NULL) {
+	if (ctx != NULL) {
 		ctx->result_handler_fn = result_handler_fn;
 	}
 	return E_SUCCESS;
@@ -755,4 +755,20 @@ char* create_service_url_id_method(docker_object_type object, const char* id,
 		}
 	}
 	return url;
+}
+
+d_err_t make_docker_api_call_params(docker_api_call_params** api_call_params, docker_object_type object,
+	const char* id, const char* method) {
+	(*api_call_params) = (docker_api_call_params*)calloc(1, sizeof(docker_api_call_params));
+	if ((*api_call_params) == NULL) {
+		return E_ALLOC_FAILED;
+	}
+	(*api_call_params)->object = object;
+	(*api_call_params)->id = id;
+	(*api_call_params)->method = method;
+	return E_SUCCESS;
+}
+
+void free_docker_api_call_params(docker_api_call_params* api_call_params) {
+	free(api_call_params);
 }

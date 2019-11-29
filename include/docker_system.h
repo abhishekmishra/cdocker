@@ -42,6 +42,8 @@ extern "C" {
 #include "docker_result.h"
 #include "docker_connection_util.h"
 
+#include <json-c/json_object.h>
+
 /**
  * Ping the docker server
  *
@@ -51,28 +53,19 @@ extern "C" {
  */
 MODULE_API d_err_t docker_ping(docker_context* ctx, docker_result** result);
 
-typedef struct docker_version_t {
-	char* version;
-	char* os;
-	char* kernel_version;
-	char* go_version;
-	char* git_commit;
-	char* arch;
-	char* api_version;
-	char* min_api_version;
-	char* build_time;
-	int experimental;
-} docker_version;
+typedef json_object docker_version;
 
-/**
- * Construct a new docker_version object.
- */
-d_err_t make_docker_version(docker_version** dv, char* version, char* os,
-		char* kernel_version, char* go_version, char* git_commit, char* arch,
-		char* api_version, char* min_api_version, char* build_time,
-		int experimental);
-
-void free_docker_version(docker_version*dv);
+#define free_docker_version(version)				json_object_put((json_object*) version)
+#define docker_version_version_get(version)			get_attr_str((json_object*)version, "Version")
+#define docker_version_os_get(version)				get_attr_str((json_object*)version, "Os")
+#define docker_version_kernel_version_get(version)	get_attr_str((json_object*)version, "KernelVersion")
+#define docker_version_go_version_get(version)		get_attr_str((json_object*)version, "GoVersion")
+#define docker_version_git_commit_get(version)		get_attr_str((json_object*)version, "GitCommit")
+#define docker_version_arch_get(version)			get_attr_str((json_object*)version, "Arch")
+#define docker_version_api_version_get(version)		get_attr_str((json_object*)version, "ApiVersion")
+#define docker_version_min_api_version_get(version) get_attr_str((json_object*)version, "MinAPIVersion")
+#define docker_version_build_time_get(version)		get_attr_str((json_object*)version, "BuildTime")
+#define docker_version_experimental_get(version)	get_attr_boolean((json_object*)version, "Experimental")
 
 /**
  * Gets the docker version information

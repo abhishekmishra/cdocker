@@ -41,7 +41,6 @@ extern "C" {
 // Do not warn about strcpy_s, sprintf_s and sscanf_s on windows build
 #define _CRT_SECURE_NO_WARNINGS
 
-
 #include <json-c/json_object.h>
 #include "docker_result.h"
 
@@ -199,6 +198,7 @@ void parse_docker_stats_readtime(char* date_str, struct tm* tm);
  * \return string with the description of the size
  */
 char* calculate_size(uint64_t size);
+
 
 #ifdef __cplusplus 
 }

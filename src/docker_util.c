@@ -46,7 +46,7 @@ char* get_attr_str(json_object* obj, char* name) {
 	json_object* extractObj;
 	char* attr = NULL;
 	if (json_object_object_get_ex(obj, name, &extractObj)) {
-		attr = (char*) json_object_get_string(extractObj);
+		attr = json_object_get_string(extractObj);
 	}
 	return attr;
 }

@@ -35,6 +35,7 @@
 
 #include "test_docker_system.h"
 
+#include "docker_util.h"
 #include "docker_log.h"
 #include "docker_system.h"
 #include "docker_connection_util.h"
@@ -68,7 +69,10 @@ static void test_version(void **state) {
 	handle_error(res);
 	assert_int_equal(res->http_error_code, 200);
 	assert_non_null(version);
-	assert_non_null(version->version);
+	char* version_str = docker_version_version_get(version);
+	assert_non_null(version_str);
+	docker_log_info("Docker version is %s", version_str);
+	free_docker_version(version);
 }
 
 static void test_info(void **state) {

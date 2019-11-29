@@ -26,13 +26,12 @@
  *
  */
 #include "docker_util.h"
+#include "docker_system.h"
 #include <docker_log.h>
 #include <stdlib.h>
 #include <string.h>
-#include <json-c/json_object.h>
 #include <json-c/json_tokener.h>
 
-#include "docker_system.h"
 #include "docker_connection_util.h"
 
 /**
@@ -67,39 +66,40 @@ d_err_t docker_ping(docker_context* ctx, docker_result** result) {
 /**
  * Construct a new docker_version object.
  */
-d_err_t make_docker_version(docker_version** dv, char* version, char* os,
-		char* kernel_version, char* go_version, char* git_commit, char* arch,
-		char* api_version, char* min_api_version, char* build_time,
-		int experimental) {
-	(*dv) = (docker_version*) calloc(1, sizeof(docker_version));
-	if (!(*dv)) {
-		return E_ALLOC_FAILED;
-	}
-	(*dv)->version = str_clone(version);
-	(*dv)->os = str_clone(os);
-	(*dv)->kernel_version = str_clone(kernel_version);
-	(*dv)->go_version = str_clone(go_version);
-	(*dv)->git_commit = str_clone(git_commit);
-	(*dv)->arch = str_clone(arch);
-	(*dv)->api_version = str_clone(api_version);
-	(*dv)->min_api_version = str_clone(min_api_version);
-	(*dv)->build_time = str_clone(build_time);
-	(*dv)->experimental = experimental;
-	return E_SUCCESS;
-}
+//d_err_t make_docker_version(docker_version** dv, char* version, char* os,
+//		char* kernel_version, char* go_version, char* git_commit, char* arch,
+//		char* api_version, char* min_api_version, char* build_time,
+//		int experimental) {
+//	(*dv) = (docker_version*) calloc(1, sizeof(docker_version));
+//	if (!(*dv)) {
+//		return E_ALLOC_FAILED;
+//	}
+//	(*dv)->version = str_clone(version);
+//	(*dv)->os = str_clone(os);
+//	(*dv)->kernel_version = str_clone(kernel_version);
+//	(*dv)->go_version = str_clone(go_version);
+//	(*dv)->git_commit = str_clone(git_commit);
+//	(*dv)->arch = str_clone(arch);
+//	(*dv)->api_version = str_clone(api_version);
+//	(*dv)->min_api_version = str_clone(min_api_version);
+//	(*dv)->build_time = str_clone(build_time);
+//	(*dv)->experimental = experimental;
+//	return E_SUCCESS;
+//}
 
-void free_docker_version(docker_version*dv) {
-	free(dv->version);
-	free(dv->os);
-	free(dv->kernel_version);
-	free(dv->go_version);
-	free(dv->git_commit);
-	free(dv->arch);
-	free(dv->api_version);
-	free(dv->min_api_version);
-	free(dv->build_time);
-	free(dv);
-}
+//void free_docker_version(docker_version *dv) {
+//	json_object_put((json_object*) dv);
+	//free(dv->version);
+	//free(dv->os);
+	//free(dv->kernel_version);
+	//free(dv->go_version);
+	//free(dv->git_commit);
+	//free(dv->arch);
+	//free(dv->api_version);
+	//free(dv->min_api_version);
+	//free(dv->build_time);
+	//free(dv);
+//}
 
 /**
  * Gets the docker version information
@@ -116,24 +116,9 @@ d_err_t docker_system_version(docker_context* ctx, docker_result** result,
 		return E_ALLOC_FAILED;
 	}
 
-	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
+	docker_api_get(ctx, result, url, NULL, &chunk, (json_object**) version);
 
-	if ((*result)->http_error_code >= 200) {
-		make_docker_version(version, get_attr_str(response_obj, "Version"),
-				get_attr_str(response_obj, "Os"),
-				get_attr_str(response_obj, "KernelVersion"),
-				get_attr_str(response_obj, "GoVersion"),
-				get_attr_str(response_obj, "GitCommit"),
-				get_attr_str(response_obj, "Arch"),
-				get_attr_str(response_obj, "ApiVersion"),
-				get_attr_str(response_obj, "MinAPIVersion"),
-				get_attr_str(response_obj, "BuildTime"),
-				get_attr_boolean(response_obj, "Experimental"));
-	}
-
-	json_object_put(response_obj);
 	if (chunk.memory != NULL) {
 		free(chunk.memory);
 	}

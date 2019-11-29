@@ -188,6 +188,17 @@ MODULE_API d_err_t docker_api_delete(docker_context* ctx, docker_result** res, c
 MODULE_API char* create_service_url_id_method(docker_object_type object, const char* id,
 		const char* method);
 
+typedef struct docker_api_call_params_t {
+	docker_object_type object;
+	char* id;
+	char* method;
+} docker_api_call_params;
+
+d_err_t make_docker_api_call_params(docker_api_call_params** api_call_params, docker_object_type object, 
+	const char* id,	const char* method);
+
+void free_docker_api_call_params(docker_api_call_params* api_call_params);
+
 #ifdef __cplusplus 
 }
 #endif

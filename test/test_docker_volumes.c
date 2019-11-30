@@ -39,6 +39,7 @@ static docker_result* res;
 static int group_setup(void **state) {
 	curl_global_init(CURL_GLOBAL_ALL);
 	make_docker_context_default_local(&ctx);
+	docker_context_set_result_handler(ctx, &handle_result_for_test);
 	return E_SUCCESS;
 }
 
@@ -56,16 +57,16 @@ static void test_create_volumes(void **state) {
 	handle_error(res);
 	assert_int_equal(res->http_error_code, 201);
 	assert_non_null(vi);
-	assert_non_null(vi->name);
-	assert_string_equal(vi->name, "clibdocker_test_vol01");
+	assert_non_null(docker_volume_name_get(vi));
+	assert_string_equal(docker_volume_name_get(vi), "clibdocker_test_vol01");
 
 	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol02", "local", 1,
 			"clibdocker_test_label", "clibdocker_test_value");
 	handle_error(res);
 	assert_int_equal(res->http_error_code, 201);
 	assert_non_null(vi);
-	assert_non_null(vi->name);
-	assert_string_equal(vi->name, "clibdocker_test_vol02");
+	assert_non_null(docker_volume_name_get(vi));
+	assert_string_equal(docker_volume_name_get(vi), "clibdocker_test_vol02");
 }
 static void test_inspect_volume(void **state) {
 	docker_volume* vi = NULL;
@@ -73,16 +74,16 @@ static void test_inspect_volume(void **state) {
 	handle_error(res);
 	assert_int_equal(res->http_error_code, 200);
 	assert_non_null(vi);
-	assert_non_null(vi->name);
-	assert_string_equal(vi->name, "clibdocker_test_vol01");
+	assert_non_null(docker_volume_name_get(vi));
+	assert_string_equal(docker_volume_name_get(vi), "clibdocker_test_vol01");
 }
 
 static void test_list_volumes(void **state) {
-	arraylist* volumes;
-	arraylist* warnings;
+	docker_volume_list* volumes;
+	docker_volume_warnings* warnings;
 	docker_volumes_list(ctx, &res, &volumes, &warnings, 1, NULL, "clibdocker_test_label=clibdocker_test_value", NULL);
 	handle_error(res);
-	size_t len_vols = arraylist_length(volumes);
+	size_t len_vols = docker_volume_list_length(volumes);
 	assert_int_equal(res->http_error_code, 200);
 	assert_int_equal(len_vols, 2);
 }

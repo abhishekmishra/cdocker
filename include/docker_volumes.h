@@ -35,21 +35,28 @@ extern "C" {
 #include "docker_connection_util.h"
 #include "docker_util.h"
 
-typedef struct docker_volume_t {
-	time_t created_at;
-	char* name;
-	char* driver;
-	char* mountpoint;
-	arraylist* labels; //of pair
-	char* scope;
-	arraylist* options; //of pair
-	arraylist* status; //of pair
-} docker_volume;
+typedef json_object										docker_volume;
+#define free_docker_volume(vol)							json_object_put((json_object*) vol)
+#define docker_volume_name_get(vol)						get_attr_str((json_object*)vol, "Name")
+#define docker_volume_driver_get(vol)					get_attr_str((json_object*)vol, "Driver")
+#define docker_volume_mountpoint_vol_get(vol)			get_attr_str((json_object*)vol, "Mountpoint")
+#define docker_volume_go_scope_get(vol)					get_attr_str((json_object*)vol, "Scope")
+#define docker_volume_git_commit_get(vol)				get_attr_time((json_object*)vol, "CreatedAt")
 
-d_err_t make_docker_volume(docker_volume** volume, time_t created_at,
-		char* name, char* driver, char* mountpoint, char* scope);
+#define docker_volume_labels_get(vol)					get_attr_json_object((json_object*)vol, "Labels")
+#define docker_volume_labels_foreach(vol)				json_object_object_foreach(docker_volume_labels_get(vol), key, val)
+#define docker_volume_options_get(vol)					get_attr_json_object((json_object*)vol, "Options")
+#define docker_volume_options_foreach(vol)				json_object_object_foreach(docker_volume_options_get(vol), key, val)
+	
+typedef json_object										docker_volume_list;
+#define free_docker_volume_list(volume_ls)				json_object_put(volume_ls)
+#define docker_volume_list_length(volume_ls)			json_object_array_length(volume_ls)
+#define docker_volume_list_get_idx(volume_ls, i)		(docker_volume*) json_object_array_get_idx(volume_ls, i)
 
-void free_docker_volume(docker_volume* volume);
+typedef json_object										docker_volume_warnings;
+#define free_docker_warnings(warnings)					json_object_put(warnings)
+#define docker_warnings_length(warnings)				json_object_array_length(warnings)
+#define docker_warnings_get_idx(warnings, i)			(char*) json_object_array_get_idx(warnings, i)
 
 /**
  * Get the list of volumes, matching the filters provided.
@@ -66,7 +73,7 @@ void free_docker_volume(docker_volume* volume);
  * \return error code.
  */
 d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
-		arraylist** volumes, arraylist** warnings,
+		docker_volume_list** volumes, docker_volume_warnings** warnings,
 		int filter_dangling, char* filter_driver, char* filter_label,
 		char* filter_name);
 

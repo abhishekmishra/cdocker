@@ -32,34 +32,6 @@
 #include <time.h>
 #include "docker_volumes.h"
 
-d_err_t make_docker_volume(docker_volume** volume, time_t created_at,
-		char* name, char* driver, char* mountpoint, char* scope) {
-	(*volume) = (docker_volume*) malloc(sizeof(docker_volume));
-	if ((*volume) == NULL) {
-		return E_ALLOC_FAILED;
-	}
-	(*volume)->created_at = created_at;
-	(*volume)->name = str_clone(name);
-	(*volume)->driver = str_clone(driver);
-	(*volume)->mountpoint = str_clone(mountpoint);
-	(*volume)->scope = str_clone(scope);
-	arraylist_new(&(*volume)->labels, (void (*)(void *)) &free_pair);
-	arraylist_new(&(*volume)->options, (void (*)(void *)) &free_pair);
-	arraylist_new(&(*volume)->status, (void (*)(void *)) &free_pair);
-	return E_SUCCESS;
-}
-
-void free_docker_volume(docker_volume* volume) {
-	free(volume->name);
-	free(volume->driver);
-	free(volume->mountpoint);
-	free(volume->scope);
-	arraylist_free(volume->options);
-	arraylist_free(volume->labels);
-	arraylist_free(volume->status);
-	free(volume);
-}
-
 /**
  * Get the list of volumes, matching the filters provided.
  * (Any and all filters can be null/0.)
@@ -75,10 +47,13 @@ void free_docker_volume(docker_volume* volume) {
  * \return error code.
  */
 d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
-		arraylist** volumes, arraylist** warnings,
+		docker_volume_list** volumes, docker_volume_warnings** warnings,
 		int filter_dangling, char* filter_driver, char* filter_label,
 		char* filter_name) {
 	char* url = create_service_url_id_method(VOLUME, NULL, NULL);
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
+	}
 
 	arraylist* params;
 	arraylist_new(&params,
@@ -105,65 +80,14 @@ d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
 	struct http_response_memory chunk;
 	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
 
-	arraylist_new(volumes, (void (*)(void *)) &free_docker_volume);
-	arraylist_new(warnings, &free);
+	*volumes = json_object_get(get_attr_json_object(response_obj, "Volumes"));
+	*warnings = json_object_get(get_attr_json_object(response_obj, "Warnings"));
 
-	json_object* volumes_obj;
-	json_object_object_get_ex(response_obj, "Volumes", &volumes_obj);
-	if (volumes_obj) {
-		size_t num_vols = json_object_array_length(volumes_obj);
-		for (int i = 0; i < num_vols; i++) {
-			json_object* current_obj = json_object_array_get_idx(volumes_obj,
-					i);
-			docker_volume* vi;
-			struct tm ctime;
-			memset(&ctime, 0, sizeof(struct tm));
-			parse_iso_datetime(get_attr_str(current_obj, "CreatedAt"), &ctime);
-			time_t created_time = mktime(&ctime);
-
-			make_docker_volume(&vi, created_time,
-					get_attr_str(current_obj, "Name"),
-					get_attr_str(current_obj, "Driver"),
-					get_attr_str(current_obj, "Mountpoint"),
-					get_attr_str(current_obj, "Scope"));
-
-			json_object* labels_obj;
-			json_object_object_get_ex(current_obj, "Labels", &labels_obj);
-			if (labels_obj != NULL) {
-				json_object_object_foreach(labels_obj, key, val)
-				{
-					pair* p;
-					make_pair(&p, key, (char*) json_object_get_string(val));
-					arraylist_add(vi->labels, p);
-				}
-			}
-			json_object* options_obj;
-			json_object_object_get_ex(current_obj, "Options", &options_obj);
-			if (options_obj != NULL) {
-				json_object_object_foreach(options_obj, key1, val1)
-				{
-					pair* p;
-					make_pair(&p, key1, (char*) json_object_get_string(val1));
-					arraylist_add(vi->options, p);
-				}
-			}
-			arraylist_add((*volumes), vi);
-		}
-	}
-
-	json_object* warnings_obj;
-	json_object_object_get_ex(response_obj, "Warnings", &warnings_obj);
-	if (warnings_obj) {
-		size_t num_warns = json_object_array_length(warnings_obj);
-		for (int i = 0; i < num_warns; i++) {
-			json_object* current_obj = json_object_array_get_idx(warnings_obj,
-					i);
-			char* warning = (char*) json_object_get_string(current_obj);
-			arraylist_add((*warnings), warning);
-		}
-	}
-
+	json_object_put(response_obj);
 	free(params);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -200,47 +124,17 @@ d_err_t docker_volume_create(docker_context* ctx, docker_result** result,
 	docker_log_debug("Request body is %s", request_str);
 
 	char* url = create_service_url_id_method(VOLUME, NULL, "create");
-	json_object *response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_post(ctx, result, url, NULL, request_str, &chunk, &response_obj);
-
-	//If volume was created parse the response and return the details.
-	if ((*result)->http_error_code == 201) {
-		docker_volume* vi;
-		struct tm ctime;
-		memset(&ctime, 0, sizeof(struct tm));
-		parse_iso_datetime(get_attr_str(response_obj, "CreatedAt"), &ctime);
-		time_t created_time = mktime(&ctime);
-		make_docker_volume(&vi, created_time,
-				get_attr_str(response_obj, "Name"),
-				get_attr_str(response_obj, "Driver"),
-				get_attr_str(response_obj, "Mountpoint"),
-				get_attr_str(response_obj, "Scope"));
-
-		json_object* labels_obj;
-		json_object_object_get_ex(response_obj, "Labels", &labels_obj);
-		if (labels_obj != NULL) {
-			json_object_object_foreach(labels_obj, key, val)
-			{
-				pair* p;
-				make_pair(&p, key, (char*) json_object_get_string(val));
-				arraylist_add(vi->labels, p);
-			}
-		}
-
-		json_object* status_obj;
-		json_object_object_get_ex(response_obj, "Status", &status_obj);
-		if (status_obj != NULL) {
-			json_object_object_foreach(status_obj, key1, val1)
-			{
-				pair* p;
-				make_pair(&p, key1, (char*) json_object_get_string(val1));
-				arraylist_add(vi->status, p);
-			}
-		}
-		(*volume) = vi;
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
 	}
 
+	struct http_response_memory chunk;
+	docker_api_post(ctx, result, url, NULL, request_str, &chunk, volume);
+
+	json_object_put(request_obj);
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 
@@ -259,47 +153,16 @@ d_err_t docker_volume_inspect(docker_context* ctx, docker_result** result,
 		return E_INVALID_INPUT;
 	}
 	char* url = create_service_url_id_method(VOLUME, NULL, name);
-	json_object *response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
-
-	//If volume was returned parse the response and return the details.
-	if ((*result)->http_error_code == 200) {
-		docker_volume* vi;
-		struct tm ctime;
-		memset(&ctime, 0, sizeof(struct tm));
-		parse_iso_datetime(get_attr_str(response_obj, "CreatedAt"), &ctime);
-		time_t created_time = mktime(&ctime);
-		make_docker_volume(&vi, created_time,
-				get_attr_str(response_obj, "Name"),
-				get_attr_str(response_obj, "Driver"),
-				get_attr_str(response_obj, "Mountpoint"),
-				get_attr_str(response_obj, "Scope"));
-
-		json_object* labels_obj;
-		json_object_object_get_ex(response_obj, "Labels", &labels_obj);
-		if (labels_obj != NULL) {
-			json_object_object_foreach(labels_obj, key, val)
-			{
-				pair* p;
-				make_pair(&p, key, (char*) json_object_get_string(val));
-				arraylist_add(vi->labels, p);
-			}
-		}
-
-		json_object* status_obj;
-		json_object_object_get_ex(response_obj, "Status", &status_obj);
-		if (status_obj != NULL) {
-			json_object_object_foreach(status_obj, key1, val1)
-			{
-				pair* p;
-				make_pair(&p, key1, (char*) json_object_get_string(val1));
-				arraylist_add(vi->status, p);
-			}
-		}
-		(*volume) = vi;
+	if (url == NULL) {
+		return E_ALLOC_FAILED;
 	}
 
+	struct http_response_memory chunk;
+	docker_api_get(ctx, result, url, NULL, &chunk, volume);
+
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
 	return E_SUCCESS;
 }
 

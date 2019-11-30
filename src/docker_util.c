@@ -107,6 +107,14 @@ long long get_attr_long_long(json_object* obj, char* name) {
 	return attr;
 }
 
+time_t get_attr_time(json_object* obj, char* name) {
+	struct tm ctime;
+	memset(&ctime, 0, sizeof(struct tm));
+	parse_iso_datetime(get_attr_str(obj, "name"), &ctime);
+	time_t time_ret = mktime(&ctime);
+	return time_ret;
+}
+
 json_object* get_attr_json_object(json_object* obj, char* name) {
 	json_object* extractObj = NULL;
 	json_object_object_get_ex(obj, name, &extractObj);

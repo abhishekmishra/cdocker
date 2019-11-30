@@ -187,6 +187,15 @@ unsigned long get_attr_unsigned_long(json_object* obj, char* name);
 long long get_attr_long_long(json_object* obj, char* name);
 
 /**
+ * Get the time_t object with the given key from a json_object
+ * 
+ * \param obj the json_object
+ * \param name of the string attribute
+ * \return time_t value of the attribute
+ */
+time_t get_attr_time(json_object* obj, char* name);
+
+/**
  * Get a long long object with the given key from a json_object
  *
  * \param obj the json object

@@ -44,9 +44,14 @@
 static docker_context* ctx = NULL;
 static docker_result* res;
 
+void handle_result_for_test(docker_result* result) {
+	docker_log_info(result->url);
+}
+
 static int group_setup(void **state) {
 	curl_global_init(CURL_GLOBAL_ALL);
 	make_docker_context_default_local(&ctx);
+	ctx->result_handler_fn = &handle_result_for_test;
 	return E_SUCCESS;
 }
 

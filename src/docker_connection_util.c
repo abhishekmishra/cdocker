@@ -450,6 +450,10 @@ d_err_t docker_api_post_buf_cb_w_content_type(docker_context* ctx,
 			}
 			(*result)->start_time = start;
 			(*result)->end_time = end;
+
+			if (ctx->result_handler_fn != NULL) {
+				ctx->result_handler_fn(*result);
+			}
 		}
 		/* always cleanup */
 		curl_easy_cleanup(curl);
@@ -529,6 +533,10 @@ d_err_t docker_api_post_cb_w_content_type(docker_context* ctx,
 			}
 			(*result)->start_time = start;
 			(*result)->end_time = end;
+
+			if (ctx->result_handler_fn != NULL) {
+				ctx->result_handler_fn(*result);
+			}
 		}
 		/* always cleanup */
 		curl_easy_cleanup(curl);
@@ -616,6 +624,10 @@ d_err_t docker_api_get_cb(docker_context* ctx, docker_result** result,
 			}
 			(*result)->start_time = start;
 			(*result)->end_time = end;
+
+			if (ctx->result_handler_fn != NULL) {
+				ctx->result_handler_fn(*result);
+			}
 		}
 
 		/* always cleanup */
@@ -683,6 +695,10 @@ d_err_t docker_api_delete(docker_context* ctx, docker_result** result,
 			}
 			(*result)->start_time = start;
 			(*result)->end_time = end;
+
+			if (ctx->result_handler_fn != NULL) {
+				ctx->result_handler_fn(*result);
+			}
 		}
 
 		/* always cleanup */

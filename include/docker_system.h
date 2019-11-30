@@ -104,15 +104,15 @@ d_err_t docker_system_info(docker_context* ctx, docker_result** result,
 typedef arraylist									docker_event_list;
 #define free_docker_event_list(event_ls)			arraylist_free(event_ls)
 #define docker_event_list_length(event_ls)			arraylist_length(event_ls)
-#define docker_event_list_get(event_ls, i)			arraylist_get(event_ls, i)
+#define docker_event_list_get_idx(event_ls, i)			arraylist_get(event_ls, i)
 
 typedef json_object									docker_event;
 #define free_docker_event(event)					json_object_put((json_object*) event)
 #define docker_event_type_get(event)				get_attr_str((json_object*)event, "Type")
 #define docker_event_action_get(event)				get_attr_str((json_object*)event, "Action")
 #define docker_event_time_get(event)				get_attr_unsigned_long((json_object*)event, "time")
-#define docker_event_actor_id_get(event)			get_attr_str(get_json_object((json_object*)event, "Actor"), "ID")
-#define docker_event_attributes_get(event)			get_json_object(get_json_object((json_object*)event, "Actor"), "Attributes")
+#define docker_event_actor_id_get(event)			get_attr_str(get_attr_json_object((json_object*)event, "Actor"), "ID")
+#define docker_event_attributes_get(event)			get_attr_json_object(get_attr_json_object((json_object*)event, "Actor"), "Attributes")
 #define docker_event_attributes_foreach(event)		json_object_object_foreach(docker_event_attributes_get(event), key, val)
 
 /**
@@ -146,82 +146,91 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 
 //Docker df
 
-//{
-//  "LayersSize": 1092588,
-//  "Images": [
-//    {
-//      "Id": "sha256:2b8fd9751c4c0f5dd266fcae00707e67a2545ef34f9a29354585f93dac906749",
-//      "ParentId": "",
-//      "RepoTags": [
-//        "busybox:latest"
-//      ],
-//      "RepoDigests": [
-//        "busybox@sha256:a59906e33509d14c036c8678d687bd4eec81ed7c4b8ce907b888c607f6a1e0e6"
-//      ],
-//      "Created": 1466724217,
-//      "Size": 1092588,
-//      "SharedSize": 0,
-//      "VirtualSize": 1092588,
-//      "Labels": {},
-//      "Containers": 1
-//    }
-//  ],
-//  "Containers": [
-//    {
-//      "Id": "e575172ed11dc01bfce087fb27bee502db149e1a0fad7c296ad300bbff178148",
-//      "Names": [
-//        "/top"
-//      ],
-//      "Image": "busybox",
-//      "ImageID": "sha256:2b8fd9751c4c0f5dd266fcae00707e67a2545ef34f9a29354585f93dac906749",
-//      "Command": "top",
-//      "Created": 1472592424,
-//      "Ports": [],
-//      "SizeRootFs": 1092588,
-//      "Labels": {},
-//      "State": "exited",
-//      "Status": "Exited (0) 56 minutes ago",
-//      "HostConfig": {
-//        "NetworkMode": "default"
-//      },
-//      "NetworkSettings": {
-//        "Networks": {
-//          "bridge": {
-//            "IPAMConfig": null,
-//            "Links": null,
-//            "Aliases": null,
-//            "NetworkID": "d687bc59335f0e5c9ee8193e5612e8aee000c8c62ea170cfb99c098f95899d92",
-//            "EndpointID": "8ed5115aeaad9abb174f68dcf135b49f11daf597678315231a32ca28441dec6a",
-//            "Gateway": "172.18.0.1",
-//            "IPAddress": "172.18.0.2",
-//            "IPPrefixLen": 16,
-//            "IPv6Gateway": "",
-//            "GlobalIPv6Address": "",
-//            "GlobalIPv6PrefixLen": 0,
-//            "MacAddress": "02:42:ac:12:00:02"
-//          }
-//        }
-//      },
-//      "Mounts": []
-//    }
-//  ],
-//  "Volumes": [
-//    {
-//      "Name": "my-volume",
-//      "Driver": "local",
-//      "Mountpoint": "/var/lib/docker/volumes/my-volume/_data",
-//      "Labels": null,
-//      "Scope": "local",
-//      "Options": null,
-//      "UsageData": {
-//        "Size": 10920104,
-//        "RefCount": 2
-//      }
-//    }
-//  ]
-//}
+/**
+ * Gets the docker version information
+ *
+ * \param ctx docker context
+ * \param result object
+ * \param version object to return
+ * \return error code.
+ */
+MODULE_API d_err_t docker_system_version(docker_context* ctx, docker_result** result,
+	docker_version** version);
+
+typedef json_object										docker_df;
+typedef json_object										docker_df_image;
+typedef json_object										docker_df_container;
+typedef json_object										docker_df_volume;
+typedef json_object										docker_df_volume_usage_data;
+
+#define docker_df_image_id_get(img)						get_attr_str((json_object*)img, "Id")
+#define docker_df_image_parent_id_get(img)				get_attr_str((json_object*)img, "ParentId")
+#define docker_df_image_created_get(img)				get_attr_unsigned_long((json_object*)img, "Created")
+#define docker_df_image_size_get(img)					get_attr_unsigned_long((json_object*)img, "Size")
+#define docker_df_image_shared_size_get(img)			get_attr_unsigned_long((json_object*)img, "SharedSize")
+#define docker_df_image_virtual_size_get(img)			get_attr_unsigned_long((json_object*)img, "VirtualSize")
+#define docker_df_image_containers_get(img)				get_attr_unsigned_long((json_object*)img, "Containers")
+
+#define docker_df_image_repo_tags_get(img)				get_attr_json_object((json_object*)img, "RepoTags")
+#define docker_df_image_repo_tags_length(img)			json_object_array_length(docker_df_image_repo_tags_get(img))
+#define docker_df_image_repo_tags_get_idx(img, i)		(const char*)json_object_array_get_idx(docker_df_image_repo_tags_get(img), i)
+
+#define docker_df_image_repo_digests_get(img)			get_attr_json_object((json_object*)img, "RepoDigests")
+#define docker_df_image_repo_digests_length(img)		json_object_array_length(docker_df_image_repo_digests_get(img))
+#define docker_df_image_repo_digests_get_idx(img, i)	(const char*)json_object_array_get_idx(docker_df_image_repo_digests_get(img), i)
+
+#define docker_df_container_id_get(ctr)					get_attr_str((json_object*)ctr, "Id")
+#define docker_df_container_image_get(ctr)				get_attr_str((json_object*)ctr, "Image")
+#define docker_df_container_image_id_get(ctr)			get_attr_str((json_object*)ctr, "ImageID")
+#define docker_df_container_command_get(ctr)			get_attr_str((json_object*)ctr, "Command")
+#define docker_df_container_created_get(ctr)			get_attr_unsigned_long((json_object*)ctr, "Created")
+#define docker_df_container_size_rootfs_get(ctr)		get_attr_unsigned_long((json_object*)ctr, "SizeRootFs")
+#define docker_df_container_state_get(ctr)				get_attr_str((json_object*)ctr, "State")
+#define docker_df_container_status_get(ctr)				get_attr_str((json_object*)ctr, "Status")
+
+#define docker_df_volume_name_get(vol)					get_attr_str((json_object*)vol, "Name")
+#define docker_df_volume_driver_get(vol)				get_attr_str((json_object*)vol, "Driver")
+#define docker_df_volume_mountpoint_get(vol)			get_attr_str((json_object*)vol, "Mountpoint")
+#define docker_df_volume_scope_get(vol)					get_attr_str((json_object*)vol, "Scope")
+#define docker_df_volume_usage_data_get(vol)			(docker_df_volume_usage_data*)get_attr_json_object((json_object*)vol, "UsageData")
+
+#define docker_df_volume_usage_data_size_get(ud)		get_attr_unsigned_long((json_object*)ud, "Size")
+#define docker_df_volume_usage_data_ref_count_get(ud)	get_attr_unsigned_long((json_object*)ud, "RefCount")
+
+#define docker_df_container_names_get(ctr)				get_attr_json_object((json_object*)ctr, "Names")
+#define docker_df_container_names_length(ctr)			json_object_array_length(docker_df_container_names_get(ctr))
+#define docker_df_container_names_get_idx(ctr, i)		(const char*)json_object_array_get_idx(docker_df_container_names_get(ctr), i)
+
+#define docker_df_container_mounts_get(ctr)				get_attr_json_object((json_object*)ctr, "Mounts")
+#define docker_df_container_mounts_length(ctr)			json_object_array_length(docker_df_container_mounts_get(ctr))
+#define docker_df_container_mounts_get_idx(ctr, i)		(const char*)json_object_array_get_idx(docker_df_container_mounts_get(ctr), i)
+
+#define free_docker_df(df)								json_object_put((json_object*) df)
+#define docker_df_layers_size_get(df)					get_attr_unsigned_long((json_object*)df, "LayersSize")
+
+#define docker_df_images_get(df)						get_attr_json_object((json_object*)df, "Images")
+#define docker_df_images_length(df)						json_object_array_length(docker_df_images_get(df))
+#define docker_df_images_get_idx(df, i)					(docker_df_image*)json_object_array_get_idx(docker_df_images_get(df), i)
+
+#define docker_df_containers_get(df)					get_attr_json_object((json_object*)df, "Containers")
+#define docker_df_containers_length(df)					json_object_array_length(docker_df_containers_get(df))
+#define docker_df_containers_get_idx(df, i)				(docker_df_container*)json_object_array_get_idx(docker_df_containers_get(df), i)
+
+#define docker_df_volumes_get(df)						get_attr_json_object((json_object*)df, "Volumes")
+#define docker_df_volumes_length(df)					json_object_array_length(docker_df_volumes_get(df))
+#define docker_df_volumes_get_idx(df, i)				(docker_df_volume*)json_object_array_get_idx(docker_df_volumes_get(df), i)
 
 //TODO docker df
+/**
+ * Gets the docker usage data
+ *
+ * \param ctx docker context
+ * \param result object
+ * \param docker_df object to return
+ * \return error code.
+ */
+MODULE_API d_err_t docker_system_df(docker_context* ctx, docker_result** result,
+	docker_df** df);
 
 #ifdef __cplusplus 
 }

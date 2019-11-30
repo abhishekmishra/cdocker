@@ -193,7 +193,30 @@ long long get_attr_long_long(json_object* obj, char* name);
  * \param name of the object attribute
  * \return long long value of attribute
  */
-json_object* get_json_object(json_object* obj, char* name);
+json_object* get_attr_json_object(json_object* obj, char* name);
+
+/**
+ * Get the json type of the attribute identified by "name" of 
+ * the given json_object.
+ * See the json_type enum for possible values.
+ *
+ * \param obj the json object
+ * \param name of the attribute
+ * \return json_type
+ */
+json_type get_attr_type(json_object* obj, char* name);
+
+/**
+ * Get prettified json string.
+ * The returned string is owned by the json_object,
+ * and will be free when the json_object is freed.
+ * If caller needs to use the string beyond the lifetime
+ * of owning object, create a duplicate.
+ * 
+ * \param obj the json object.
+ * \return the json string.
+ */
+const char* get_json_string(json_object* obj);
 
 void parse_iso_datetime(char* date_str, struct tm* tm);
 

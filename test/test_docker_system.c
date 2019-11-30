@@ -95,19 +95,30 @@ static void test_events(void **state) {
 	assert_non_null(events);
 	assert_int_not_equal(docker_event_list_length(events), 0);
 	for (size_t i = 0; i < docker_event_list_length(events); i++) {
-		docker_event* evt = docker_event_list_get(events, i);
+		docker_event* evt = docker_event_list_get_idx(events, i);
 		assert_non_null(docker_event_action_get(evt));
 		docker_log_info("Event action is %s", docker_event_action_get(evt));
 	}
 }
 
+static void test_df(void** state) {
+	docker_df* df;
+	docker_system_df(ctx, &res, &df);
+	handle_error(res);
+	assert_int_equal(res->http_error_code, 200);
+	assert_non_null(df);
+	unsigned long layers_size = docker_df_layers_size_get(df);
+	docker_log_info("Layers Size is %lu", layers_size);
+	free_docker_df(df);
+}
 
 int docker_system_tests() {
 	const struct CMUnitTest tests[] = {
 	cmocka_unit_test(test_ping),
 	cmocka_unit_test(test_version),
 	cmocka_unit_test(test_info),
-	cmocka_unit_test(test_events)
+	cmocka_unit_test(test_events),
+	cmocka_unit_test(test_df),
  };
 	return cmocka_run_group_tests_name("docker system tests", tests,
 			group_setup, group_teardown);

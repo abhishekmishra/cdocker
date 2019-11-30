@@ -107,10 +107,25 @@ long long get_attr_long_long(json_object* obj, char* name) {
 	return attr;
 }
 
-json_object* get_json_object(json_object* obj, char* name) {
+json_object* get_attr_json_object(json_object* obj, char* name) {
 	json_object* extractObj = NULL;
 	json_object_object_get_ex(obj, name, &extractObj);
 	return extractObj;
+}
+
+json_type get_attr_type(json_object* obj, char* name) {
+	json_object* extractObj = NULL;
+	json_object_object_get_ex(obj, name, &extractObj);
+	if (extractObj == NULL) {
+		return json_type_null;
+	}
+	else {
+		return json_object_get_type(extractObj);
+	}
+}
+
+const char* get_json_string(json_object* obj) {
+	return json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PRETTY);
 }
 
 d_err_t make_pair(pair** p, char* key, char* value) {

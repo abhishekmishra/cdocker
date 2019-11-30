@@ -780,8 +780,8 @@ d_err_t make_docker_api_call_params(docker_api_call_params** api_call_params, do
 		return E_ALLOC_FAILED;
 	}
 	(*api_call_params)->object = object;
-	(*api_call_params)->id = id;
-	(*api_call_params)->method = method;
+	(*api_call_params)->id = (char*)id;
+	(*api_call_params)->method = (char*)method;
 	return E_SUCCESS;
 }
 

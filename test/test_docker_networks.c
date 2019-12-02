@@ -52,13 +52,14 @@ static int group_teardown(void **state) {
 }
 
 static void test_list_networks(void **state) {
-	arraylist* networks;
+	docker_network_list* networks;
 	docker_networks_list(ctx, &res, &networks, NULL, NULL, NULL, NULL, NULL, NULL);
 	handle_error(res);
-	size_t len_nets = arraylist_length(networks);
+	size_t len_nets = docker_network_list_length(networks);
 	for(int i = 0; i < len_nets; i++) {
-		docker_network* ni = (docker_network*)arraylist_get(networks, i);
-		assert_non_null(ni->name);
+		docker_network* ni = docker_network_list_get_idx(networks, i);
+		assert_non_null(ni);
+		assert_non_null(docker_network_name_get(ni));
 	}
 	assert_int_equal(res->http_error_code, 200);
 }
@@ -68,7 +69,7 @@ static void test_inspect_network(void **state) {
 	docker_network_inspect(ctx, &res, &net, "host", 0, NULL);
 	handle_error(res);
 	assert_int_equal(res->http_error_code, 200);
-	assert_string_equal(net->name, "host");
+	assert_string_equal(docker_network_name_get(net), "host");
 }
 
 int docker_networks_tests() {

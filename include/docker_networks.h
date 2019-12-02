@@ -36,57 +36,41 @@ extern "C" {
 #include "docker_util.h"
 #include "docker_connection_util.h"
 
-typedef struct docker_network_ipam_config_t {
-	char* subnet;
-	char* gateway;
-} docker_network_ipam_config;
+typedef json_object											docker_network_container;
+#define docker_network_container_name_get(ctr)				get_attr_str((json_object*)ctr, "Name")
+#define docker_network_container_endpoint_id_get(ctr)		get_attr_str((json_object*)ctr, "EndpointID")
+#define docker_network_container_mac_address_get(ctr)		get_attr_str((json_object*)ctr, "MacAddress")
+#define docker_network_container_ipv4_address_get(ctr)		get_attr_str((json_object*)ctr, "IPv4Address")
+#define docker_network_container_ipv6_address_get(ctr)		get_attr_str((json_object*)ctr, "IPv6Address")
 
-d_err_t make_docker_network_ipam_config(docker_network_ipam_config** config, char* subnet, char* gateway);
-void free_docker_network_ipam_config(docker_network_ipam_config* config);
+typedef json_object											docker_network_ipam;
+#define docker_network_ipam_driver_get(ipam)				get_attr_str((json_object*)ipam, "Driver")
+#define docker_network_ipam_config_length(ipam)				json_object_array_length(get_attr_json_object((json_object*)ipam, "Config"))
+#define docker_network_ipam_config_get_idx(ipam, i)			json_object_array_get_idx(get_attr_json_object((json_object*)ipam, "Config"))
 
-typedef struct docker_network_ipam_t {
-	char* driver;
-	arraylist* config; //of docker_network_ipam_config
-	arraylist* options;
-} docker_network_ipam;
+typedef json_object											docker_network;
+#define free_docker_network(net)							json_object_put((json_object*) net)
+#define docker_network_name_get(net)						get_attr_str((json_object*)net, "Name")
+#define docker_network_id_get(net)							get_attr_str((json_object*)net, "Id")
+#define docker_network_created_get(net)						get_attr_str((json_object*)net, "Created")
+#define docker_network_scope_get(net)						get_attr_str((json_object*)net, "Scope")
+#define docker_network_driver_get(net)						get_attr_str((json_object*)net, "Driver")
+#define docker_network_enable_ipv6_get(net)					get_attr_boolean((json_object*)net, "EnableIPv6")
+#define docker_network_internal_get(net)					get_attr_boolean((json_object*)net, "Internal")
+#define docker_network_attachable_get(net)					get_attr_boolean((json_object*)net, "Attachable")
+#define docker_network_ingress_get(net)						get_attr_boolean((json_object*)net, "Ingress")
+#define docker_network_options_get(net)						get_attr_json_object((json_object*)net, "Options")
+#define docker_network_options_foreach(net)					json_object_object_foreach(docker_network_options_get(net), key, val)
+#define docker_network_labels_get(net)						get_attr_json_object((json_object*)net, "Labels")
+#define docker_network_labels_foreach(net)					json_object_object_foreach(docker_network_labels_get(net), key, val)
+#define docker_network_ipam_get(net)						(docker_network_ipam*)get_attr_json_object((json_object*)net, "IPAM")
+#define docker_network_containers_get(net)					get_attr_json_object((json_object*)net, "Containers")
+#define docker_network_containers_foreach(net)				json_object_object_foreach(docker_network_containers_get(net), key, val)
 
-d_err_t make_docker_network_ipam(docker_network_ipam** ipam, char* driver);
-void free_docker_network_ipam(docker_network_ipam* ipam);
-
-typedef struct docker_network_container_t {
-	char* id;
-	char* name;
-	char* endpoint_id;
-	char* mac_address;
-	char* ipv4_address;
-	char* ipv6_address;
-} docker_network_container;
-
-d_err_t make_docker_network_container(docker_network_container** container,
-		char* id, char* name, char* endpoint_id, char* mac_address,
-		char* ipv4_address, char* ipv6_address);
-void free_docker_network_container(docker_network_container* container);
-
-typedef struct docker_network_t {
-	char* name;
-	char* id;
-	time_t created;
-	char* scope;
-	char* driver;
-	int enableIPv6;
-	docker_network_ipam* ipam;
-	int internal;
-	int attachable;
-	int ingress;
-	arraylist* containers; // of docker_network_container
-	arraylist* options; //of pair
-	arraylist* labels; //of pair
-} docker_network;
-
-d_err_t make_docker_network(docker_network** network, char* name,
-		char* id, time_t created, char* scope, char* driver, int enableIPv6,
-		docker_network_ipam* ipam, int internal, int attachable, int ingress);
-void free_docker_network(docker_network* network);
+typedef json_object											docker_network_list;
+#define free_docker_network_list(network_ls)				json_object_put(network_ls)
+#define docker_network_list_length(network_ls)				json_object_array_length(network_ls)
+#define docker_network_list_get_idx(network_ls, i)			(docker_network*) json_object_array_get_idx(network_ls, i)
 
 /**
  * List all networks which match the filters given.
@@ -104,7 +88,7 @@ void free_docker_network(docker_network* network);
  * \return error code
  */
 d_err_t docker_networks_list(docker_context* ctx, docker_result** result,
-		arraylist** networks, char* filter_driver, char* filter_id,
+		docker_network_list** networks, char* filter_driver, char* filter_id,
 		char* filter_label, char* filter_name, char* filter_scope,
 		char* filter_type);
 

@@ -35,9 +35,9 @@ int main(int argc, char **argv) {
 	//res = docker_system_tests();
 	//docker_log_info("#### Done                      ####");
 
-	//docker_log_info("#### Docker networks API      	####");
-	//res = docker_networks_tests();
-	//docker_log_info("#### Done                      ####");
+	docker_log_info("#### Docker networks API      	####");
+	res = docker_networks_tests();
+	docker_log_info("#### Done                      ####");
 
 	docker_log_info("#### Docker volumes API      	####");
 	res = docker_volumes_tests();

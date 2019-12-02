@@ -38,31 +38,49 @@ extern "C" {
 
 #define DEFAULT_DOCKER_FILE_NAME "Dockerfile"
 
-typedef struct docker_image_t {
-	char* id;
-	char* parent_id;
-	arraylist* repo_tags;
-	arraylist* repo_digests;
-	time_t created;
-	unsigned long size;
-	unsigned long virtual_size;
-	unsigned long shared_size;
-	arraylist* labels; //of pair
-	unsigned long containers;
-} docker_image;
+//typedef struct docker_image_t {
+//	char* id;
+//	char* parent_id;
+//	arraylist* repo_tags;
+//	arraylist* repo_digests;
+//	time_t created;
+//	unsigned long size;
+//	unsigned long virtual_size;
+//	unsigned long shared_size;
+//	arraylist* labels; //of pair
+//	unsigned long containers;
+//} docker_image;
+//
+//d_err_t make_docker_image(docker_image** image, char* id, char* parent_id,
+//		time_t created, unsigned long size, unsigned long virtual_size,
+//		unsigned long shared_size, unsigned long containers);
+//
+//void free_docker_image(docker_image* image);
 
-d_err_t make_docker_image(docker_image** image, char* id, char* parent_id,
-		time_t created, unsigned long size, unsigned long virtual_size,
-		unsigned long shared_size, unsigned long containers);
+typedef json_object											docker_image;
+#define docker_image_id_get(img)							get_attr_str((json_object*)img, "Id")
+#define docker_image_container_get(img)						get_attr_str((json_object*)img, "Container")
+#define docker_image_comment_get(img)						get_attr_str((json_object*)img, "Comment")
+#define docker_image_os_get(img)							get_attr_str((json_object*)img, "Os")
+#define docker_image_architecture_get(img)					get_attr_str((json_object*)img, "Architecture")
+#define docker_image_parent_get(img)						get_attr_str((json_object*)img, "Parent")
+#define docker_image_docker_version_get(img)				get_attr_str((json_object*)img, "DockerVersion")
+#define docker_image_virtual_size_get(img)					get_attr_long_long((json_object*)img, "VirtualSize")
+#define docker_image_size_get(img)							get_attr_long_long((json_object*)img, "Size")
+#define docker_image_author_get(img)						get_attr_str((json_object*)img, "Author")
+#define docker_image_created_get(img)						get_attr_str((json_object*)img, "Created")
 
-void free_docker_image(docker_image* image);
+typedef json_object											docker_image_list;
+#define free_docker_image_list(image_ls)					json_object_put(image_ls)
+#define docker_image_list_length(image_ls)					json_object_array_length(image_ls)
+#define docker_image_list_get_idx(image_ls, i)				(docker_image*) json_object_array_get_idx(image_ls, i)
 
 /**
  * List images matching the filters.
  *
  * \param ctx docker context
  * \param result the docker result object to return
- * \param images array list of images to be returned
+ * \param images list of images to be returned
  * \param all (0 indicates false, true otherwise)
  * \param digests add repo digests in return object (0 is false, true otherwise)
  * \param filter_before <image-name>[:<tag>], <image id> or <image@digest>
@@ -73,7 +91,7 @@ void free_docker_image(docker_image* image);
  * \return error code
  */
 d_err_t docker_images_list(docker_context* ctx, docker_result** result,
-		arraylist** images, int all, int digests, char* filter_before,
+		docker_image_list** images, int all, int digests, char* filter_before,
 		int filter_dangling, char* filter_label, char* filter_reference,
 		char* filter_since);
 

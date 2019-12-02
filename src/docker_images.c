@@ -32,49 +32,12 @@
 #include "docker_images.h"
 #include "tinydir.h"
 
-d_err_t make_docker_image(docker_image** image, char* id, char* parent_id,
-		time_t created, unsigned long size, unsigned long virtual_size,
-		unsigned long shared_size, unsigned long containers)
-{
-	(*image) = (docker_image*) calloc(1, sizeof(docker_image));
-	if ((*image) == NULL)
-	{
-		return E_ALLOC_FAILED;
-	}
-
-	(*image)->id = str_clone(id);
-	(*image)->parent_id = str_clone(parent_id);
-	(*image)->created = created;
-	(*image)->size = size;
-	(*image)->virtual_size = virtual_size;
-	(*image)->shared_size = shared_size;
-	(*image)->containers = containers;
-
-	arraylist_new(&(*image)->repo_tags, &free);
-	arraylist_new(&(*image)->repo_digests, &free);
-	arraylist_new(&(*image)->labels, (void (*)(void *)) &free_pair);
-
-	return E_SUCCESS;
-}
-
-void free_docker_image(docker_image* image)
-{
-	if (image)
-	{
-		free(image->id);
-		free(image->parent_id);
-		arraylist_free(image->repo_tags);
-		arraylist_free(image->repo_digests);
-		arraylist_free(image->labels);
-	}
-}
-
 /**
  * List images matching the filters.
  *
  * \param ctx docker context
  * \param result the docker result object to return
- * \param images array list of images to be returned
+ * \param images list of images to be returned
  * \param all (0 indicates false, true otherwise)
  * \param digests add repo digests in return object (0 is false, true otherwise)
  * \param filter_before <image-name>[:<tag>], <image id> or <image@digest>
@@ -85,7 +48,7 @@ void free_docker_image(docker_image* image)
  * \return error code
  */
 d_err_t docker_images_list(docker_context* ctx, docker_result** result,
-		arraylist** images, int all, int digests, char* filter_before,
+		docker_image_list** images, int all, int digests, char* filter_before,
 		int filter_dangling, char* filter_label, char* filter_reference,
 		char* filter_since)
 {
@@ -134,65 +97,8 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 		arraylist_add(params, p);
 	}
 
-	json_object *response_obj = NULL;
 	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
-
-	arraylist_new(images, (void (*)(void *)) &free_docker_image);
-	size_t num_imgs = json_object_array_length(response_obj);
-
-	for (size_t i = 0; i < num_imgs; i++)
-	{
-		json_object* current_obj = json_object_array_get_idx(response_obj, i);
-		docker_image* img;
-
-		make_docker_image(&img, get_attr_str(current_obj, "Id"),
-				get_attr_str(current_obj, "ParentId"),
-				get_attr_unsigned_long(current_obj, "Created"),
-				get_attr_unsigned_long(current_obj, "Size"),
-				get_attr_unsigned_long(current_obj, "VirtualSize"),
-				get_attr_unsigned_long(current_obj, "SharedSize"),
-				get_attr_unsigned_long(current_obj, "Containers"));
-
-		json_object* labels_obj;
-		json_object_object_get_ex(current_obj, "Labels", &labels_obj);
-		if (labels_obj != NULL)
-		{
-			json_object_object_foreach(labels_obj, key, val)
-			{
-				pair* p;
-				make_pair(&p, key, (char*) json_object_get_string(val));
-				arraylist_add(img->labels, p);
-			}
-		}
-		json_object* repo_tags_obj;
-		json_object_object_get_ex(current_obj, "RepoTags", &repo_tags_obj);
-		if (repo_tags_obj != NULL)
-		{
-			size_t num_repo_tags = json_object_array_length(repo_tags_obj);
-			for (size_t j = 0; j < num_repo_tags; j++)
-			{
-				arraylist_add(img->repo_tags,
-						(char*) json_object_get_string(
-								json_object_array_get_idx(repo_tags_obj, j)));
-			}
-		}
-		json_object* repo_digests_obj;
-		json_object_object_get_ex(current_obj, "RepoDigests",
-				&repo_digests_obj);
-		if (repo_digests_obj != NULL)
-		{
-			size_t num_repo_digests = json_object_array_length(repo_digests_obj);
-			for (size_t j = 0; j < num_repo_digests; j++)
-			{
-				arraylist_add(img->repo_digests,
-						(char*) json_object_get_string(
-								json_object_array_get_idx(repo_digests_obj,
-										j)));
-			}
-		}
-		arraylist_add((*images), img);
-	}
+	docker_api_get(ctx, result, url, params, &chunk, images);
 
 	arraylist_free(params);
 	if (chunk.memory != NULL) {

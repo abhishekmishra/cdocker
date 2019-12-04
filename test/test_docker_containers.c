@@ -37,10 +37,11 @@ void log_pull_message(docker_image_create_status* status, void* client_cbargs) {
 void log_stats(docker_container_stats* stats, void* client_cbargs) {
 	if (stats) {
 		docker_container_cpu_stats* cpu_stats =
-				stats->cpu_stats;
+				docker_container_stats_cpu_stats_get(stats);
 		docker_log_info("Cpu usage is %lu, num cpus is %d, usage%% is %f",
-				cpu_stats->system_cpu_usage, cpu_stats->online_cpus,
-				docker_container_stats_get_cpu_usage_percent(stats));
+				docker_container_cpu_stats_system_cpu_usage_get(cpu_stats), 
+				docker_container_cpu_stats_online_cpus_get(cpu_stats),
+				docker_container_stats_get_cpu_usage_percent(cpu_stats));
 	}
 }
 
@@ -173,11 +174,13 @@ static void test_stats_container(void **state) {
 	docker_container_stats* stats;
 	docker_container_get_stats(ctx, &res, &stats, id);
 	handle_error(res);
+
 	docker_container_cpu_stats* cpu_stats =
-			stats->cpu_stats;
+		docker_container_stats_cpu_stats_get(stats);
 	docker_log_info("Cpu usage is %lu, num cpus is %d, usage%% is %f",
-			cpu_stats->system_cpu_usage, cpu_stats->online_cpus,
-			docker_container_stats_get_cpu_usage_percent(stats));
+		docker_container_cpu_stats_system_cpu_usage_get(cpu_stats),
+		docker_container_cpu_stats_online_cpus_get(cpu_stats),
+		docker_container_stats_get_cpu_usage_percent(cpu_stats));
 
 	assert_int_equal(res->http_error_code, 200);
 

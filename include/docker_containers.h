@@ -449,81 +449,56 @@ d_err_t docker_container_changes(docker_context* ctx, docker_result** result,
 
 /////// Docker container stats
 
-typedef struct docker_container_pids_stats_t {
-	int current;
-} docker_container_pids_stats;
+typedef json_object													docker_percpu_usage_list;
+#define docker_percpu_usage_list_length(percpu_usage_ls)			json_object_array_length(percpu_usage_ls)
+#define docker_percpu_usage_list_get_idx(percpu_usage_ls, i)		(docker_percpu_usage*) json_object_array_get_idx(percpu_usage_ls, i)
 
-d_err_t make_docker_container_pids_stats(
-	docker_container_pids_stats** pids_stats, int current);
-void free_docker_container_pids_stats(docker_container_pids_stats* pids);
+typedef json_object													docker_cpu_usage;
+#define free_docker_cpu_usage(cpu_usg)								json_object_put((json_object*) cpu_usg)
+#define docker_cpu_usage_usermode_get(cpu_usg)						get_attr_long_long((json_object*)cpu_usg, "usage_in_usermode")
+#define docker_cpu_usage_total_get(cpu_usg)							get_attr_long_long((json_object*)cpu_usg, "total_usage")
+#define docker_cpu_usage_kernelmode_get(cpu_usg)					get_attr_long_long((json_object*)cpu_usg, "usage_in_kernelmode")
+#define docker_cpu_usage_percpu_usage_get(cpu_usg)					(docker_percpu_usage_list*)get_attr_json_object((json_object*)cpu_usg, "percpu_usage")
 
-typedef struct docker_container_net_stats_t {
-	char* name;
-	unsigned long rx_bytes;
-	unsigned long rx_dropped;
-	unsigned long rx_errors;
-	unsigned long rx_packets;
-	unsigned long tx_bytes;
-	unsigned long tx_dropped;
-	unsigned long tx_errors;
-	unsigned long tx_packets;
-} docker_container_net_stats;
+typedef json_object													docker_throttling_data;
+#define free_docker_throttling_data(throt)							json_object_put((json_object*) throt)
+#define docker_throttling_data_periods_get(throt)					get_attr_long_long((json_object*)throt, "periods")
+#define docker_throttling_data_throttled_periods_get(throt)			get_attr_long_long((json_object*)throt, "throttled_periods")
+#define docker_throttling_data_throttled_time_get(throt)			get_attr_long_long((json_object*)throt, "throttled_time")
 
-d_err_t make_docker_container_net_stats(docker_container_net_stats** net_stats,
-	char* name, unsigned long rx_bytes, unsigned long rx_dropped,
-	unsigned long rx_errors, unsigned long rx_packets,
-	unsigned long tx_bytes, unsigned long tx_dropped,
-	unsigned long tx_errors, unsigned long tx_packets);
-void free_docker_container_net_stats(docker_container_net_stats* net_stats);
+typedef json_object													docker_container_cpu_stats;
+#define free_docker_container_cpu_stats(cpu_stats)					json_object_put((json_object*) cpu_stats)
+#define docker_container_cpu_stats_system_cpu_usage_get(cpu_stats)	get_attr_long_long((json_object*)cpu_stats, "system_cpu_usage")
+#define docker_container_cpu_stats_online_cpus_get(cpu_stats)		get_attr_long((json_object*)cpu_stats, "online_cpus")
+#define docker_container_cpu_stats_cpu_usage_get(cpu_stats)			(docker_cpu_usage*)get_attr_json_object((json_object*)cpu_stats, "cpu_usage")
+#define docker_container_cpu_stats_throttling_data_get(cpu_stats)	(docker_throttling_data*)get_attr_json_object((json_object*)cpu_stats, "throttling_data")
 
-typedef struct docker_container_mem_stats_t {
-	unsigned long max_usage;
-	unsigned long usage;
-	unsigned long failcnt;
-	unsigned long limit;
-} docker_container_mem_stats;
+typedef json_object													docker_container_mem_stats;
+#define free_docker_container_mem_stats(mem_stats)					json_object_put((json_object*) mem_stats)
+#define docker_container_mem_stats_max_usage_get(mem_stats)			get_attr_long_long((json_object*)mem_stats, "max_usage")
+#define docker_container_mem_stats_usage_get(mem_stats)				get_attr_long_long((json_object*)mem_stats, "usage")
+#define docker_container_mem_stats_failcnt_get(mem_stats)			get_attr_long_long((json_object*)mem_stats, "failcnt")
+#define docker_container_mem_stats_limit_get(mem_stats)				get_attr_long_long((json_object*)mem_stats, "limit")
+#define docker_container_mem_stats_stats_get(mem_stats)				get_attr_json_object((json_object*)mem_stats, "stats")
+#define docker_container_mem_stats_stats_foreach(mem_stats)			json_object_object_foreach(docker_container_mem_stats_stats_get(mem_stats), key, val)
 
-d_err_t make_docker_container_mem_stats(docker_container_mem_stats** mem_stats,
-	unsigned long max_usage, unsigned long usage, unsigned long failcnt,
-	unsigned long limit);
-void free_docker_container_mem_stats(docker_container_mem_stats* mem_stats);
+typedef json_object													docker_container_net_stats;
+#define free_docker_container_net_stats(net_stats)					json_object_put((json_object*) net_stats)
+#define docker_container_net_stats_foreach(net_stats)				json_object_object_foreach(net_stats, key, val)
+#define docker_container_net_stats_stats_foreach(net_stats)			json_object_object_foreach(net_stats_val, key, val)
 
-//TODO: add throttling data
-typedef struct docker_container_cpu_stats_t {
-	arraylist* percpu_usage; //of unsigned long
-	unsigned long total_usage;
-	unsigned long usage_in_usermode;
-	unsigned long usage_in_kernelmode;
-	unsigned long system_cpu_usage;
-	int online_cpus;
-} docker_container_cpu_stats;
+typedef json_object													docker_container_pid_stats;
+#define free_docker_container_pid_stats(pid_stats)					json_object_put((json_object*) pid_stats)
+#define docker_container_pid_stats_foreach(pid_stats)				json_object_object_foreach(pid_stats, key, val)
 
-d_err_t make_docker_container_cpu_stats(docker_container_cpu_stats** cpu_stats,
-	unsigned long total_usage, unsigned long usage_in_usermode,
-	unsigned long usage_in_kernelmode, unsigned long system_cpu_usage,
-	int online_cpus);
-void free_docker_container_cpu_stats(docker_container_cpu_stats* cpu_stats);
-
-//TODO: define and add blkio stats
-typedef struct docker_container_stats_t {
-	struct tm* read;
-	docker_container_pids_stats* pid_stats;
-	arraylist* net_stats_list; //of docker_container_net_stats*
-	docker_container_mem_stats* mem_stats;
-	docker_container_cpu_stats* cpu_stats;
-	docker_container_cpu_stats* precpu_stats;
-} docker_container_stats;
-
-d_err_t make_docker_container_stats(docker_container_stats** stats,
-	struct tm* read, docker_container_pids_stats* pid_stats,
-	docker_container_mem_stats* mem_stats,
-	docker_container_cpu_stats* cpu_stats,
-	docker_container_cpu_stats* precpu_stats);
-
-void free_docker_container_stats(docker_container_stats* stats);
-
-float docker_container_stats_get_cpu_usage_percent(
-	docker_container_stats* stats);
+typedef json_object													docker_container_stats;
+#define free_docker_container_stats(stats)							json_object_put((json_object*) stats)
+#define docker_container_stats_read_get(stats)						get_attr_str((json_object*)stats, "read")
+#define docker_container_stats_pid_stats_get(stats)					(docker_container_pid_stats*)get_attr_json_object((json_object*)stats, "pid_stats")
+#define docker_container_stats_networks_get(stats)					(docker_container_net_stats*)get_attr_json_object((json_object*)stats, "networks")
+#define docker_container_stats_mem_stats_get(stats)					(docker_container_mem_stats*)get_attr_json_object((json_object*)stats, "memory_stats")
+#define docker_container_stats_cpu_stats_get(stats)					(docker_container_cpu_stats*)get_attr_json_object((json_object*)stats, "cpu_stats")
+#define docker_container_stats_precpu_stats_get(stats)				(docker_container_cpu_stats*)get_attr_json_object((json_object*)stats, "precpu_stats")
 
 /**
 	* Get stats from a running container. (the non-streaming version)
@@ -551,6 +526,9 @@ d_err_t docker_container_get_stats_cb(docker_context* ctx,
 	docker_result** result,
 	void (*docker_container_stats_cb)(docker_container_stats* stats,
 		void* cbargs), void* cbargs, char* id);
+
+float docker_container_stats_get_cpu_usage_percent(
+		docker_container_stats* stats);
 
 ///////////// Get Container Start, Stop, Restart, Kill, Rename, Pause, Unpause, Wait
 

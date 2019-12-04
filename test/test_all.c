@@ -23,9 +23,9 @@ int main(int argc, char **argv) {
 	docker_log_set_level(LOG_INFO);
 	docker_log_info("#### Starting clibdocker tests ####");
 
-	//docker_log_info("#### Docker container API      ####");
-	//res = docker_container_tests();
-	//docker_log_info("#### Done                      ####");
+	docker_log_info("#### Docker container API      ####");
+	res = docker_container_tests();
+	docker_log_info("#### Done                      ####");
 
 	docker_log_info("#### Docker images API      	####");
 	res = docker_images_tests();

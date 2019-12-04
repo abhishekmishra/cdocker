@@ -87,12 +87,12 @@ static void test_start(void **state) {
 
 static void test_list(void **state) {
 	char* id = *state;
-	docker_containers_list* containers;
+	docker_ctr_list* containers;
 	docker_container_list(ctx, &res, &containers, 0, 5, 1, "id", id, NULL);
 	handle_error(res);
 	docker_log_info("Read %d containers.\n",
-			docker_containers_list_length(containers));
-	assert_int_equal(docker_containers_list_length(containers), 1);
+			docker_ctr_list_length(containers));
+	assert_int_equal(docker_ctr_list_length(containers), 1);
 }
 
 // TODO: need a better test case, when we have a long

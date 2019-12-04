@@ -22,205 +22,236 @@ extern "C" {
 #include "docker_connection_util.h"
 #include "docker_util.h"
 
-typedef enum docker_container_port_type_t {
-	CONTAINER_PORT_TYPE_TCP = 1
-} docker_container_port_type;
+//typedef enum docker_container_port_type_t {
+//	CONTAINER_PORT_TYPE_TCP = 1
+//} docker_container_port_type;
+//
+///**
+//	* This struct holds the public port, private port and port type.
+//	*/
+//typedef struct docker_container_ports_t {
+//	long private_port;
+//	long public_port;
+//	docker_container_port_type type;
+//} docker_container_ports;
+//
+///**
+//	* Create a docker_container_ports instance.
+//	*
+//	* \param ports the instance to create.
+//	* \param priv the private port
+//	* \param pub the public port
+//	* \param type port type
+//	* \return error code
+//	*/
+//d_err_t make_docker_container_ports(docker_container_ports** ports, long priv,
+//	long pub, char* type);
+//
+///**
+//	* Free docker_container_ports instance.
+//	*
+//	* \param ports the ports struct to free.
+//	*/
+//void free_docker_container_ports(docker_container_ports* ports);
+//
+///**
+//	* A container label struct: Key value pair.
+//	*/
+//typedef struct docker_container_label_t {
+//	char* key;
+//	char* value;
+//} docker_container_label;
+//
+///**
+//	* Create a new label.
+//	*
+//	* \param label ptr to return value.
+//	* \param key
+//	* \param value
+//	* \return error code
+//	*/
+//d_err_t make_docker_container_label(docker_container_label** label,
+//	const char* key, const char* value);
+//
+///**
+//	* Free docker_container_label.
+//	*
+//	* \param label the label instance.
+//	*/
+//void free_docker_container_label(docker_container_label* label);
+//
+///**
+//	* Struct for the container host config.
+//	*/
+//typedef struct docker_container_host_config_t {
+//	long max_iops;
+//	long max_iobps;
+//	long blkio_weight;
+//	json_object* blkio_device_read_bps;
+//	json_object* blkio_device_write_bps;
+//	json_object* blkio_device_read_iops;
+//	json_object* blkio_device_write_iops;
+//	char* container_id_file;
+//	char* cpuset_spus;
+//	char* cpuset_mems;
+//	int cpu_percent;
+//	int cpu_shares;
+//	long cpu_period;
+//	long cpu_realtime_period;
+//	long cpu_realtime_runtime;
+//	arraylist* devices;
+//	char* ipc_mode;
+//	arraylist* lxc_conf;
+//	long memory;
+//	long memory_swap;
+//	long memory_reservation;
+//	long kernel_memory;
+//	bool oom_kill_disable;
+//	bool oom_score_adj;
+//	char* network_mode;
+//	char* pid_mode;
+//	json_object* port_bindings;
+//	bool privileged;
+//	bool readonly_rootfs;
+//	bool publish_all_ports;
+//	json_object* restart_policy;
+//	json_object* log_config;
+//	json_object* sysctls;
+//	json_object* ulimits;
+//	char* volume_driver;
+//	long shm_size;
+//}docker_container_host_config;
+//
+//
+///**
+//	* Create a new host config
+//	*
+//	* \param pointer to return instance
+//	* \param network_mode
+//	* \return error_code
+//	*/
+//d_err_t make_docker_container_host_config(
+//	docker_container_host_config** host_config, const char* network_mode);
+//
+///**
+//	* Free the docker_container_host_config
+//	* \param host_config
+//	*/
+//void free_docker_container_host_config(
+//	docker_container_host_config* host_config);
+//
+///**
+//	* Struct for the network settings item
+//	*/
+//typedef struct docker_container_network_settings_item_t {
+//	char* name;
+//	char* network_id;
+//	char* endpoint_id;
+//	char* gateway;
+//	char* ip_address;
+//	int ip_prefix_len;
+//	char* ipv6_gateway;
+//	char* global_ipv6_address;
+//	int global_ipv6_prefix_len;
+//	char* mac_address;
+//} docker_container_network_settings_item;
+//
+///**
+//	* Create a new network settings item
+//	*/
+//d_err_t make_docker_container_network_settings_item(
+//	docker_container_network_settings_item** item, const char* name,
+//	const char* network_id, const char* endpoint_id, const char* gateway,
+//	const char* ip_address, int ip_prefix_len, const char* ipv6_gateway,
+//	const char* global_ipv6_address, int global_ipv6_prefix_len,
+//	const char* mac_address);
+//
+//void free_docker_container_network_settings_item(
+//	docker_container_network_settings_item* settings_item);
+//
+//typedef struct docker_container_mount_t {
+//	char* name;
+//	char* type;
+//	char* source;
+//	char* destination;
+//	char* driver;
+//	char* mode;
+//	int rw;
+//	char* propagation;
+//} docker_container_mount;
+//
+///**
+//	* Create a new mount object
+//	*/
+//d_err_t make_docker_container_mount(docker_container_mount** mount,
+//	const char* name, const char* type, const char* source,
+//	const char* destination, const char* driver, const char* mode,
+//	const int rw, const char* propagation);
+//
+//void free_docker_container_mount(docker_container_mount* mount);
+//
+//typedef struct docker_container_list_item_t {
+//	char* id;
+//	char* image;
+//	char* image_id;
+//	char* command;
+//	long long created;
+//	char* state;
+//	char* status;
+//	long long size_rw;
+//	long long size_root_fs;
+//	docker_container_host_config* hostConfig;
+//	arraylist* names;
+//	arraylist* ports;
+//	arraylist* labels;
+//	arraylist* network_settings;
+//	arraylist* mounts;
+//} docker_container_list_item;
+//
+///**
+//	* Create a new containers list item.
+//	*/
+//d_err_t make_docker_containers_list_item(docker_container_list_item** item,
+//	const char* id, const char* image, const char* image_id,
+//	const char* command, const long long created, const char* state,
+//	const char* status, const long long size_rw,
+//	const long long size_root_fs,
+//	const docker_container_host_config* hostConfig);
+//
+//void free_docker_container_list_item(docker_container_list_item* item);
+//
+//typedef arraylist docker_containers_list;
 
-/**
-	* This struct holds the public port, private port and port type.
-	*/
-typedef struct docker_container_ports_t {
-	long private_port;
-	long public_port;
-	docker_container_port_type type;
-} docker_container_ports;
+typedef json_object										docker_ctr_port;
+#define free_docker_ctr_port(ctr_port)					json_object_put((json_object*) ctr_port)
+#define docker_ctr_port_type_get(ctr_port)				get_attr_str((json_object*)ctr_port, "Type")
+#define docker_ctr_port_private_port_get(ctr_port)		get_attr_long((json_object*)ctr_port, "PrivatePort")
+#define docker_ctr_port_public_port_get(ctr_port)		get_attr_long((json_object*)ctr_port, "PublicPort")
 
-/**
-	* Create a docker_container_ports instance.
-	*
-	* \param ports the instance to create.
-	* \param priv the private port
-	* \param pub the public port
-	* \param type port type
-	* \return error code
-	*/
-d_err_t make_docker_container_ports(docker_container_ports** ports, long priv,
-	long pub, char* type);
+typedef json_object										docker_ctr_ls_item;
+#define free_docker_ctr_ls_item(ctr)					json_object_put((json_object*) ctr)
+#define docker_ctr_ls_item_id_get(ctr)					get_attr_str((json_object*)ctr, "Id")
+#define docker_ctr_ls_item_names_get(ctr)				get_attr_json_object((json_object*)ctr, "Names")
+#define docker_ctr_ls_item_names_length(ctr)			json_object_array_length(docker_ctr_ls_item_names_get(ctr))
+#define docker_ctr_ls_item_names_get_idx(ctr, i)		(char*) json_object_array_get_idx(docker_ctr_ls_item_names_get(ctr), i)
+#define docker_ctr_ls_item_image_get(ctr)				get_attr_str((json_object*)ctr, "Image")
+#define docker_ctr_ls_item_image_id_get(ctr)			get_attr_str((json_object*)ctr, "ImageID")
+#define docker_ctr_ls_item_command_get(ctr)				get_attr_str((json_object*)ctr, "Command")
+#define docker_ctr_ls_item_created_get(ctr)				get_attr_long_long((json_object*)ctr, "Created")
+#define docker_ctr_ls_item_state_get(ctr)				get_attr_str((json_object*)ctr, "State")
+#define docker_ctr_ls_item_status_get(ctr)				get_attr_str((json_object*)ctr, "Status")
+#define docker_ctr_ls_item_size_rw_get(ctr)				get_attr_long_long((json_object*)ctr, "SizeRw")
+#define docker_ctr_ls_item_size_root_fs_get(ctr)		get_attr_long_long((json_object*)ctr, "SizeRootFs")
+#define docker_ctr_ls_item_ports_get(ctr)				get_attr_json_object((json_object*)ctr, "Ports")
+#define docker_ctr_ls_item_ports_length(ctr)			json_object_array_length(docker_ctr_ls_item_ports_get(ctr))
+#define docker_ctr_ls_item_ports_get_idx(ctr, i)		(docker_ctr_port*) json_object_array_get_idx(docker_ctr_ls_item_ports_get(ctr), i)
+#define docker_ctr_ls_item_ports_labels_get(vol)		get_attr_json_object((json_object*)vol, "Labels")
+#define docker_ctr_ls_item_ports_labels_foreach(vol)	json_object_object_foreach(docker_ctr_ls_item_ports_labels_get(vol), key, val)
 
-/**
-	* Free docker_container_ports instance.
-	*
-	* \param ports the ports struct to free.
-	*/
-void free_docker_container_ports(docker_container_ports* ports);
-
-/**
-	* A container label struct: Key value pair.
-	*/
-typedef struct docker_container_label_t {
-	char* key;
-	char* value;
-} docker_container_label;
-
-/**
-	* Create a new label.
-	*
-	* \param label ptr to return value.
-	* \param key
-	* \param value
-	* \return error code
-	*/
-d_err_t make_docker_container_label(docker_container_label** label,
-	const char* key, const char* value);
-
-/**
-	* Free docker_container_label.
-	*
-	* \param label the label instance.
-	*/
-void free_docker_container_label(docker_container_label* label);
-
-/**
-	* Struct for the container host config.
-	*/
-typedef struct docker_container_host_config_t {
-	long max_iops;
-	long max_iobps;
-	long blkio_weight;
-	json_object* blkio_device_read_bps;
-	json_object* blkio_device_write_bps;
-	json_object* blkio_device_read_iops;
-	json_object* blkio_device_write_iops;
-	char* container_id_file;
-	char* cpuset_spus;
-	char* cpuset_mems;
-	int cpu_percent;
-	int cpu_shares;
-	long cpu_period;
-	long cpu_realtime_period;
-	long cpu_realtime_runtime;
-	arraylist* devices;
-	char* ipc_mode;
-	arraylist* lxc_conf;
-	long memory;
-	long memory_swap;
-	long memory_reservation;
-	long kernel_memory;
-	bool oom_kill_disable;
-	bool oom_score_adj;
-	char* network_mode;
-	char* pid_mode;
-	json_object* port_bindings;
-	bool privileged;
-	bool readonly_rootfs;
-	bool publish_all_ports;
-	json_object* restart_policy;
-	json_object* log_config;
-	json_object* sysctls;
-	json_object* ulimits;
-	char* volume_driver;
-	long shm_size;
-}docker_container_host_config;
-
-
-/**
-	* Create a new host config
-	*
-	* \param pointer to return instance
-	* \param network_mode
-	* \return error_code
-	*/
-d_err_t make_docker_container_host_config(
-	docker_container_host_config** host_config, const char* network_mode);
-
-/**
-	* Free the docker_container_host_config
-	* \param host_config
-	*/
-void free_docker_container_host_config(
-	docker_container_host_config* host_config);
-
-/**
-	* Struct for the network settings item
-	*/
-typedef struct docker_container_network_settings_item_t {
-	char* name;
-	char* network_id;
-	char* endpoint_id;
-	char* gateway;
-	char* ip_address;
-	int ip_prefix_len;
-	char* ipv6_gateway;
-	char* global_ipv6_address;
-	int global_ipv6_prefix_len;
-	char* mac_address;
-} docker_container_network_settings_item;
-
-/**
-	* Create a new network settings item
-	*/
-d_err_t make_docker_container_network_settings_item(
-	docker_container_network_settings_item** item, const char* name,
-	const char* network_id, const char* endpoint_id, const char* gateway,
-	const char* ip_address, int ip_prefix_len, const char* ipv6_gateway,
-	const char* global_ipv6_address, int global_ipv6_prefix_len,
-	const char* mac_address);
-
-void free_docker_container_network_settings_item(
-	docker_container_network_settings_item* settings_item);
-
-typedef struct docker_container_mount_t {
-	char* name;
-	char* type;
-	char* source;
-	char* destination;
-	char* driver;
-	char* mode;
-	int rw;
-	char* propagation;
-} docker_container_mount;
-
-/**
-	* Create a new mount object
-	*/
-d_err_t make_docker_container_mount(docker_container_mount** mount,
-	const char* name, const char* type, const char* source,
-	const char* destination, const char* driver, const char* mode,
-	const int rw, const char* propagation);
-
-void free_docker_container_mount(docker_container_mount* mount);
-
-typedef struct docker_container_list_item_t {
-	char* id;
-	char* image;
-	char* image_id;
-	char* command;
-	long long created;
-	char* state;
-	char* status;
-	long long size_rw;
-	long long size_root_fs;
-	docker_container_host_config* hostConfig;
-	arraylist* names;
-	arraylist* ports;
-	arraylist* labels;
-	arraylist* network_settings;
-	arraylist* mounts;
-} docker_container_list_item;
-
-/**
-	* Create a new containers list item.
-	*/
-d_err_t make_docker_containers_list_item(docker_container_list_item** item,
-	const char* id, const char* image, const char* image_id,
-	const char* command, const long long created, const char* state,
-	const char* status, const long long size_rw,
-	const long long size_root_fs,
-	const docker_container_host_config* hostConfig);
-
-void free_docker_container_list_item(docker_container_list_item* item);
-
-typedef arraylist docker_containers_list;
+typedef json_object										docker_ctr_list;
+#define free_docker_ctr_list(ctr_ls)					json_object_put(ctr_ls)
+#define docker_ctr_list_length(ctr_ls)					json_object_array_length(ctr_ls)
+#define docker_ctr_list_get_idx(ctr_ls, i)				(docker_ctr*) json_object_array_get_idx(ctr_ls, i)
 
 /**
 	* List docker containers
@@ -235,15 +266,8 @@ typedef arraylist docker_containers_list;
 	* \return error code
 	*/
 d_err_t docker_container_list(docker_context* ctx, docker_result** result,
-	docker_containers_list** container_list, int all, int limit, int size,
+	docker_ctr_list** container_list, int all, int limit, int size,
 	...);
-
-d_err_t make_docker_containers_list(docker_containers_list** container_list);
-int docker_containers_list_add(docker_containers_list* list,
-	docker_container_list_item* item);
-docker_container_list_item* docker_containers_list_get_idx(
-	docker_containers_list* list, int i);
-size_t docker_containers_list_length(docker_containers_list* list);
 
 typedef struct health_config_t {
 	char** test;
@@ -340,7 +364,7 @@ typedef struct docker_container_details_t {
 	time_t created;
 	char* driver;
 	arraylist* exec_ids;
-	docker_container_host_config* host_config;
+	//docker_container_host_config* host_config;
 	char* hostname_path;
 	char* hosts_path;
 	char* log_path;

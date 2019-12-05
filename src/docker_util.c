@@ -51,6 +51,18 @@ char* get_attr_str(json_object* obj, char* name) {
 	return attr;
 }
 
+d_err_t set_attr_str(json_object* obj, char* name, char* val) {
+	json_object* value_obj;
+	json_object_object_get_ex(obj, name, &value_obj);
+	if (!value_obj) {
+		value_obj = json_object_new_string(val);
+		return json_object_object_add(obj, name, value_obj);
+	}
+	else {
+		return json_object_set_string(value_obj, val);
+	}
+}
+
 int get_attr_boolean(json_object* obj, char* name) {
 	json_object* extractObj;
 	char* attr = NULL;
@@ -66,6 +78,18 @@ int get_attr_boolean(json_object* obj, char* name) {
 	return flag;
 }
 
+d_err_t set_attr_boolean(json_object* obj, char* name, int val) {
+	json_object* value_obj;
+	json_object_object_get_ex(obj, name, &value_obj);
+	if (!value_obj) {
+		value_obj = json_object_new_int(val);
+		return json_object_object_add(obj, name, value_obj);
+	}
+	else {
+		return json_object_set_int(value_obj, val);
+	}
+}
+
 int get_attr_int(json_object* obj, char* name) {
 	json_object* extractObj;
 	int attr = -1;
@@ -75,6 +99,18 @@ int get_attr_int(json_object* obj, char* name) {
 	}
 //	docker_log_debug("%s is |%d|.", name, attr);
 	return attr;
+}
+
+d_err_t set_attr_int(json_object* obj, char* name, int val) {
+	json_object* value_obj;
+	json_object_object_get_ex(obj, name, &value_obj);
+	if (!value_obj) {
+		value_obj = json_object_new_int(val);
+		return json_object_object_add(obj, name, value_obj);
+	}
+	else {
+		return json_object_set_int(value_obj, val);
+	}
 }
 
 long get_attr_long(json_object* obj, char* name) {
@@ -87,6 +123,18 @@ long get_attr_long(json_object* obj, char* name) {
 	return attr;
 }
 
+d_err_t set_attr_long(json_object* obj, char* name, long val) {
+	json_object* value_obj;
+	json_object_object_get_ex(obj, name, &value_obj);
+	if (!value_obj) {
+		value_obj = json_object_new_int64(val);
+		return json_object_object_add(obj, name, value_obj);
+	}
+	else {
+		return json_object_set_int64(value_obj, val);
+	}
+}
+
 unsigned long get_attr_unsigned_long(json_object* obj, char* name) {
 	json_object* extractObj;
 	unsigned long attr = -1;
@@ -95,6 +143,18 @@ unsigned long get_attr_unsigned_long(json_object* obj, char* name) {
 		free(extractObj);
 	}
 	return attr;
+}
+
+d_err_t set_attr_unsigned_long(json_object* obj, char* name, unsigned long val) {
+	json_object* value_obj;
+	json_object_object_get_ex(obj, name, &value_obj);
+	if (!value_obj) {
+		value_obj = json_object_new_int64(val);
+		return json_object_object_add(obj, name, value_obj);
+	}
+	else {
+		return json_object_set_int64(value_obj, val);
+	}
 }
 
 long long get_attr_long_long(json_object* obj, char* name) {
@@ -107,6 +167,18 @@ long long get_attr_long_long(json_object* obj, char* name) {
 	return attr;
 }
 
+d_err_t set_attr_long_long(json_object* obj, char* name, long long val) {
+	json_object* value_obj;
+	json_object_object_get_ex(obj, name, &value_obj);
+	if (!value_obj) {
+		value_obj = json_object_new_int64(val);
+		return json_object_object_add(obj, name, value_obj);
+	}
+	else {
+		return json_object_set_int64(value_obj, val);
+	}
+}
+
 time_t get_attr_time(json_object* obj, char* name) {
 	struct tm ctime;
 	memset(&ctime, 0, sizeof(struct tm));
@@ -115,10 +187,26 @@ time_t get_attr_time(json_object* obj, char* name) {
 	return time_ret;
 }
 
+d_err_t set_attr_time(json_object* obj, char* name, time_t val) {
+	json_object* value_obj;
+	json_object_object_get_ex(obj, name, &value_obj);
+	if (!value_obj) {
+		value_obj = json_object_new_int64(val);
+		return json_object_object_add(obj, name, value_obj);
+	}
+	else {
+		return json_object_set_int64(value_obj, val);
+	}
+}
+
 json_object* get_attr_json_object(json_object* obj, char* name) {
 	json_object* extractObj = NULL;
 	json_object_object_get_ex(obj, name, &extractObj);
 	return extractObj;
+}
+
+d_err_t set_attr_json_object(json_object* obj, char* name, json_object* val) {
+	return json_object_object_add(obj, name, val);
 }
 
 json_type get_attr_type(json_object* obj, char* name) {

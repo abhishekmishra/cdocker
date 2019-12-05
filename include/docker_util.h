@@ -142,6 +142,16 @@ char* str_clone(const char* from);
 char* get_attr_str(json_object* obj, char* name);
 
 /**
+ * Set a string object with the given key in a json_object
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \param val string value of the attribute
+ * \return string value of attribute
+ */
+d_err_t set_attr_str(json_object* obj, char* name, char* val);
+
+/**
  * Get a int object with the given key from a json_object
  *
  * \param obj the json object
@@ -149,6 +159,16 @@ char* get_attr_str(json_object* obj, char* name);
  * \return int value of attribute
  */
 int get_attr_int(json_object* obj, char* name);
+
+/**
+ * Set an integer object with the given key in a json_object
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \param val string value of the attribute
+ * \return string value of attribute
+ */
+d_err_t set_attr_int(json_object* obj, char* name, int val);
 
 /**
  * Get a boolean object with the given key from a json_object
@@ -160,6 +180,16 @@ int get_attr_int(json_object* obj, char* name);
 int get_attr_boolean(json_object* obj, char* name);
 
 /**
+ * Set a boolean object with the given key in a json_object
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \param val string value of the attribute
+ * \return string value of attribute
+ */
+d_err_t set_attr_boolean(json_object* obj, char* name, int val);
+
+/**
  * Get a long object with the given key from a json_object
  *
  * \param obj the json object
@@ -167,6 +197,16 @@ int get_attr_boolean(json_object* obj, char* name);
  * \return long value of attribute
  */
 long get_attr_long(json_object* obj, char* name);
+
+/**
+ * Set a long integer object with the given key in a json_object
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \param val string value of the attribute
+ * \return string value of attribute
+ */
+d_err_t set_attr_long(json_object* obj, char* name, long val);
 
 /**
  * Get a unsigned long object with the given key from a json_object
@@ -178,6 +218,16 @@ long get_attr_long(json_object* obj, char* name);
 unsigned long get_attr_unsigned_long(json_object* obj, char* name);
 
 /**
+ * Set an unsigned long integer object with the given key in a json_object
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \param val string value of the attribute
+ * \return string value of attribute
+ */
+d_err_t set_attr_unsigned_long(json_object* obj, char* name, unsigned long val);
+
+/**
  * Get a long long object with the given key from a json_object
  *
  * \param obj the json object
@@ -185,6 +235,16 @@ unsigned long get_attr_unsigned_long(json_object* obj, char* name);
  * \return long long value of attribute
  */
 long long get_attr_long_long(json_object* obj, char* name);
+
+/**
+ * Set a long long int object with the given key in a json_object
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \param val string value of the attribute
+ * \return string value of attribute
+ */
+d_err_t set_attr_long_long(json_object* obj, char* name, long long val);
 
 /**
  * Get the time_t object with the given key from a json_object
@@ -196,6 +256,16 @@ long long get_attr_long_long(json_object* obj, char* name);
 time_t get_attr_time(json_object* obj, char* name);
 
 /**
+ * Set a time object with the given key in a json_object
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \param val string value of the attribute
+ * \return string value of attribute
+ */
+d_err_t set_attr_time(json_object* obj, char* name, time_t val);
+
+/**
  * Get a long long object with the given key from a json_object
  *
  * \param obj the json object
@@ -203,6 +273,16 @@ time_t get_attr_time(json_object* obj, char* name);
  * \return long long value of attribute
  */
 json_object* get_attr_json_object(json_object* obj, char* name);
+
+/**
+ * Set a json object with the given key in a json_object
+ *
+ * \param obj the json object
+ * \param name of the string attribute
+ * \param val string value of the attribute
+ * \return string value of attribute
+ */
+d_err_t set_attr_json_object(json_object* obj, char* name, json_object* val);
 
 /**
  * Get the json type of the attribute identified by "name" of 

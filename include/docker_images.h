@@ -38,25 +38,6 @@ extern "C" {
 
 #define DEFAULT_DOCKER_FILE_NAME "Dockerfile"
 
-//typedef struct docker_image_t {
-//	char* id;
-//	char* parent_id;
-//	arraylist* repo_tags;
-//	arraylist* repo_digests;
-//	time_t created;
-//	unsigned long size;
-//	unsigned long virtual_size;
-//	unsigned long shared_size;
-//	arraylist* labels; //of pair
-//	unsigned long containers;
-//} docker_image;
-//
-//d_err_t make_docker_image(docker_image** image, char* id, char* parent_id,
-//		time_t created, unsigned long size, unsigned long virtual_size,
-//		unsigned long shared_size, unsigned long containers);
-//
-//void free_docker_image(docker_image* image);
-
 typedef json_object											docker_image;
 #define docker_image_id_get(img)							get_attr_str((json_object*)img, "Id")
 #define docker_image_container_get(img)						get_attr_str((json_object*)img, "Container")
@@ -69,6 +50,12 @@ typedef json_object											docker_image;
 #define docker_image_size_get(img)							get_attr_long_long((json_object*)img, "Size")
 #define docker_image_author_get(img)						get_attr_str((json_object*)img, "Author")
 #define docker_image_created_get(img)						get_attr_str((json_object*)img, "Created")
+#define docker_image_repo_tags_get(img)						get_attr_json_object((json_object*)img, "RepoTags")
+#define docker_image_repo_tags_length(img)					json_object_array_length(docker_image_repo_tags_get(img))
+#define docker_image_repo_tags_get_idx(img, i)				(char*) json_object_array_get_idx(docker_image_repo_tags_get(img), i)
+#define docker_image_repo_digests_get(img)					get_attr_json_object((json_object*)img, "RepoDigests")
+#define docker_image_repo_digests_length(img)				json_object_array_length(docker_image_repo_digests_get(img))
+#define docker_image_repo_digests_get_idx(img, i)			(char*) json_object_array_get_idx(docker_image_repo_digests_get(img), i)
 
 typedef json_object											docker_image_list;
 #define free_docker_image_list(image_ls)					json_object_put(image_ls)

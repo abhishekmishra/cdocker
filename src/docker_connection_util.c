@@ -348,7 +348,7 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 			new_docker_result(result);
 			(*result)->error_code = E_SUCCESS;
 			(*result)->http_error_code = response_code;
-			(*result)->url = effective_url;
+			(*result)->url = str_clone(effective_url);
 			//make_docker_result(result, E_SUCCESS, response_code, effective_url,
 			//	NULL);
 		}
@@ -356,7 +356,7 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 		{
 			(*result)->error_code = E_INVALID_INPUT;
 			(*result)->http_error_code = response_code;
-			(*result)->url = effective_url;
+			(*result)->url = str_clone(effective_url);
 			(*result)->message = "error";
 			//make_docker_result(result, E_INVALID_INPUT, response_code,
 			//	effective_url, "error");

@@ -182,7 +182,7 @@ d_err_t set_attr_long_long(json_object* obj, char* name, long long val) {
 time_t get_attr_time(json_object* obj, char* name) {
 	struct tm ctime;
 	memset(&ctime, 0, sizeof(struct tm));
-	parse_iso_datetime(get_attr_str(obj, "name"), &ctime);
+	parse_iso_datetime(get_attr_str(obj, name), &ctime);
 	time_t time_ret = mktime(&ctime);
 	return time_ret;
 }

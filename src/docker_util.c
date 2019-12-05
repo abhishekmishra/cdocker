@@ -278,6 +278,26 @@ const char* filters_to_str(json_object* filters) {
 	return json_object_get_string(filters);
 }
 
+void add_array_str(json_object* obj, char* name, char* value) {
+	json_object* value_obj;
+	json_object_object_get_ex(obj, name, &value_obj);
+	if (!value_obj) {
+		value_obj = json_object_new_array();
+		json_object_object_add(obj, name, value_obj);
+	}
+	json_object_array_add(value_obj, json_object_new_string(value));
+}
+
+void add_array_int(json_object* obj, char* name, int value) {
+	json_object* value_obj;
+	json_object_object_get_ex(obj, name, &value_obj);
+	if (!value_obj) {
+		value_obj = json_object_new_array();
+		json_object_object_add(obj, name, value_obj);
+	}
+	json_object_array_add(value_obj, json_object_new_int(value));
+}
+
 // implementation based on suggestions at
 // https://stackoverflow.com/questions/26895428/how-do-i-parse-an-iso-8601-date-with-optional-milliseconds-to-a-struct-tm-in-c
 void parse_iso_datetime(char* date_str, struct tm* tm) {

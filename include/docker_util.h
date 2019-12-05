@@ -307,6 +307,25 @@ json_type get_attr_type(json_object* obj, char* name);
  */
 const char* get_json_string(json_object* obj);
 
+/**
+ * Add a string value to the array if it exits, or create a new one.
+ *
+ * \param obj the json object containing the array
+ * \param name name of the array
+ * \param value value of the array
+ */
+void add_array_str(json_object* obj, char* name, char* value);
+
+/**
+ * Add an int value to the array if it exits, or create a new one.
+ *
+ * \param obj the json object containing the array
+ * \param name name of the array
+ * \param value value of the array
+ */
+void add_array_int(json_object* obj, char* name, int value);
+
+
 void parse_iso_datetime(char* date_str, struct tm* tm);
 
 void parse_docker_stats_readtime(char* date_str, struct tm* tm);

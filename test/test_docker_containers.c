@@ -47,21 +47,20 @@ void log_stats(docker_container_stats* stats, void* client_cbargs) {
 
 static int group_setup(void **state) {
 	char* id = NULL;
-	docker_create_container_params* p;
+	docker_ctr_create_params* p;
 
 	curl_global_init(CURL_GLOBAL_ALL);
 	make_docker_context_default_local(&ctx);
-	make_docker_create_container_params(&p);
-	p->image = "alpine";
-	p->cmd = (char**) malloc(2 * sizeof(char*));
-	p->cmd[0] = "echo";
-	p->cmd[1] = "hello world";
-	p->num_cmd = 2;
+	p = make_docker_ctr_create_params();
+	docker_ctr_create_params_image_set(p, "alpine");
+	docker_ctr_create_params_cmd_add(p, "echo");
+	docker_ctr_create_params_cmd_add(p, "hello world");
 	docker_create_container(ctx, &res, &id, p);
 	handle_error(res);
 	assert_non_null(id);
 	*state = id;
-//	printf("id in state = %s\n", *state);
+	printf("id in state = %s\n", id);
+	free_docker_ctr_create_params(p);
 	return 0;
 }
 static int group_teardown(void **state) {
@@ -160,10 +159,10 @@ static void test_stats_container(void **state) {
 			"bfirsh/reticulate-splines", "latest", NULL);
 	handle_error(res);
 
-	docker_create_container_params* p;
-	make_docker_create_container_params(&p);
-	p->image = "bfirsh/reticulate-splines";
+	docker_ctr_create_params* p = make_docker_ctr_create_params();
+	docker_ctr_create_params_image_set(p, "bfirsh/reticulate-splines");
 	docker_create_container(ctx, &res, &id, p);
+	free_docker_ctr_create_params(p);
 	handle_error(res);
 
 	docker_log_info("Started docker container id is %s\n", id);

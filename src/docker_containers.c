@@ -98,73 +98,14 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 
 }
 
-d_err_t make_docker_create_container_params(
-	docker_create_container_params** params) {
-	docker_create_container_params* p =
-		(docker_create_container_params*)calloc(1,
-			sizeof(docker_create_container_params));
-	if (p != NULL) {
-		p->hostname = NULL;
-		p->domainname = NULL;
-		p->user = NULL;
-		p->attach_stdin = -1;
-		p->attach_stdout = -1;
-		p->attach_stderr = -1;
-		p->exposed_ports = NULL;
-		p->tty = -1;
-		p->open_stdin = -1;
-		p->stdin_once = -1;
-		p->env = NULL;
-		p->num_env = -1;
-		p->cmd = NULL;
-		p->num_cmd = -1;
-		p->health_check = NULL;
-		p->args_escaped = -1;
-		p->image = NULL;
-		p->volumes = NULL;
-		p->working_dir = NULL;
-		p->entrypoint = NULL;
-		p->network_disabled = -1;
-		p->mac_address = NULL;
-		p->on_build = NULL;
-		p->num_on_build = -1;
-		p->labels = NULL;
-		p->stop_signal = NULL;
-		p->stop_timeout = -1;
-		p->shell = NULL;
-		p->host_config = NULL;
-		p->network_config = NULL;
-		(*params) = p;
-		return E_SUCCESS;
-	}
-	else {
-		return E_ALLOC_FAILED;
-	}
-}
-
 d_err_t docker_create_container(docker_context* ctx, docker_result** result,
-	char** id, docker_create_container_params* params) {
+	char** id, docker_ctr_create_params* params) {
 	(*id) = NULL;
 	json_object* response_obj = NULL;
 	struct http_response_memory chunk;
 
-	json_object* create_obj = json_object_new_object();
-
-	if (params->image != NULL) {
-		json_object_object_add(create_obj, "Image",
-			json_object_new_string(params->image));
-	}
-	if (params->cmd != NULL) {
-		json_object* cmd_arr = json_object_new_array();
-		for (int i = 0; i < params->num_cmd; i++) {
-			json_object_array_add(cmd_arr,
-				json_object_new_string(params->cmd[i]));
-		}
-		json_object_object_add(create_obj, "Cmd", cmd_arr);
-	}
-
 	docker_api_post(ctx, result, "containers/create", NULL,
-		(char*)json_object_to_json_string(create_obj), &chunk,
+		(char*)json_object_to_json_string(params), &chunk,
 		&response_obj);
 
 	json_object* idObj;

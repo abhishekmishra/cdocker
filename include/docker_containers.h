@@ -69,57 +69,65 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 	docker_ctr_list** container_list, int all, int limit, int size,
 	...);
 
-typedef struct health_config_t {
-	char** test;
-	int num_test;
-	int interval;
-	int timeout;
-	int retries;
-	int start_period;
-} health_config;
+//typedef struct health_config_t {
+//	char** test;
+//	int num_test;
+//	int interval;
+//	int timeout;
+//	int retries;
+//	int start_period;
+//} health_config;
+//
+//typedef struct docker_create_container_params_t {
+//	char* hostname;
+//	char* domainname;
+//	char* user;
+//	int attach_stdin;
+//	int attach_stdout;
+//	int attach_stderr;
+//	char* exposed_ports;
+//	int tty;
+//	int open_stdin;
+//	int stdin_once;
+//	char** env;
+//	int num_env;
+//	char** cmd;
+//	int num_cmd;
+//	health_config* health_check;
+//	int args_escaped;
+//	char* image;
+//	//TODO: Add type for volumes;
+//	char* volumes;
+//	char* working_dir;
+//	char* entrypoint;
+//	int network_disabled;
+//	char* mac_address;
+//	char** on_build;
+//	int num_on_build;
+//	//TODO: Add labels type;
+//	char* labels;
+//	char* stop_signal;
+//	int stop_timeout;
+//	char* shell;
+//	//TODO: Add type for host_config
+//	char* host_config;
+//	//TODO: Add type for network_config
+//	char* network_config;
+//} docker_create_container_params;
+//
+//d_err_t make_docker_create_container_params(
+//	docker_create_container_params** params);
 
-typedef struct docker_create_container_params_t {
-	char* hostname;
-	char* domainname;
-	char* user;
-	int attach_stdin;
-	int attach_stdout;
-	int attach_stderr;
-	char* exposed_ports;
-	int tty;
-	int open_stdin;
-	int stdin_once;
-	char** env;
-	int num_env;
-	char** cmd;
-	int num_cmd;
-	health_config* health_check;
-	int args_escaped;
-	char* image;
-	//TODO: Add type for volumes;
-	char* volumes;
-	char* working_dir;
-	char* entrypoint;
-	int network_disabled;
-	char* mac_address;
-	char** on_build;
-	int num_on_build;
-	//TODO: Add labels type;
-	char* labels;
-	char* stop_signal;
-	int stop_timeout;
-	char* shell;
-	//TODO: Add type for host_config
-	char* host_config;
-	//TODO: Add type for network_config
-	char* network_config;
-} docker_create_container_params;
-
-d_err_t make_docker_create_container_params(
-	docker_create_container_params** params);
+typedef json_object													docker_ctr_create_params;
+#define make_docker_ctr_create_params								(docker_ctr_create_params*)json_object_new_object
+#define free_docker_ctr_create_params(ctr_create)					json_object_put(ctr_create)
+#define docker_ctr_create_params_image_set(ctr_create, img)			set_attr_str(ctr_create, "Image", img)
+#define docker_ctr_create_params_entrypoint_set(ctr_create, entry)	set_attr_str(ctr_create, "Entrypoint", entry)
+#define docker_ctr_create_params_cmd_add(ctr_create, cmd)			add_array_str(ctr_create, "Cmd", cmd)
+#define docker_ctr_create_params_env_add(ctr_create, env)			add_array_str(ctr_create, "Env", env)
 
 d_err_t docker_create_container(docker_context* ctx, docker_result** result,
-	char** id, docker_create_container_params* params);
+	char** id, docker_ctr_create_params* params);
 
 typedef struct docker_container_config_t {
 	bool attach_stderr;

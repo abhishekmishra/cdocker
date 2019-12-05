@@ -84,6 +84,14 @@ static void test_start(void **state) {
 	assert_string_equal(output, "hello world\n");
 }
 
+static void test_inspect(void** state) {
+	char* id = *state;
+	docker_ctr* ctr = docker_inspect_container(ctx, id, 0);
+	assert_non_null(ctr);
+	//docker_log_info("%s", get_json_string(ctr));
+	docker_log_info("%s", docker_ctr_name_get(ctr));
+}
+
 static void test_list(void **state) {
 	char* id = *state;
 	docker_ctr_list* containers;
@@ -191,6 +199,7 @@ int docker_container_tests() {
 	const struct CMUnitTest tests[] = {
 	//	cmocka_unit_test(test_rename_stopped_container),
 			cmocka_unit_test(test_start),
+			cmocka_unit_test(test_inspect),
 			cmocka_unit_test(test_list),
 			cmocka_unit_test(test_changes),
 			cmocka_unit_test(test_stopping_stopped_container),

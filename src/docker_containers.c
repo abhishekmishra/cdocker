@@ -125,6 +125,25 @@ d_err_t docker_create_container(docker_context* ctx, docker_result** result,
 	return E_SUCCESS;
 }
 
+docker_ctr* docker_inspect_container(docker_context* ctx, char* id, int size) {
+	char* url = create_service_url_id_method(CONTAINER, id, "json");
+	if (url == NULL) {
+		return NULL;
+	}
+
+	docker_ctr* ctr = NULL;
+	docker_result* result;
+	struct http_response_memory chunk;
+	docker_api_get(ctx, &result, url, NULL, &chunk, &ctr);
+
+	free(url);
+	//Free chunk memory
+	if (chunk.memory != NULL) {
+		free(chunk.memory);
+	}
+	return ctr;
+}
+
 /**
  * List all processes in a container identified by id.
  *

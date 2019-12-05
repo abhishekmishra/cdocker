@@ -69,55 +69,6 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 	docker_ctr_list** container_list, int all, int limit, int size,
 	...);
 
-//typedef struct health_config_t {
-//	char** test;
-//	int num_test;
-//	int interval;
-//	int timeout;
-//	int retries;
-//	int start_period;
-//} health_config;
-//
-//typedef struct docker_create_container_params_t {
-//	char* hostname;
-//	char* domainname;
-//	char* user;
-//	int attach_stdin;
-//	int attach_stdout;
-//	int attach_stderr;
-//	char* exposed_ports;
-//	int tty;
-//	int open_stdin;
-//	int stdin_once;
-//	char** env;
-//	int num_env;
-//	char** cmd;
-//	int num_cmd;
-//	health_config* health_check;
-//	int args_escaped;
-//	char* image;
-//	//TODO: Add type for volumes;
-//	char* volumes;
-//	char* working_dir;
-//	char* entrypoint;
-//	int network_disabled;
-//	char* mac_address;
-//	char** on_build;
-//	int num_on_build;
-//	//TODO: Add labels type;
-//	char* labels;
-//	char* stop_signal;
-//	int stop_timeout;
-//	char* shell;
-//	//TODO: Add type for host_config
-//	char* host_config;
-//	//TODO: Add type for network_config
-//	char* network_config;
-//} docker_create_container_params;
-//
-//d_err_t make_docker_create_container_params(
-//	docker_create_container_params** params);
-
 typedef json_object													docker_ctr_create_params;
 #define make_docker_ctr_create_params								(docker_ctr_create_params*)json_object_new_object
 #define free_docker_ctr_create_params(ctr_create)					json_object_put(ctr_create)
@@ -129,67 +80,24 @@ typedef json_object													docker_ctr_create_params;
 d_err_t docker_create_container(docker_context* ctx, docker_result** result,
 	char** id, docker_ctr_create_params* params);
 
-typedef struct docker_container_config_t {
-	bool attach_stderr;
-	bool attach_stdin;
-	bool attach_stdout;
-	arraylist* cmd;
-	char* domain_name;
-	arraylist* env;
-	char* hostname;
-	char* image;
-	arraylist* labels;
-	char* mac_address;
-	bool network_disabled;
-	bool open_stdin;
-	bool stdin_once;
-	bool tty;
-	char* user;
-	arraylist* volumes;
-	char* working_dir;
-	char* stop_signal;
-	long stop_timeout;
-} docker_container_config;
+typedef json_object									docker_ctr;
+#define free_docker_ctr(ctr)						json_object_put((json_object*) ctr)
+#define docker_ctr_id_get(ctr)						get_attr_str((json_object*)ctr, "Id")
+#define docker_ctr_image_get(ctr)					get_attr_str((json_object*)ctr, "Image")
+#define docker_ctr_name_get(ctr)					get_attr_str((json_object*)ctr, "Name")
+#define docker_ctr_path_get(ctr)					get_attr_str((json_object*)ctr, "Path")
+#define docker_ctr_created_get(ctr)					get_attr_long_long((json_object*)ctr, "Created")
+#define docker_ctr_state_get(ctr)					get_attr_str((json_object*)ctr, "State")
+#define docker_ctr_status_get(ctr)					get_attr_str((json_object*)ctr, "Status")
+#define docker_ctr_size_rw_get(ctr)					get_attr_long_long((json_object*)ctr, "SizeRw")
+#define docker_ctr_size_root_fs_get(ctr)			get_attr_long_long((json_object*)ctr, "SizeRootFs")
+#define docker_ctr_ports_get(ctr)					get_attr_json_object((json_object*)ctr, "Ports")
+#define docker_ctr_ports_length(ctr)				json_object_array_length(docker_ctr_ports_get(ctr))
+#define docker_ctr_ports_get_idx(ctr, i)			(docker_ctr_port*) json_object_array_get_idx(docker_ctr_ports_get(ctr), i)
+#define docker_ctr_ports_labels_get(vol)			get_attr_json_object((json_object*)vol, "Labels")
+#define docker_ctr_ports_labels_foreach(vol)		json_object_object_foreach(docker_ctr_ports_labels_get(vol), key, val)
 
-typedef struct docker_container_state_t {
-	char* error;
-	int exit_code;
-	char* finished_at;
-	bool oom_killed;
-	bool dead;
-	bool paused;
-	long pid;
-	bool restarting;
-	bool running;
-	char* started_at;
-	char* status;
-}docker_container_state;
-
-typedef struct docker_container_details_t {
-	char* app_armor_profile;
-	arraylist* args;
-	docker_container_config* config;
-	time_t created;
-	char* driver;
-	arraylist* exec_ids;
-	//docker_container_host_config* host_config;
-	char* hostname_path;
-	char* hosts_path;
-	char* log_path;
-	char* id;
-	char* image;
-	char* mount_label;
-	char* name;
-	json_object* network_settings;
-	char* path;
-	char* process_label;
-	char* resolv_conv_path;
-	long restart_count;
-	docker_container_state* state;
-	arraylist* mounts;
-} docker_container_details;
-
-//docker_container_details* docker_inspect_container(docker_context* ctx, char* id, int size);
+docker_ctr* docker_inspect_container(docker_context* ctx, char* id, int size);
 
 /**
 	* Struct which holds the titles of the process line, and the details of all processes.

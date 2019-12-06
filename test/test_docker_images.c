@@ -62,6 +62,11 @@ static void test_list_images(void **state) {
 	assert_int_equal(res->http_error_code, 200);
 	assert_non_null(images);
 	assert_int_not_equal(docker_image_list_length(images), 0);
+	for (int i = 0; i < docker_image_list_length(images); i++) {
+		docker_image* img = docker_image_list_get_idx(images, i);
+		assert_non_null(docker_image_id_get(img));
+		docker_log_info("Image found %s", docker_image_id_get(img));
+	}
 }
 
 int docker_images_tests() {

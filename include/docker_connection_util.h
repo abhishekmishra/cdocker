@@ -209,6 +209,9 @@ typedef struct docker_call_t {
 	char* request_data;
 	long request_data_len;
 
+	// Response data
+	char* response_data;
+
 	// Callback Config
 	status_callback* status_cb;
 	void* cb_args;
@@ -233,6 +236,10 @@ char* docker_call_request_data_get(docker_call* dcall);
 void docker_call_request_data_len_set(docker_call* dcall, long request_data_len);
 
 long docker_call_request_data_len_get(docker_call* dcall);
+
+void docker_call_response_data_set(docker_call* dcall, char* response_data);
+
+char* docker_call_response_data_get(docker_call* dcall);
 
 void docker_call_status_cb_set(docker_call* dcall, status_callback* status_callback);
 

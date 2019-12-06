@@ -800,6 +800,8 @@ d_err_t make_docker_call(docker_call** dcall, char* site_url, docker_object_type
 	(*dcall)->request_data = NULL;
 	(*dcall)->request_data_len = -1L;
 
+	(*dcall)->response_data = NULL;
+
 	(*dcall)->status_cb = NULL;
 	(*dcall)->cb_args = NULL;
 	(*dcall)->client_cb_args = NULL;
@@ -858,6 +860,19 @@ long docker_call_request_data_len_get(docker_call* dcall) {
 	return -1L;
 }
 
+void docker_call_response_data_set(docker_call* dcall, char* response_data)) {
+	if (dcall != NULL && response_data != NULL) {
+		dcall->response_data = str_clone(response_data);
+	}
+}
+
+char* docker_call_response_data_get(docker_call* dcall) {
+	if (dcall != NULL) {
+		return dcall->response_data;
+	}
+	return NULL;
+}
+
 void docker_call_status_cb_set(docker_call* dcall, status_callback* status_callback) {
 	if (dcall != NULL) {
 		dcall->status_cb = status_callback;
@@ -911,6 +926,9 @@ void free_docker_call(docker_call* dcall)
 {
 	if (dcall != NULL)
 	{
+		if (dcall->response_data != NULL) {
+			free(dcall->response_data);
+		}
 		coll_al_map_foreach_fn(dcall->params, &free_param_value);
 		free_coll_al_map(dcall->params);
 		free(dcall);
@@ -1063,6 +1081,7 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 			if (chunk->memory != NULL)
 			{
 				result->response_json_str = str_clone(chunk->memory);
+				docker_call_response_data_set(dcall, str_clone(chunk->memory));
 			}
 			result->start_time = start;
 			result->end_time = end;

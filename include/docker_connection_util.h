@@ -206,6 +206,8 @@ void free_docker_api_url(docker_api_url* api_url);
 
 int docker_api_url_params_add(docker_api_url* api_url, char* param, char* value);
 
+char* docker_api_url_get_url(docker_api_url* api_url);
+
 // END: Docker API Calls HTTP Utils V2 
 
 #ifdef __cplusplus 

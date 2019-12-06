@@ -38,28 +38,19 @@
  * Ping the docker server
  *
  * \param ctx docker context
- * \param result docker result object
  * \return error code
  */
-d_err_t docker_ping(docker_context* ctx, docker_result** result) {
-	char* url = create_service_url_id_method(SYSTEM, NULL, "_ping");
-	if(url == NULL) {
+d_err_t docker_ping(docker_context* ctx) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, SYSTEM, NULL, "_ping") != 0) {
 		return E_ALLOC_FAILED;
 	}
-	json_object *response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
 
-	if ((*result)->http_error_code != 200) {
-		(*result)->message = str_clone("Docker Server not OK.");
-		return E_PING_FAILED;
-	}
+	json_object *response_obj = NULL;
+	d_err_t err = docker_call_exec(ctx, call, &response_obj);
 
 	json_object_put(response_obj);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	free(url);
+	free_docker_call(call);
 	return E_SUCCESS;
 }
 

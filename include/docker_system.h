@@ -45,13 +45,12 @@ extern "C" {
 #include <json-c/json_object.h>
 
 /**
- * Ping the docker server
- *
- * \param ctx docker context
- * \param result docker result object
- * \return error code
- */
-MODULE_API d_err_t docker_ping(docker_context* ctx, docker_result** result);
+* Ping the docker server
+*
+* \param ctx docker context
+* \return error code
+*/
+d_err_t docker_ping(docker_context* ctx);
 
 typedef json_object									docker_version;
 #define free_docker_version(version)				json_object_put((json_object*) version)

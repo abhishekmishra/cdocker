@@ -54,46 +54,6 @@ MODULE_API d_err_t new_docker_result(docker_result** result) {
 	return E_SUCCESS;
 }
 
-
-/**
- * Utility method to create docker result, should be used by all API
- * implementations to create the result object to return.
- *
- * Makes a defensive copy of all provided data so that they can be
- * freed after creation of the result.
- */
-//d_err_t make_docker_result(docker_result** result, d_err_t error_code,
-//	long http_error_code, const char* url, const char* message) {
-//	if (new_docker_result(result) != E_SUCCESS) {
-//		return E_ALLOC_FAILED;
-//	}
-//	(*result)->error_code = error_code;
-//	(*result)->http_error_code = http_error_code;
-//	if (message) {
-//		(*result)->message = (char*)calloc((strlen(message) + 1),
-//			sizeof(char));
-//		if ((*result)->message != NULL) {
-//			strcpy((*result)->message, message);
-//		}
-//	}
-//	else {
-//		(*result)->message = NULL;
-//	}
-//	if (url) {
-//		(*result)->url = (char*)calloc((strlen(url) + 1), sizeof(char));
-//		if ((*result)->url != NULL) {
-//			strcpy((*result)->url, url);
-//		}
-//	}
-//	else {
-//		(*result)->url = NULL;
-//	}
-//	(*result)->method = NULL;
-//	(*result)->request_json_str = NULL;
-//	(*result)->response_json_str = NULL;
-//	return E_SUCCESS;
-//}
-
 /**
  * Frees all internal memory used in the docker_result, should be
  * called for all result objects as soon as they are no longer needed.

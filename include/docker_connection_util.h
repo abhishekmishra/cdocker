@@ -122,14 +122,14 @@ MODULE_API char* build_url(CURL *curl, char* base_url, arraylist* url_params);
 MODULE_API d_err_t set_curl_url(CURL* curl, docker_context* ctx, char* api_url,
 		arraylist* url_params);
 
-struct http_response_memory {
+typedef struct http_response_memory {
 	char *memory;
 	size_t size;
 	size_t flush_end;
 	void (*status_callback)(char* msg, void* cbargs, void* client_cbargs);
 	void* cbargs;
 	void* client_cbargs;
-};
+} docker_call_mem;
 
 /**
  * Util method used internally to HTTP POST to the Docker url.
@@ -191,22 +191,68 @@ MODULE_API char* create_service_url_id_method(docker_object_type object, const c
 
 // BEGIN: Docker API Calls HTTP Utils V2 
 
-typedef struct docker_api_url_t {
+typedef void (status_callback)(char* msg, void* cbargs, void* client_cbargs);
+
+typedef struct docker_call_t {
+	// URL Parts
 	char* site_url;
 	docker_object_type object;
 	char* id;
 	char* method;
 	coll_al_map* params;
-} docker_api_url;
 
-d_err_t make_docker_api_url(docker_api_url** api_url, char* site_url, docker_object_type object, 
+	// HTTP
+	char* request_method;
+	char* content_type_header;
+
+	// Request object
+	char* request_data;
+	long request_data_len;
+
+	// Callback Config
+	status_callback* status_cb;
+	void* cb_args;
+	void* client_cb_args;
+} docker_call;
+
+d_err_t make_docker_call(docker_call** dcall, char* site_url, docker_object_type object, 
 	const char* id,	const char* method);
 
-void free_docker_api_url(docker_api_url* api_url);
+void docker_call_request_method_set(docker_call* dcall, char* method);
 
-int docker_api_url_params_add(docker_api_url* api_url, char* param, char* value);
+char* docker_call_request_method_get(docker_call* dcall);
 
-char* docker_api_url_get_url(docker_api_url* api_url);
+void docker_call_content_type_header_set(docker_call* dcall, char* content_type_header);
+
+char* docker_call_content_type_header_get(docker_call* dcall);
+
+void docker_call_request_data_set(docker_call* dcall, char* request_data);
+
+char* docker_call_request_data_get(docker_call* dcall);
+
+void docker_call_request_data_len_set(docker_call* dcall, long request_data_len);
+
+long docker_call_request_data_len_get(docker_call* dcall);
+
+void docker_call_status_cb_set(docker_call* dcall, status_callback* status_callback);
+
+status_callback* docker_call_status_cb_get(docker_call* dcall);
+
+void docker_call_cb_args_set(docker_call* dcall, void* cb_args);
+
+char* docker_call_cb_args_get(docker_call* dcall);
+
+void docker_call_client_cb_args_set(docker_call* dcall, void* client_cb_args);
+
+char* docker_call_client_cb_args_get(docker_call* dcall);
+
+void free_docker_call(docker_call* dcall);
+
+int docker_call_params_add(docker_call* dcall, char* param, char* value);
+
+char* docker_call_get_url(docker_call* dcall);
+
+d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** response);
 
 // END: Docker API Calls HTTP Utils V2 
 

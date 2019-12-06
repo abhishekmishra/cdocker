@@ -326,15 +326,14 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 		docker_log_debug("Response = Empty");
 	}
 
+	new_docker_result(result);
+
 	/* Check for errors */
 	if (res != CURLE_OK)
 	{
 		fprintf(stderr, "curl_easy_perform() failed: %s\n",
 			curl_easy_strerror(res));
-		new_docker_result(result);
 		(*result)->error_code = E_CONNECTION_FAILED;
-		//make_docker_result(result, E_CONNECTION_FAILED, -1, NULL,
-		//	NULL);
 	}
 	else
 	{
@@ -345,28 +344,23 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 		if (response_code == 200 || response_code == 201
 			|| response_code == 204)
 		{
-			new_docker_result(result);
 			(*result)->error_code = E_SUCCESS;
 			(*result)->http_error_code = response_code;
 			(*result)->url = str_clone(effective_url);
-			//make_docker_result(result, E_SUCCESS, response_code, effective_url,
-			//	NULL);
 		}
 		else
 		{
 			(*result)->error_code = E_INVALID_INPUT;
 			(*result)->http_error_code = response_code;
 			(*result)->url = str_clone(effective_url);
-			(*result)->message = "error";
-			//make_docker_result(result, E_INVALID_INPUT, response_code,
-			//	effective_url, "error");
+			(*result)->message = str_clone("error");
 		}
 		if ((*result)->http_error_code >= 400)
 		{
 			char* msg = get_attr_str(response_obj, "message");
 			if (msg)
 			{
-				(*result)->message = msg;
+				(*result)->message = str_clone(msg);
 			}
 		}
 	}
@@ -778,30 +772,129 @@ char* create_service_url_id_method(docker_object_type object, const char* id,
 
 // BEGIN: Docker API Calls HTTP Utils V2 
 
-d_err_t make_docker_api_url(docker_api_url** api_url, char* site_url, docker_object_type object,
+d_err_t make_docker_call(docker_call** dcall, char* site_url, docker_object_type object,
 	const char* id, const char* method) {
-	(*api_url) = (docker_api_url*)calloc(1, sizeof(docker_api_url));
-	if ((*api_url) == NULL) {
+	(*dcall) = (docker_call*)calloc(1, sizeof(docker_call));
+	if ((*dcall) == NULL) {
 		return E_ALLOC_FAILED;
 	}
 	if (site_url != NULL)
 	{
 		if (is_unix_socket(site_url)) {
-			(*api_url)->site_url = "http://localhost/";
+			(*dcall)->site_url = "http://localhost/";
 		}
 		else {
-			(*api_url)->site_url = site_url;
+			(*dcall)->site_url = site_url;
 		}
 	}
 	else
 	{
-		(*api_url)->site_url = NULL;
+		(*dcall)->site_url = NULL;
 	}
-	(*api_url)->object = object;
-	(*api_url)->id = (char*)id;
-	(*api_url)->method = (char*)method;
-	(*api_url)->params = make_coll_al_map(&strcmp);
+	(*dcall)->object = object;
+	(*dcall)->id = (char*)id;
+	(*dcall)->method = (char*)method;
+	(*dcall)->params = make_coll_al_map(&strcmp);
+
+	(*dcall)->request_method = "GET";
+	(*dcall)->request_data = NULL;
+	(*dcall)->request_data_len = -1L;
+
+	(*dcall)->status_cb = NULL;
+	(*dcall)->cb_args = NULL;
+	(*dcall)->client_cb_args = NULL;
 	return E_SUCCESS;
+}
+
+void docker_call_request_method_set(docker_call* dcall, char* method) {
+	if (dcall != NULL && method != NULL) {
+		dcall->request_method = str_clone(method);
+	}
+}
+
+char* docker_call_request_method_get(docker_call* dcall) {
+	if (dcall != NULL) {
+		return dcall->request_method;
+	}
+	return NULL;
+}
+
+void docker_call_content_type_header_set(docker_call* dcall, char* content_type_header) {
+	if (dcall != NULL && content_type_header != NULL) {
+		dcall->content_type_header = str_clone(content_type_header);
+	}
+}
+
+char* docker_call_content_type_header_get(docker_call* dcall) {
+	if (dcall != NULL) {
+		return dcall->content_type_header;
+	}
+	return NULL;
+}
+
+void docker_call_request_data_set(docker_call* dcall, char* request_data) {
+	if (dcall != NULL && request_data != NULL) {
+		dcall->request_data = str_clone(request_data);
+	}
+}
+
+char* docker_call_request_data_get(docker_call* dcall) {
+	if (dcall != NULL) {
+		return dcall->request_data;
+	}
+	return NULL;
+}
+
+void docker_call_request_data_len_set(docker_call* dcall, long request_data_len) {
+	if (dcall != NULL) {
+		dcall->request_data_len = request_data_len;
+	}
+}
+
+long docker_call_request_data_len_get(docker_call* dcall) {
+	if (dcall != NULL) {
+		return dcall->request_data_len;
+	}
+	return -1L;
+}
+
+void docker_call_status_cb_set(docker_call* dcall, status_callback* status_callback) {
+	if (dcall != NULL) {
+		dcall->status_cb = status_callback;
+	}
+}
+
+status_callback* docker_call_status_cb_get(docker_call* dcall) {
+	if (dcall != NULL) {
+		return dcall->status_cb;
+	}
+	return NULL;
+}
+
+void docker_call_cb_args_set(docker_call* dcall, void* cb_args) {
+	if (dcall != NULL) {
+		dcall->cb_args = cb_args;
+	}
+}
+
+char* docker_call_cb_args_get(docker_call* dcall) {
+	if (dcall != NULL) {
+		return dcall->cb_args;
+	}
+	return NULL;
+}
+
+void docker_call_client_cb_args_set(docker_call* dcall, void* client_cb_args) {
+	if (dcall != NULL) {
+		dcall->client_cb_args = client_cb_args;
+	}
+}
+
+char* docker_call_client_cb_args_get(docker_call* dcall) {
+	if (dcall != NULL) {
+		return dcall->client_cb_args;
+	}
+	return NULL;
 }
 
 void free_param_value(size_t idx, char* param, char* value)
@@ -814,39 +907,39 @@ void free_param_value(size_t idx, char* param, char* value)
 	}
 }
 
-void free_docker_api_url(docker_api_url* api_url)
+void free_docker_call(docker_call* dcall)
 {
-	if (api_url != NULL)
+	if (dcall != NULL)
 	{
-		coll_al_map_foreach_fn(api_url->params, &free_param_value);
-		free_coll_al_map(api_url->params);
-		free(api_url);
+		coll_al_map_foreach_fn(dcall->params, &free_param_value);
+		free_coll_al_map(dcall->params);
+		free(dcall);
 	}
 }
 
-int docker_api_url_params_add(docker_api_url* api_url, char* param, char* value)
+int docker_call_params_add(docker_call* dcall, char* param, char* value)
 {
-	if (api_url != NULL) {
-		return coll_al_map_put(api_url->params, str_clone(param), str_clone(value));
+	if (dcall != NULL) {
+		return coll_al_map_put(dcall->params, str_clone(param), str_clone(value));
 	}
 	return E_UNKNOWN_ERROR;
 }
 
-char* docker_api_url_get_url(docker_api_url* api_url) {
+char* docker_call_get_url(docker_call* dcall) {
 	CURL* curl = curl_easy_init();
 
-	char* service_url = create_service_url_id_method(api_url->object, api_url->id, api_url->method);
+	char* service_url = create_service_url_id_method(dcall->object, dcall->id, dcall->method);
 	coll_al_map* esc_params = make_coll_al_map(&strcmp);
 
 	char* final_url = NULL;
 	size_t final_url_len = 2; //for question mark and null terminator
 
-	final_url_len += strlen(api_url->site_url);
+	final_url_len += strlen(dcall->site_url);
 	final_url_len += strlen(service_url);
 
-	for (size_t i = 0; i < coll_al_map_keys_length(api_url->params); i++) {
-		char* key_esc = curl_easy_escape(curl, coll_al_map_keys_get_idx(api_url->params, i), 0);
-		char* val_esc = curl_easy_escape(curl, coll_al_map_values_get_idx(api_url->params, i), 0);
+	for (size_t i = 0; i < coll_al_map_keys_length(dcall->params); i++) {
+		char* key_esc = curl_easy_escape(curl, coll_al_map_keys_get_idx(dcall->params, i), 0);
+		char* val_esc = curl_easy_escape(curl, coll_al_map_values_get_idx(dcall->params, i), 0);
 
 		coll_al_map_put(esc_params, key_esc, val_esc);
 
@@ -858,7 +951,7 @@ char* docker_api_url_get_url(docker_api_url* api_url) {
 	final_url = (char*)calloc(final_url_len, sizeof(char));
 	if (final_url != NULL) {
 		final_url[0] = 0;
-		strcat(final_url, api_url->site_url);
+		strcat(final_url, dcall->site_url);
 		strcat(final_url, service_url);
 		size_t num_params = coll_al_map_keys_length(esc_params);
 		strcat(final_url, "?");
@@ -875,6 +968,129 @@ char* docker_api_url_get_url(docker_api_url* api_url) {
 	curl_easy_cleanup(curl);
 	coll_al_map_foreach_fn(esc_params, &free_param_value);
 	return final_url;
+}
+
+d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** response) {
+	CURL* curl;
+	CURLcode res;
+	struct curl_slist* headers = NULL;
+	time_t start, end;
+	d_err_t err = E_SUCCESS;
+
+	start = time(NULL);
+
+	// allocate memory for the response string
+	docker_call_mem* chunk = (docker_call_mem*)calloc(1, sizeof(docker_call_mem));
+	if (chunk == NULL) {
+		return E_ALLOC_FAILED;
+	}
+	chunk->memory = malloc(1); /* will be grown as needed by the realloc above */
+	chunk->size = 0; /* no data at this point */
+	chunk->flush_end = 0;
+	chunk->status_callback = docker_call_status_cb_get(dcall);
+	chunk->cbargs = docker_call_cb_args_get(dcall);
+	chunk->client_cbargs = docker_call_client_cb_args_get(dcall);
+
+	// allocate the docker result object
+	docker_result* result;
+	//TODO: handle request does this for now, but can be moved here later.
+	//err = new_docker_result(&result);
+	//if (err != E_SUCCESS) {
+	//	return err;
+	//}
+
+	/* get a curl handle */
+	curl = curl_easy_init();
+
+	if (curl)
+	{
+		// Set the URL
+		char* docker_url = docker_call_get_url(dcall);
+		if (is_unix_socket(ctx->url))
+		{
+			curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, ctx->url);
+		}
+		curl_easy_setopt(curl, CURLOPT_URL, docker_url);
+
+		// Set the custom request if any (not required for GET/POST)
+		if (docker_call_request_method_get(dcall) != NULL) {
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+		}
+
+		// Set content type headers if any
+		if (docker_call_content_type_header_get(dcall) != NULL) {
+			headers = curl_slist_append(headers, "Expect:");
+			headers = curl_slist_append(headers, docker_call_content_type_header_get(dcall));
+			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+		}
+
+		// Now specify the POST data if request type is POST
+		// and request_data is not NULL.
+		if (docker_call_request_data_get(dcall) != NULL &&
+			strcmp(docker_call_request_method_get(dcall), "POST") == 0) {
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, docker_call_request_data_get(dcall));
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, docker_call_request_data_len_get(dcall));
+		}
+
+		/* send all data to this function  */
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
+
+		/* we pass our 'chunk' struct to the callback function */
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)chunk);
+
+		/* some servers don't like requests that are made without a user-agent
+		 field, so we provide one */
+		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+		/* Perform the request, res will get the return code */
+		res = curl_easy_perform(curl);
+
+		/* Check for errors, and handle response */
+		handle_response(res, curl, &result, chunk, response);
+
+		// Mark end time of request
+		end = time(NULL);
+
+		if (result != NULL)
+		{
+			result->method = docker_call_request_method_get(dcall);
+			if (docker_call_request_data_get(dcall) != NULL)
+			{
+				result->request_json_str = str_clone(docker_call_request_data_get(dcall));
+			}
+			if (chunk->memory != NULL)
+			{
+				result->response_json_str = str_clone(chunk->memory);
+			}
+			result->start_time = start;
+			result->end_time = end;
+
+			if (ctx->result_handler_fn != NULL) {
+				ctx->result_handler_fn(result);
+			}
+
+			if (result->http_error_code >= 400) {
+				err = result->http_error_code;
+			}
+
+			// cleanup docker_result
+			free_docker_result(result);
+		}
+
+		/* always cleanup */
+		curl_easy_cleanup(curl);
+
+		// free url
+		free(docker_url);
+	}
+
+	// cleanup chunk
+	if (chunk->memory != NULL) {
+		free(chunk->memory);
+	}
+	free(chunk);
+
+	return err;
 }
 
 // END: Docker API Calls HTTP Utils V2 

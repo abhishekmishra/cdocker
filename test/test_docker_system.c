@@ -59,9 +59,8 @@ static int group_teardown(void **state) {
 }
 
 static void test_ping(void **state) {
-	docker_ping(ctx, &res);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 200);
+	d_err_t e = docker_ping(ctx);
+	assert_int_equal(e, E_SUCCESS);
 }
 
 static void test_version(void **state) {

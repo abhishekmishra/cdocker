@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 #include <arraylist.h>
+#include <coll_arraylist_map.h>
 #include <stdlib.h>
 #include "docker_common.h"
 #include <stdbool.h>
@@ -51,7 +52,7 @@ MODULE_API bool is_unix_socket(char* url);
 MODULE_API bool is_npipe(char* url);
 
 typedef enum {
-	CONTAINER = 1, IMAGE = 2, SYSTEM = 3, NETWORK = 4, VOLUME = 5
+	NONE = 0, CONTAINER = 1, IMAGE = 2, SYSTEM = 3, NETWORK = 4, VOLUME = 5
 } docker_object_type;
 
 typedef void (docker_result_handler_fn) (docker_result* result);
@@ -188,16 +189,24 @@ MODULE_API d_err_t docker_api_delete(docker_context* ctx, docker_result** res, c
 MODULE_API char* create_service_url_id_method(docker_object_type object, const char* id,
 		const char* method);
 
-typedef struct docker_api_call_params_t {
+// BEGIN: Docker API Calls HTTP Utils V2 
+
+typedef struct docker_api_url_t {
+	char* site_url;
 	docker_object_type object;
 	char* id;
 	char* method;
-} docker_api_call_params;
+	coll_al_map* params;
+} docker_api_url;
 
-d_err_t make_docker_api_call_params(docker_api_call_params** api_call_params, docker_object_type object, 
+d_err_t make_docker_api_url(docker_api_url** api_url, char* site_url, docker_object_type object, 
 	const char* id,	const char* method);
 
-void free_docker_api_call_params(docker_api_call_params* api_call_params);
+void free_docker_api_url(docker_api_url* api_url);
+
+int docker_api_url_params_add(docker_api_url* api_url, char* param, char* value);
+
+// END: Docker API Calls HTTP Utils V2 
 
 #ifdef __cplusplus 
 }

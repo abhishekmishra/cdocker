@@ -714,6 +714,9 @@ char* create_service_url_id_method(docker_object_type object, const char* id,
 	char* object_url = NULL;
 	switch (object)
 	{
+	case NONE:
+		object_url = NULL;
+		break;
 	case CONTAINER:
 		object_url = "containers";
 		break;
@@ -773,18 +776,104 @@ char* create_service_url_id_method(docker_object_type object, const char* id,
 	return url;
 }
 
-d_err_t make_docker_api_call_params(docker_api_call_params** api_call_params, docker_object_type object,
+// BEGIN: Docker API Calls HTTP Utils V2 
+
+d_err_t make_docker_api_url(docker_api_url** api_url, char* site_url, docker_object_type object,
 	const char* id, const char* method) {
-	(*api_call_params) = (docker_api_call_params*)calloc(1, sizeof(docker_api_call_params));
-	if ((*api_call_params) == NULL) {
+	(*api_url) = (docker_api_url*)calloc(1, sizeof(docker_api_url));
+	if ((*api_url) == NULL) {
 		return E_ALLOC_FAILED;
 	}
-	(*api_call_params)->object = object;
-	(*api_call_params)->id = (char*)id;
-	(*api_call_params)->method = (char*)method;
+	if (site_url != NULL)
+	{
+		if (is_unix_socket(site_url)) {
+			(*api_url)->site_url = "http://localhost/";
+		}
+		else {
+			(*api_url)->site_url = site_url;
+		}
+	}
+	else
+	{
+		(*api_url)->site_url = NULL;
+	}
+	(*api_url)->object = object;
+	(*api_url)->id = (char*)id;
+	(*api_url)->method = (char*)method;
+	(*api_url)->params = make_coll_al_map(&strcmp);
 	return E_SUCCESS;
 }
 
-void free_docker_api_call_params(docker_api_call_params* api_call_params) {
-	free(api_call_params);
+void free_param_value(size_t idx, char* param, char* value)
+{
+	if (param != NULL) {
+		free(param);
+	}
+	if (value != NULL) {
+		free(value);
+	}
 }
+
+void free_docker_api_url(docker_api_url* api_url)
+{
+	if (api_url != NULL)
+	{
+		coll_al_map_foreach(api_url->params, &free_param_value);
+		free_coll_al_map(api_url->params);
+		free(api_url);
+	}
+}
+
+int docker_api_url_params_add(docker_api_url* api_url, char* param, char* value)
+{
+	if (api_url != NULL) {
+		return coll_al_map_put(api_url->params, str_clone(param), str_clone(value));
+	}
+}
+
+char* docker_api_url_get_url(docker_api_url* api_url) {
+	CURL* curl = curl_easy_init();
+
+	char* service_url = create_service_url_id_method(api_url->object, api_url->id, api_url->method);
+	coll_al_map* esc_params = make_coll_al_map(&strcmp);
+
+	char* final_url = NULL;
+	size_t final_url_len = 2; //for question mark and null terminator
+
+	final_url_len += strlen(api_url->site_url);
+	final_url_len += strlen(service_url);
+
+	for (size_t i = 0; i < coll_al_map_keys_length(api_url->params); i++) {
+		char* key_esc = curl_easy_escape(curl, coll_al_map_keys_get_idx(api_url->params, i), 0);
+		char* val_esc = curl_easy_escape(curl, coll_al_map_values_get_idx(api_url->params, i), 0);
+
+		coll_al_map_put(esc_params, key_esc, val_esc);
+
+		final_url_len += strlen(key_esc);
+		final_url_len += strlen(val_esc);
+		final_url_len += 2; //for equals and ampersand
+	}
+
+	final_url = (char*)calloc(final_url_len, sizeof(char));
+	if (final_url != NULL) {
+		final_url[0] = 0;
+		strcat(final_url, api_url->site_url);
+		strcat(final_url, service_url);
+		size_t num_params = coll_al_map_keys_length(esc_params);
+		strcat(final_url, "?");
+		for (size_t i = 0; i < num_params; i++) {
+			if (i > 0)
+			{
+				strcat(final_url, "&");
+			}
+			strcat(final_url, coll_al_map_keys_get_idx(esc_params, i));
+			strcat(final_url, "=");
+			strcat(final_url, coll_al_map_values_get_idx(esc_params, i));
+		}
+	}
+	curl_easy_cleanup(curl);
+	coll_al_map_foreach(esc_params, &free_param_value);
+	return final_url;
+}
+
+// END: Docker API Calls HTTP Utils V2 

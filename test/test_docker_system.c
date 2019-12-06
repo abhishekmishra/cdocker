@@ -87,9 +87,8 @@ static void test_info(void **state) {
 static void test_events(void **state) {
 	docker_event_list* events;
 	time_t now = time(NULL);
-	docker_system_events(ctx, &res, &events, now - 360000, now);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 200);
+	d_err_t e = docker_system_events(ctx, &events, now - 360000, now);
+	assert_int_equal(e, E_SUCCESS);
 	assert_non_null(events);
 	assert_int_not_equal(docker_event_list_length(events), 0);
 	for (size_t i = 0; i < docker_event_list_length(events); i++) {

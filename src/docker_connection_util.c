@@ -860,7 +860,7 @@ long docker_call_request_data_len_get(docker_call* dcall) {
 	return -1L;
 }
 
-void docker_call_response_data_set(docker_call* dcall, char* response_data)) {
+void docker_call_response_data_set(docker_call* dcall, char* response_data) {
 	if (dcall != NULL && response_data != NULL) {
 		dcall->response_data = str_clone(response_data);
 	}
@@ -956,8 +956,8 @@ char* docker_call_get_url(docker_call* dcall) {
 	final_url_len += strlen(service_url);
 
 	for (size_t i = 0; i < coll_al_map_keys_length(dcall->params); i++) {
-		char* key_esc = curl_easy_escape(curl, coll_al_map_keys_get_idx(dcall->params, i), 0);
-		char* val_esc = curl_easy_escape(curl, coll_al_map_values_get_idx(dcall->params, i), 0);
+		char* key_esc = str_clone(curl_easy_escape(curl, coll_al_map_keys_get_idx(dcall->params, i), 0));
+		char* val_esc = str_clone(curl_easy_escape(curl, coll_al_map_values_get_idx(dcall->params, i), 0));
 
 		coll_al_map_put(esc_params, key_esc, val_esc);
 
@@ -987,6 +987,7 @@ char* docker_call_get_url(docker_call* dcall) {
 	}
 	curl_easy_cleanup(curl);
 	coll_al_map_foreach_fn(esc_params, &free_param_value);
+	free_coll_al_map(esc_params);
 	return final_url;
 }
 

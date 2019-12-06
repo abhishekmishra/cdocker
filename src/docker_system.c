@@ -114,13 +114,12 @@ void parse_events_cb(char* msg, void* cb, void* cbargs) {
  * Get the docker events in a time range.
  *
  * \param ctx the docker context
- * \param result the docker result object to return
  * \param events is an arraylist containing objects of type docker_event
  * \param start_time
  * \param end_time
  * \return error code
  */
-d_err_t docker_system_events(docker_context* ctx, docker_result** result,
+d_err_t docker_system_events(docker_context* ctx,
 		arraylist** events, time_t start_time, time_t end_time) {
 	if (end_time <= 0) {
 		docker_log_warn(
@@ -128,7 +127,7 @@ d_err_t docker_system_events(docker_context* ctx, docker_result** result,
 				end_time);
 		return E_INVALID_INPUT;
 	} else {
-		return docker_system_events_cb(ctx, result, NULL, NULL, events,
+		return docker_system_events_cb(ctx, NULL, NULL, events,
 				start_time, end_time);
 	}
 }
@@ -137,7 +136,6 @@ d_err_t docker_system_events(docker_context* ctx, docker_result** result,
  * Get the docker events in a time range.
  *
  * \param ctx the docker context
- * \param result the docker result object to return
  * \param docker_events_cb pointer to callback when an event is received.
  * \param cbargs is a pointer to callback arguments
  * \param events is an arraylist containing objects of type docker_event
@@ -145,26 +143,21 @@ d_err_t docker_system_events(docker_context* ctx, docker_result** result,
  * \param end_time
  * \return error code
  */
-d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
+d_err_t docker_system_events_cb(docker_context* ctx,
 		void (*docker_events_cb)(docker_event* evt, void* cbargs), void* cbargs,
 		arraylist** events, time_t start_time, time_t end_time) {
-	char* url = create_service_url_id_method(SYSTEM, NULL, "events");
-	if (url == NULL) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, SYSTEM, NULL, "events") != 0) {
 		return E_ALLOC_FAILED;
 	}
 
-	arraylist* params;
-	arraylist_new(&params,
-			(void (*)(void *)) &free_url_param);
-	url_param* p;
 	char* start_time_str = (char*) calloc(128, sizeof(char));
 	if (start_time_str == NULL) 
 	{ 
 		return E_ALLOC_FAILED; 
 	}
 	sprintf(start_time_str, "%lu", start_time);
-	make_url_param(&p, "since", start_time_str);
-	arraylist_add(params, p);
+	docker_call_params_add(call, "since", start_time_str);
 	free(start_time_str);
 
 	if (end_time != 0) {
@@ -174,33 +167,32 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 			return E_ALLOC_FAILED;
 		}
 		sprintf(end_time_str, "%lu", end_time);
-		make_url_param(&p, "until", end_time_str);
-		arraylist_add(params, p);
+		docker_call_params_add(call, "until", end_time_str);
 		free(end_time_str);
 	}
 
+	docker_call_status_cb_set(call, &parse_events_cb);
+	docker_call_cb_args_set(call, docker_events_cb);
+	docker_call_client_cb_args_set(call, cbargs);
 	json_object *response_obj = NULL;
-	struct http_response_memory chunk;
 
-	docker_api_get_cb(ctx, result, url, params, &chunk, &response_obj,
-			&parse_events_cb, docker_events_cb, cbargs);
+	d_err_t err = docker_call_exec(ctx, call, &response_obj);
 
 	//cannot use the default response object, as that parses only one object from the response
-
 	arraylist_new(events, (void (*)(void *)) &json_object_put);
-
-	if ((*result)->http_error_code >= 200) {
-		if (chunk.memory && strlen(chunk.memory) > 0) {
-			size_t len = strlen(chunk.memory);
+	char* response_data = docker_call_response_data_get(call);
+	if (err == E_SUCCESS) {
+		if (response_data && strlen(response_data) > 0) {
+			size_t len = strlen(response_data);
 			size_t start = 0;
 			size_t end = 0;
 			for (size_t i = 0; i < len; i++) {
-				if (chunk.memory[i] == '\n') {
-					chunk.memory[i] = '\0';
+				if (response_data[i] == '\n') {
+					response_data[i] = '\0';
 					json_object* item = json_tokener_parse(
-							chunk.memory + start);
+						response_data + start);
 					arraylist_add(*events, item);
-					chunk.memory[i] = '\n';
+					response_data[i] = '\n';
 					start = i;
 				}
 			}
@@ -208,10 +200,7 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 	}
 
 	json_object_put(response_obj);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	free(url);
+	free_docker_call(call);
 	return E_SUCCESS;
 }
 

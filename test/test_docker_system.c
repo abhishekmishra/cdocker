@@ -100,9 +100,8 @@ static void test_events(void **state) {
 
 static void test_df(void** state) {
 	docker_df* df;
-	docker_system_df(ctx, &res, &df);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 200);
+	d_err_t e = docker_system_df(ctx, &df);
+	assert_int_equal(e, E_SUCCESS);
 	assert_non_null(df);
 	unsigned long layers_size = docker_df_layers_size_get(df);
 	docker_log_info("Layers Size is %lu", layers_size);

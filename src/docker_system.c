@@ -204,18 +204,14 @@ d_err_t docker_system_events_cb(docker_context* ctx,
 	return E_SUCCESS;
 }
 
-d_err_t docker_system_df(docker_context* ctx, docker_result** result,
-	docker_df** df) {
-	char* url = create_service_url_id_method(SYSTEM, NULL, "system/df");
-	if (url == NULL) {
+d_err_t docker_system_df(docker_context* ctx, docker_df** df) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, SYSTEM, NULL, "system/df") != 0) {
 		return E_ALLOC_FAILED;
 	}
 
-	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, NULL, &chunk, (json_object**)df);
+	d_err_t err = docker_call_exec(ctx, call, (json_object**)df);
 
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
+	free_docker_call(call);
 	return E_SUCCESS;
 }

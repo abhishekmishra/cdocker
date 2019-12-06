@@ -204,17 +204,14 @@ typedef json_object										docker_df_volume_usage_data;
 #define docker_df_volumes_length(df)					json_object_array_length(docker_df_volumes_get(df))
 #define docker_df_volumes_get_idx(df, i)				(docker_df_volume*)json_object_array_get_idx(docker_df_volumes_get(df), i)
 
-//TODO docker df
 /**
  * Gets the docker usage data
  *
  * \param ctx docker context
- * \param result object
  * \param docker_df object to return
  * \return error code.
  */
-MODULE_API d_err_t docker_system_df(docker_context* ctx, docker_result** result,
-	docker_df** df);
+MODULE_API d_err_t docker_system_df(docker_context* ctx, docker_df** df);
 
 #ifdef __cplusplus 
 }

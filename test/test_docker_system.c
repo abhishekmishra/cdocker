@@ -65,9 +65,8 @@ static void test_ping(void **state) {
 
 static void test_version(void **state) {
 	docker_version* version;
-	docker_system_version(ctx, &res, &version);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 200);
+	d_err_t e = docker_system_version(ctx, &version);
+	assert_int_equal(e, E_SUCCESS);
 	assert_non_null(version);
 	char* version_str = docker_version_version_get(version);
 	assert_non_null(version_str);
@@ -77,9 +76,8 @@ static void test_version(void **state) {
 
 static void test_info(void **state) {
 	docker_info* info;
-	docker_system_info(ctx, &res, &info);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 200);
+	d_err_t e = docker_system_info(ctx, &info);
+	assert_int_equal(e, E_SUCCESS);
 	assert_non_null(info);
 	unsigned long num_ctrs = docker_info_containers_get(info);
 	docker_log_info("# of containers is %lu", num_ctrs);

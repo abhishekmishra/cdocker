@@ -954,15 +954,17 @@ char* docker_call_get_url(docker_call* dcall) {
 		strcat(final_url, dcall->site_url);
 		strcat(final_url, service_url);
 		size_t num_params = coll_al_map_keys_length(esc_params);
-		strcat(final_url, "?");
-		for (size_t i = 0; i < num_params; i++) {
-			if (i > 0)
-			{
-				strcat(final_url, "&");
+		if (num_params > 0) {
+			strcat(final_url, "?");
+			for (size_t i = 0; i < num_params; i++) {
+				if (i > 0)
+				{
+					strcat(final_url, "&");
+				}
+				strcat(final_url, coll_al_map_keys_get_idx(esc_params, i));
+				strcat(final_url, "=");
+				strcat(final_url, coll_al_map_values_get_idx(esc_params, i));
 			}
-			strcat(final_url, coll_al_map_keys_get_idx(esc_params, i));
-			strcat(final_url, "=");
-			strcat(final_url, coll_al_map_values_get_idx(esc_params, i));
 		}
 	}
 	curl_easy_cleanup(curl);
@@ -1014,7 +1016,7 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 
 		// Set the custom request if any (not required for GET/POST)
 		if (docker_call_request_method_get(dcall) != NULL) {
-			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, docker_call_request_method_get(dcall));
 		}
 
 		// Set content type headers if any

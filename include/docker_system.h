@@ -69,11 +69,10 @@ typedef json_object									docker_version;
  * Gets the docker version information
  *
  * \param ctx docker context
- * \param result object
- * \param version object to return
+ * \param version docker version object to return
  * \return error code.
  */
-MODULE_API d_err_t docker_system_version(docker_context* ctx, docker_result** result,
+d_err_t docker_system_version(docker_context* ctx,
 		docker_version** version);
 
 typedef json_object									docker_info;
@@ -91,11 +90,10 @@ typedef json_object									docker_info;
  * Gets the docker system information
  *
  * \param ctx docker context
- * \param result object
  * \param info object to return
  * \return error code.
  */
-d_err_t docker_system_info(docker_context* ctx, docker_result** result,
+d_err_t docker_system_info(docker_context* ctx,
 		docker_info** info);
 
 // Docker System Events API
@@ -144,17 +142,6 @@ d_err_t docker_system_events_cb(docker_context* ctx, docker_result** result,
 		arraylist** events, time_t start_time, time_t end_time);
 
 //Docker df
-
-/**
- * Gets the docker version information
- *
- * \param ctx docker context
- * \param result object
- * \param version object to return
- * \return error code.
- */
-MODULE_API d_err_t docker_system_version(docker_context* ctx, docker_result** result,
-	docker_version** version);
 
 typedef json_object										docker_df;
 typedef json_object										docker_df_image;

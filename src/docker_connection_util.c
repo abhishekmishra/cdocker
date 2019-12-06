@@ -818,7 +818,7 @@ void free_docker_api_url(docker_api_url* api_url)
 {
 	if (api_url != NULL)
 	{
-		coll_al_map_foreach(api_url->params, &free_param_value);
+		coll_al_map_foreach_fn(api_url->params, &free_param_value);
 		free_coll_al_map(api_url->params);
 		free(api_url);
 	}
@@ -829,6 +829,7 @@ int docker_api_url_params_add(docker_api_url* api_url, char* param, char* value)
 	if (api_url != NULL) {
 		return coll_al_map_put(api_url->params, str_clone(param), str_clone(value));
 	}
+	return E_UNKNOWN_ERROR;
 }
 
 char* docker_api_url_get_url(docker_api_url* api_url) {
@@ -872,7 +873,7 @@ char* docker_api_url_get_url(docker_api_url* api_url) {
 		}
 	}
 	curl_easy_cleanup(curl);
-	coll_al_map_foreach(esc_params, &free_param_value);
+	coll_al_map_foreach_fn(esc_params, &free_param_value);
 	return final_url;
 }
 

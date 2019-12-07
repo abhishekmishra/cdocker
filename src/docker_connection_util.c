@@ -1093,7 +1093,7 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 				ctx->result_handler_fn(result);
 			}
 
-			if (result->http_error_code >= 400) {
+			if (result->http_error_code >= 300) {
 				err = result->http_error_code;
 			}
 

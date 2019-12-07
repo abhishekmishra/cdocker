@@ -165,7 +165,6 @@ void parse_status_cb(char* msg, void* cb, void* cbargs)
  * Create a new image by pulling image:tag for platform
  *
  * \param ctx docker context
- * \param result the docker result object to return
  * \param from_image image name
  * \param tag which tag to pull, for e.g. "latest"
  * \param platform which platform to pull the image for (format os[/arch[/variant]]),
@@ -173,9 +172,9 @@ void parse_status_cb(char* msg, void* cb, void* cbargs)
  * \return error code.
  */
 d_err_t docker_image_create_from_image(docker_context* ctx,
-		docker_result** result, char* from_image, char* tag, char* platform)
+		char* from_image, char* tag, char* platform)
 {
-	return docker_image_create_from_image_cb(ctx, result, NULL, NULL,
+	return docker_image_create_from_image_cb(ctx, NULL, NULL,
 			from_image, tag, platform);
 }
 
@@ -184,7 +183,6 @@ d_err_t docker_image_create_from_image(docker_context* ctx,
  * Create a new image by pulling image:tag for platform, with a progress callback
  *
  * \param ctx docker context
- * \param result the docker result object to return
  * \param status_cb callback to call for updates
  * \param cbargs callback args for the upate call
  * \param from_image image name
@@ -194,7 +192,6 @@ d_err_t docker_image_create_from_image(docker_context* ctx,
  * \return error code.
  */
 d_err_t docker_image_create_from_image_cb(docker_context* ctx,
-		docker_result** result,
 		void (*status_cb)(docker_image_create_status*, void* cbargs),
 		void* cbargs, char* from_image, char* tag, char* platform)
 {
@@ -203,43 +200,31 @@ d_err_t docker_image_create_from_image_cb(docker_context* ctx,
 		return E_INVALID_INPUT;
 	}
 
-	char* url = create_service_url_id_method(IMAGE, NULL, "create");
-	if (url == NULL) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, IMAGE, NULL, "create") != 0) {
 		return E_ALLOC_FAILED;
 	}
 
-	arraylist* params;
-	arraylist_new(&params, (void (*)(void*)) & free_url_param);
-	url_param* p;
-
-	make_url_param(&p, "fromImage", from_image);
-	arraylist_add(params, p);
+	docker_call_params_add(call, "fromImage", from_image);
 	if (tag != NULL)
 	{
-		make_url_param(&p, "tag", tag);
-		arraylist_add(params, p);
+		docker_call_params_add(call, "tag", tag);
 	}
 	if (platform != NULL)
 	{
-		make_url_param(&p, " platform", platform);
-		arraylist_add(params, p);
+		docker_call_params_add(call, " platform", platform);
 	}
+	docker_call_request_data_set(call, "");
+	docker_call_request_method_set(call, HTTP_POST_STR);
+	docker_call_status_cb_set(call, &parse_status_cb);
+	docker_call_cb_args_set(call, status_cb);
+	docker_call_client_cb_args_set(call, cbargs);
 
-	json_object *response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_post_cb(ctx, result, url, params, "", &chunk, &response_obj,
-			&parse_status_cb, status_cb, cbargs);
+	json_object* response_obj = NULL;
+	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
 
-	if ((*result)->http_error_code > 200)
-	{
-		return E_UNKNOWN_ERROR;
-	}
-
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return ret;
 }
 
 arraylist* list_dir(char* folder_path)

@@ -50,9 +50,8 @@ static int group_teardown(void **state) {
 }
 
 static void test_pull_alpine_latest(void **state) {
-	docker_image_create_from_image(ctx, &res, "alpine:latest", NULL, NULL);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 200);
+	d_err_t e = docker_image_create_from_image(ctx, "alpine:latest", NULL, NULL);
+	assert_int_equal(e, E_SUCCESS);
 }
 
 static void test_list_images(void **state) {

@@ -54,16 +54,16 @@ typedef json_object										docker_ctr_list;
 #define docker_ctr_list_get_idx(ctr_ls, i)				(docker_ctr*) json_object_array_get_idx(ctr_ls, i)
 
 /**
-	* List docker containers
-	*
-	* \param ctx the docker context
-	* \param container_list array_list of containers to be returned
-	* \param all all or running only
-	* \param limit max containers to return
-	* \param size return the size of containers in response
-	* \param varargs pairs of filters char* filter_name, char* filter_value (terminated by a NULL)
-	* \return error code
-	*/
+* List docker containers
+*
+* \param ctx the docker context
+* \param container_list array_list of containers to be returned
+* \param all all or running only
+* \param limit max containers to return
+* \param size return the size of containers in response
+* \param varargs pairs of filters char* filter_name, char* filter_value (terminated by a NULL)
+* \return error code
+*/
 d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** container_list, 
 	int all, int limit, int size, ...);
 
@@ -98,8 +98,8 @@ typedef json_object									docker_ctr;
 docker_ctr* docker_inspect_container(docker_context* ctx, char* id, int size);
 
 /**
-	* Struct which holds the titles of the process line, and the details of all processes.
-	*/
+* Struct which holds the titles of the process line, and the details of all processes.
+*/
 typedef struct docker_container_ps_t {
 	arraylist* titles;
 
@@ -109,41 +109,38 @@ typedef struct docker_container_ps_t {
 } docker_container_ps;
 
 /**
-	* List all processes in a container identified by id.
-	*
-	* \param ctx is a docker context
-	* \param result is the pointer to the result to be returned.
-	* \param ps is the pointer to the process list to be returned.
-	* \param id is the container id
-	* \param ps_args is the command line args to be passed to the ps command (can be NULL).
-	* \return the process details as docker_container_ps list.
-	* \return error code of the result
-	*/
+* List all processes in a container identified by id.
+*
+* \param ctx is a docker context
+* \param ps is the pointer to the process list to be returned.
+* \param id is the container id
+* \param ps_args is the command line args to be passed to the ps command (can be NULL).
+* \return the process details as docker_container_ps list.
+* \return error code of the result
+*/
 d_err_t docker_process_list_container(docker_context* ctx,
-	docker_result** result, docker_container_ps** ps, char* id,
-	char* process_args);
+	docker_container_ps** ps, char* id,	char* process_args);
 
 ///////////// Get Container Logs
 
 /**
-	* Get the logs for the docker container.
-	*
-	* \param ctx docker context
-	* \param result pointer to docker_result
-	* \param log pointer to string to be returned.
-	* \param id container id
-	* \param follow - this param has no effect for now, as socket support is not implemented.
-	* \param stdout whether to get stdout (>0 means yes)
-	* \param stderr whether to get stdin (>0 means yes)
-	* \param since time since which the logs are to be fetched (unix timestamp)
-	* \param until time till which the logs are to be fetched (unix timestamp)
-	* \param timestamps add timestamps to log lines (>0 means yes)
-	* \param tail 0 means all, any positive number indicates the number of lines to fetch.
-	* \return error code
-	*/
-d_err_t docker_container_logs(docker_context* ctx, docker_result** result,
-	char** log, char* id, int follow, int std_out, int std_err, long since,
-	long until, int timestamps, int tail);
+* Get the logs for the docker container.
+*
+* \param ctx docker context
+* \param result pointer to docker_result
+* \param log pointer to string to be returned.
+* \param id container id
+* \param follow - this param has no effect for now, as socket support is not implemented.
+* \param stdout whether to get stdout (>0 means yes)
+* \param stderr whether to get stdin (>0 means yes)
+* \param since time since which the logs are to be fetched (unix timestamp)
+* \param until time till which the logs are to be fetched (unix timestamp)
+* \param timestamps add timestamps to log lines (>0 means yes)
+* \param tail 0 means all, any positive number indicates the number of lines to fetch.
+* \return error code
+*/
+d_err_t docker_container_logs(docker_context* ctx, char** log, char* id, int follow, 
+	int std_out, int std_err, long since, long until, int timestamps, int tail);
 
 ///////////// Get Container FS Changes
 
@@ -174,16 +171,14 @@ docker_container_change* docker_changes_list_get_idx(docker_changes_list* list,
 size_t docker_changes_list_length(docker_changes_list* list);
 
 /**
-	* Get the file system changes for the docker container.
-	*
-	* \param ctx docker context
-	* \param result pointer to docker_result
-	* \param changes pointer to struct to be returned.
-	* \param id container id
-	* \return error code
-	*/
-d_err_t docker_container_changes(docker_context* ctx, docker_result** result,
-	docker_changes_list** changes, char* id);
+* Get the file system changes for the docker container.
+*
+* \param ctx docker context
+* \param changes pointer to struct to be returned.
+* \param id container id
+* \return error code
+*/
+d_err_t docker_container_changes(docker_context* ctx, docker_changes_list** changes, char* id);
 
 /////// Docker container stats
 
@@ -239,27 +234,26 @@ typedef json_object													docker_container_stats;
 #define docker_container_stats_precpu_stats_get(stats)				(docker_container_cpu_stats*)get_attr_json_object((json_object*)stats, "precpu_stats")
 
 /**
-	* Get stats from a running container. (the non-streaming version)
-	*
-	* \param ctx docker context
-	* \param result pointer to docker_result
-	* \param stats the stats object to return
-	* \param id container id
-	* \return error code
-	*/
-d_err_t docker_container_get_stats(docker_context* ctx, docker_result** result,
+* Get stats from a running container. (the non-streaming version)
+*
+* \param ctx docker context
+* \param stats the stats object to return
+* \param id container id
+* \return error code
+*/
+d_err_t docker_container_get_stats(docker_context* ctx,
 	docker_container_stats** stats, char* id);
 
 /**
-	* Get stats from a running container. (the streaming version)
-	*
-	* \param ctx docker context
-	* \param result pointer to docker_result
-	* \param docker_container_stats_cb the callback which receives the stats object, and any client args
-	* \param cbargs client args to be passed on to the callback (closure)
-	* \param id container id
-	* \return error code
-	*/
+* Get stats from a running container. (the streaming version)
+*
+* \param ctx docker context
+* \param result pointer to docker_result
+* \param docker_container_stats_cb the callback which receives the stats object, and any client args
+* \param cbargs client args to be passed on to the callback (closure)
+* \param id container id
+* \return error code
+*/
 d_err_t docker_container_get_stats_cb(docker_context* ctx,
 	docker_result** result,
 	void (*docker_container_stats_cb)(docker_container_stats* stats,
@@ -271,113 +265,105 @@ float docker_container_stats_get_cpu_usage_percent(
 ///////////// Get Container Start, Stop, Restart, Kill, Rename, Pause, Unpause, Wait
 
 /**
-	* Start a container
-	*
-	* \param ctx docker context
-	* \param result pointer to docker_result
-	* \param id container id
-	* \param detachKeys (optional) key combination for detaching a container.
-	* \return error code
-	*/
-d_err_t docker_start_container(docker_context* ctx, docker_result** result,
+* Start a container
+*
+* \param ctx docker context
+* \param id container id
+* \param detachKeys (optional) key combination for detaching a container.
+* \return error code
+*/
+d_err_t docker_start_container(docker_context* ctx,
 	char* id, char* detachKeys);
 
 /**
-	* Stop a container
-	*
-	* \param ctx docker context
-	* \param result pointer to docker_result
-	* \param id container id
-	* \param t number of seconds to wait before killing the container
-	* \return error code
-	*/
-d_err_t docker_stop_container(docker_context* ctx, docker_result** result,
+* Stop a container
+*
+* \param ctx docker context
+* \param id container id
+* \param t number of seconds to wait before killing the container
+* \return error code
+*/
+d_err_t docker_stop_container(docker_context* ctx,
 	char* id, int t);
 
 /**
-	* Restart a container
-	*
-	* \param ctx docker context
-	* \param result pointer to docker_result
-	* \param id container id
-	* \param t number of seconds to wait before killing the container
-	* \return error code
-	*/
-d_err_t docker_restart_container(docker_context* ctx, docker_result** result,
+* Restart a container
+*
+* \param ctx docker context
+* \param id container id
+* \param t number of seconds to wait before killing the container
+* \return error code
+*/
+d_err_t docker_restart_container(docker_context* ctx,
 	char* id, int t);
 
 /**
-	* Kill a container
-	*
-	* \param ctx docker context
-	* \param result pointer to docker_result
-	* \param id container id
-	* \param signal (optional - NULL for default i.e. SIGKILL) signal name to send
-	* \return error code
-	*/
-d_err_t docker_kill_container(docker_context* ctx, docker_result** result,
+* Kill a container
+*
+* \param ctx docker context
+* \param id container id
+* \param signal (optional - NULL for default i.e. SIGKILL) signal name to send
+* \return error code
+*/
+d_err_t docker_kill_container(docker_context* ctx,
 	char* id, char* signal);
 
 /**
-	* Rename a container
-	*
-	* \param ctx docker context
-	* \param result pointer to docker_result
-	* \param id container id
-	* \param name new name for the container
-	* \return error code
-	*/
-d_err_t docker_rename_container(docker_context* ctx, docker_result** result,
+* Rename a container
+*
+* \param ctx docker context
+* \param result pointer to docker_result
+* \param id container id
+* \param name new name for the container
+* \return error code
+*/
+d_err_t docker_rename_container(docker_context* ctx,
 	char* id, char* name);
 
 /**
-	* Pause a container
-	*
-	* \param ctx docker context
-	* \param result pointer to docker_result
-	* \param id container id
-	* \return error code
-	*/
-d_err_t docker_pause_container(docker_context* ctx, docker_result** result,
+* Pause a container
+*
+* \param ctx docker context
+* \param id container id
+* \return error code
+*/
+d_err_t docker_pause_container(docker_context* ctx,
 	char* id);
 
 /**
-	* Unpause a container
-	*
-	* \param ctx docker context
-	* \param result pointer to docker_result
-	* \param id container id
-	* \return error code
-	*/
-d_err_t docker_unpause_container(docker_context* ctx, docker_result** result,
+* Unpause a container
+*
+* \param ctx docker context
+* \param id container id
+* \return error code
+*/
+d_err_t docker_unpause_container(docker_context* ctx, 
 	char* id);
 
 //TODO: implement wait status code in API.
 /**
-	* Wait for a container
-	*
-	* \param ctx docker context
-	* \param result pointer to docker_result
-	* \param id container id
-	* \param condition (optional - NULL for default "not-running") condition to wait for
-	* \return error code
-	*/
-d_err_t docker_wait_container(docker_context* ctx, docker_result** result,
+* Wait for a container
+*
+* \param ctx docker context
+* \param id container id
+* \param condition (optional - NULL for default "not-running") condition to wait for
+* \return error code
+*/
+d_err_t docker_wait_container(docker_context* ctx, 
 	char* id, char* condition);
 
 
 /**
-	* Remove a container
-	*
-	* \param ctx docker context
-	* \param result pointer to docker_result
-	* \param id container id
-	* \param v remove volumes associated with the container
-	* \param force if the container is running, kill it before removing it.
-	* \param link remove specified link
-	* \return error code
-	*/
-d_err_t docker_remove_container(docker_context* ctx, docker_result** result,
+* Remove a container
+*
+* \param ctx docker context
+* \param id container id
+* \param v remove volumes associated with the container
+* \param force if the container is running, kill it before removing it.
+* \param link remove specified link
+* \return error code
+*/
+d_err_t docker_remove_container(docker_context* ctx, 
 	char* id, int v, int force, int link);
 
 #ifdef __cplusplus 

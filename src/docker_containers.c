@@ -109,21 +109,15 @@ d_err_t docker_create_container(docker_context* ctx,
 }
 
 docker_ctr* docker_inspect_container(docker_context* ctx, char* id, int size) {
-	char* url = create_service_url_id_method(CONTAINER, id, "json");
-	if (url == NULL) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "json") != 0) {
 		return NULL;
 	}
 
 	docker_ctr* ctr = NULL;
-	docker_result* result;
-	struct http_response_memory chunk;
-	docker_api_get(ctx, &result, url, NULL, &chunk, &ctr);
+	d_err_t err = docker_call_exec(ctx, call, &ctr);
 
-	free(url);
-	//Free chunk memory
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
+	free_docker_call(call);
 	return ctr;
 }
 
@@ -136,19 +130,16 @@ docker_ctr* docker_inspect_container(docker_context* ctx, char* id, int size) {
  * \return the process details as docker_container_ps list.
  */
 d_err_t docker_process_list_container(docker_context* ctx,
-	docker_result** result, docker_container_ps** ps, char* id,
-	char* process_args) {
-	char* url = create_service_url_id_method(CONTAINER, id, "top");
-	if (url == NULL) {
+	docker_container_ps** ps, char* id,	char* process_args) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "top") != 0) {
 		return E_ALLOC_FAILED;
 	}
-	docker_log_debug("Top url is %s", url);
 
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
+	d_err_t err = docker_call_exec(ctx, call, &response_obj);
 
-	if (is_ok((*result))) {
+	if (err == E_SUCCESS) {
 		docker_container_ps* p;
 		p = (docker_container_ps*)malloc(sizeof(docker_container_ps));
 		if (!p) {
@@ -183,25 +174,15 @@ d_err_t docker_process_list_container(docker_context* ctx,
 		}
 		(*ps) = p;
 	}
-	else {
-		json_object* msg_obj;
-		json_object_object_get_ex(response_obj, "message", &msg_obj);
-		(*result)->message = (char*)json_object_to_json_string(msg_obj);
-	}
 
-	//Free url, chunk memory
-	free(url);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return err;
 }
 
 /**
  * Get the logs for the docker container.
  *
  * \param ctx docker context
- * \param result pointer to docker_result
  * \param log pointer to string to be returned.
  * \param follow - this param has no effect for now, as socket support is not implemented.
  * \param stdout whether to get stdout (>0 means yes)
@@ -212,75 +193,65 @@ d_err_t docker_process_list_container(docker_context* ctx,
  * \param tail 0 means all, any positive number indicates the number of lines to fetch.
  * \return error code
  */
-d_err_t docker_container_logs(docker_context* ctx, docker_result** result,
-	char** log, char* id, int follow, int std_out, int std_err, long since,
-	long until, int timestamps, int tail) {
-	char* method = "/logs";
-	char* containers = "containers/";
-	char* url = (char*)calloc(
-		(strlen(containers) + strlen(id) + strlen(method) + 1), sizeof(char));
-	if (url == NULL) {
+d_err_t docker_container_logs(docker_context* ctx, char** log, char* id, int follow, 
+	int std_out, int std_err, long since, long until, int timestamps, int tail) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "logs") != 0) {
 		return E_ALLOC_FAILED;
 	}
-	sprintf(url, "%s%s%s", containers, id, method);
-	docker_log_debug("Stdout url is %s", url);
-
-	arraylist* params;
-	arraylist_new(&params,
-		(void (*)(void*)) & free_url_param);
-	url_param* p;
 
 	if (std_out > 0) {
-		make_url_param(&p, "stdout", "true");
-		arraylist_add(params, p);
+		docker_call_params_add(call, "stdout", "true");
 	}
 
 	if (std_err > 0) {
-		make_url_param(&p, "stderr", "true");
-		arraylist_add(params, p);
+		docker_call_params_add(call, "stderr", "true");
 	}
 
 	if (since >= 0) {
 		char* since_val = (char*)malloc(128 * sizeof(char));
+		if (since_val == NULL) {
+			return E_ALLOC_FAILED;
+		}
 		sprintf(since_val, "%ld", since);
-		make_url_param(&p, "since", since_val);
-		arraylist_add(params, p);
+		docker_call_params_add(call, "since", since_val);
+		free(since_val);
 	}
 
 	if (until > 0) {
 		char* until_val = (char*)malloc(128 * sizeof(char));
+		if (until_val == NULL) {
+			return E_ALLOC_FAILED;
+		}
 		sprintf(until_val, "%ld", until);
-		make_url_param(&p, "until", until_val);
-		arraylist_add(params, p);
+		docker_call_params_add(call, "until", until_val);
+		free(until_val);
 	}
 
 	if (timestamps > 0) {
-		make_url_param(&p, "timestamps", "true");
-		arraylist_add(params, p);
+		docker_call_params_add(call, "timestamps", "true");
 	}
 
 	if (tail > 0) {
 		char* tail_val = (char*)malloc(128 * sizeof(char));
+		if (tail_val == NULL) {
+			return E_ALLOC_FAILED;
+		}
 		sprintf(tail_val, "%d", tail);
-		make_url_param(&p, "tail", tail_val);
-		arraylist_add(params, p);
+		docker_call_params_add(call, "tail", tail_val);
+		free(tail_val);
 	}
 
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
+	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
+	json_object_put(response_obj);
 
-	if(chunk.memory != NULL) {
-		(*log) = str_clone(chunk.memory + 8);
+	if(docker_call_response_data_get(call) != NULL) {
+		(*log) = str_clone(docker_call_response_data_get(call) + 8);
 	}
 
-	//Free url, params list, chunk memory
-	free(url);
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return ret;
 }
 
 ///////////// Get Container FS Changes
@@ -342,19 +313,18 @@ size_t docker_changes_list_length(docker_changes_list* list) {
  * Get the file system changes for the docker container.
  *
  * \param ctx docker context
- * \param result pointer to docker_result
  * \param changes pointer to struct to be returned.
  * \param id container id
  * \return error code
  */
-d_err_t docker_container_changes(docker_context* ctx, docker_result** result,
-	docker_changes_list** changes, char* id) {
-	char* url = create_service_url_id_method(CONTAINER, id, "changes");
-	if (url == NULL) { return E_ALLOC_FAILED; }
+d_err_t docker_container_changes(docker_context* ctx, docker_changes_list** changes, char* id) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "changes") != 0) {
+		return E_ALLOC_FAILED;
+	}
 
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, NULL, &chunk, &response_obj);
+	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
 
 	if ((json_object_get_type(response_obj) != json_type_null)) {
 		docker_log_debug("Response = %s",
@@ -378,12 +348,8 @@ d_err_t docker_container_changes(docker_context* ctx, docker_result** result,
 		(*changes) = NULL;
 	}
 
-	//Free url, chunk memory
-	free(url);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return ret;
 }
 
 /////// Docker container stats
@@ -392,36 +358,25 @@ d_err_t docker_container_changes(docker_context* ctx, docker_result** result,
  * Get stats from a running container. (the non-streaming version)
  *
  * \param ctx docker context
- * \param result pointer to docker_result
  * \param stats the stats object to return
  * \param id container id
  * \return error code
  */
-d_err_t docker_container_get_stats(docker_context* ctx, docker_result** result,
-	docker_container_stats** stats, char* id) {
+d_err_t docker_container_get_stats(docker_context* ctx,	docker_container_stats** stats, 
+	char* id) {
 	if (id == NULL || strlen(id) == 0) {
 		return E_INVALID_INPUT;
 	}
 
-	char* url = create_service_url_id_method(CONTAINER, id, "stats");
-	if (url == NULL) { return E_ALLOC_FAILED; }
-	arraylist* params;
-	arraylist_new(&params,
-		(void (*)(void*)) & free_url_param);
-	url_param* p;
-	make_url_param(&p, "stream", str_clone("false"));
-	arraylist_add(params, p);
-
-	struct http_response_memory chunk;
-	d_err_t ret = docker_api_get(ctx, result, url, params, &chunk, stats);
-
-	//Free url, params list, chunk memory
-	free(url);
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "stats") != 0) {
+		return E_ALLOC_FAILED;
 	}
+	docker_call_params_add(call, "stream", str_clone("false"));
 
+	d_err_t ret = docker_call_exec(ctx, call, stats);
+
+	free_docker_call(call);
 	return ret;
 }
 
@@ -456,29 +411,20 @@ d_err_t docker_container_get_stats_cb(docker_context* ctx,
 		return E_INVALID_INPUT;
 	}
 
-	char* url = create_service_url_id_method(CONTAINER, id, "stats");
-	if (url == NULL) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "stats") != 0) {
 		return E_ALLOC_FAILED;
 	}
-	arraylist* params;
-	arraylist_new(&params,
-		(void (*)(void*)) & free_url_param);
-	url_param* p;
-	make_url_param(&p, "stream", str_clone("true"));
-	arraylist_add(params, p);
+	docker_call_params_add(call, "stream", str_clone("true"));
+	docker_call_status_cb_set(call, &parse_container_stats_cb);
+	docker_call_cb_args_set(call, docker_container_stats_cb);
+	docker_call_client_cb_args_set(call, cbargs);
 
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_get_cb(ctx, result, url, params, &chunk, &response_obj,
-		&parse_container_stats_cb, docker_container_stats_cb, cbargs);
+	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
 
-	//Free url, params list, chunk memory
-	free(url);
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return ret;
 }
 
 float docker_container_stats_get_cpu_usage_percent(
@@ -502,60 +448,43 @@ float docker_container_stats_get_cpu_usage_percent(
  * Start a container
  *
  * \param ctx docker context
- * \param result pointer to docker_result
  * \param id container id
  * \param detachKeys (optional, pass NULL if not needed) key combination for detaching a container.
  * \return error code
  */
-d_err_t docker_start_container(docker_context* ctx, docker_result** result,
-	char* id, char* detachKeys) {
-	char* url = create_service_url_id_method(CONTAINER, id, "start");
-	if (url == NULL) {
+d_err_t docker_start_container(docker_context* ctx, char* id, char* detachKeys) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "start") != 0) {
 		return E_ALLOC_FAILED;
 	}
-	arraylist* params;
-	arraylist_new(&params,
-		(void (*)(void*)) & free_url_param);
-	url_param* p;
 
 	if (detachKeys != NULL) {
-		make_url_param(&p, "detachKeys", detachKeys);
-		arraylist_add(params, p);
+		docker_call_params_add(call, "detachKeys", detachKeys);
 	}
+	docker_call_request_data_set(call, "");
+	docker_call_request_method_set(call, HTTP_POST_STR);
 
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
+	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
+	json_object_put(response_obj);
 
-	//Free url, params list, chunk memory
-	free(url);
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return ret;
 }
 
 /**
  * Stop a container
  *
  * \param ctx docker context
- * \param result pointer to docker_result
  * \param id container id
  * \param t number of seconds to wait before killing the container
  * \return error code
  */
-d_err_t docker_stop_container(docker_context* ctx, docker_result** result,
-	char* id, int t) {
-	char* url = create_service_url_id_method(CONTAINER, id, "stop");
-	if (url == NULL) {
+d_err_t docker_stop_container(docker_context* ctx, char* id, int t) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "stop") != 0) {
 		return E_ALLOC_FAILED;
 	}
-
-	arraylist* params;
-	arraylist_new(&params,
-		(void (*)(void*)) & free_url_param);
-	url_param* p;
 
 	if (t > 0) {
 		char* tstr = (char*)calloc(128, sizeof(char));
@@ -563,52 +492,42 @@ d_err_t docker_stop_container(docker_context* ctx, docker_result** result,
 			return E_ALLOC_FAILED;
 		}
 		sprintf(tstr, "%d", t);
-		make_url_param(&p, "t", tstr);
-		arraylist_add(params, p);
+		docker_call_params_add(call, "t", tstr);
+		free(tstr);
 	}
+	docker_call_request_data_set(call, "");
+	docker_call_request_method_set(call, HTTP_POST_STR);
 
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
+	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
+	json_object_put(response_obj);
 
-	if ((*result)->http_error_code == 304) {
-		(*result)->message = str_clone(
-			"container is already stopped.");
-	}
+	//if (ret == 304) {
+	//	(*result)->message = str_clone(
+	//		"container is already stopped.");
+	//}
 
-	if ((*result)->http_error_code == 404) {
-		(*result)->message = str_clone("container not found.");
-	}
+	//if (ret == 404) {
+	//	(*result)->message = str_clone("container not found.");
+	//}
 
-	//Free url, params list, chunk memory
-	free(url);
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return ret;
 }
 
 /**
  * Restart a container
  *
  * \param ctx docker context
- * \param result pointer to docker_result
  * \param id container id
  * \param t number of seconds to wait before killing the container
  * \return error code
  */
-d_err_t docker_restart_container(docker_context* ctx, docker_result** result,
-	char* id, int t) {
-	char* url = create_service_url_id_method(CONTAINER, id, "restart");
-	if (url == NULL) {
+d_err_t docker_restart_container(docker_context* ctx, char* id, int t) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "restart") != 0) {
 		return E_ALLOC_FAILED;
 	}
-
-	arraylist* params;
-	arraylist_new(&params,
-		(void (*)(void*)) & free_url_param);
-	url_param* p;
 
 	if (t > 0) {
 		char* tstr = (char*)calloc(128, sizeof(char));
@@ -616,217 +535,178 @@ d_err_t docker_restart_container(docker_context* ctx, docker_result** result,
 			return E_ALLOC_FAILED;
 		}
 		sprintf(tstr, "%d", t);
-		make_url_param(&p, "t", tstr);
-		arraylist_add(params, p);
+		docker_call_params_add(call, "t", tstr);
+		free(tstr);
 	}
+	docker_call_request_data_set(call, "");
+	docker_call_request_method_set(call, HTTP_POST_STR);
 
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
+	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
+	json_object_put(response_obj);
 
-	if ((*result)->http_error_code == 404) {
-		(*result)->message = str_clone("container not found.");
-	}
+	//if (ret == 404) {
+	//	(*result)->message = str_clone("container not found.");
+	//}
 
-	//Free url, params list, chunk memory
-	free(url);
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return ret;
 }
 
 /**
  * Kill a container
  *
  * \param ctx docker context
- * \param result pointer to docker_result
  * \param id container id
  * \param signal (optional - NULL for default i.e. SIGKILL) signal name to send
  * \return error code
  */
-d_err_t docker_kill_container(docker_context* ctx, docker_result** result,
-	char* id, char* signal) {
-	char* url = create_service_url_id_method(CONTAINER, id, "kill");
-	if (url == NULL) {
+d_err_t docker_kill_container(docker_context* ctx, char* id, char* signal) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "kill") != 0) {
 		return E_ALLOC_FAILED;
 	}
 
-	arraylist* params;
-	arraylist_new(&params,
-		(void (*)(void*)) & free_url_param);
-	url_param* p;
-
 	if (signal != NULL) {
-		make_url_param(&p, "signal", str_clone(signal));
-		arraylist_add(params, p);
+		docker_call_params_add(call, "signal", str_clone(signal));
 	}
+	docker_call_request_data_set(call, "");
+	docker_call_request_method_set(call, HTTP_POST_STR);
 
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
+	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
+	json_object_put(response_obj);
 
-	if ((*result)->http_error_code == 404) {
-		(*result)->message = str_clone("container not found.");
-	}
+	//if ((*result)->http_error_code == 404) {
+	//	(*result)->message = str_clone("container not found.");
+	//}
 
-	if ((*result)->http_error_code == 409) {
-		(*result)->message = str_clone("container is not running.");
-	}
+	//if ((*result)->http_error_code == 409) {
+	//	(*result)->message = str_clone("container is not running.");
+	//}
 
-	//Free url, params list, chunk memory
-	free(url);
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return ret;
 }
 
 /**
  * Rename a container
  *
  * \param ctx docker context
- * \param result pointer to docker_result
  * \param id container id
  * \param name new name for the container
  * \return error code
  */
-d_err_t docker_rename_container(docker_context* ctx, docker_result** result,
-	char* id, char* name) {
-	char* url = create_service_url_id_method(CONTAINER, id, "rename");
-	if (url == NULL) {
+d_err_t docker_rename_container(docker_context* ctx, char* id, char* name) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "rename") != 0) {
 		return E_ALLOC_FAILED;
 	}
-	arraylist* params;
-	arraylist_new(&params,
-		(void (*)(void*)) & free_url_param);
-	url_param* p;
 
 	if (name != NULL) {
-		make_url_param(&p, "name", str_clone(name));
-		arraylist_add(params, p);
+		docker_call_params_add(call, "name", str_clone(name));
 	}
+	docker_call_request_data_set(call, "");
+	docker_call_request_method_set(call, HTTP_POST_STR);
 
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
+	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
+	json_object_put(response_obj);
 
-	if ((*result)->http_error_code == 404) {
-		(*result)->message = str_clone("container not found.");
-	}
+	//if ((*result)->http_error_code == 404) {
+	//	(*result)->message = str_clone("container not found.");
+	//}
 
-	if ((*result)->http_error_code == 409) {
-		(*result)->message = str_clone("name is already in use");
-	}
+	//if ((*result)->http_error_code == 409) {
+	//	(*result)->message = str_clone("name is already in use");
+	//}
 
-	//Free url, params list, chunk memory
-	free(url);
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return ret;
 }
 
 /**
  * Pause a container
  *
  * \param ctx docker context
- * \param result pointer to docker_result
  * \param id container id
  * \return error code
  */
-d_err_t docker_pause_container(docker_context* ctx, docker_result** result,
-	char* id) {
-	char* url = create_service_url_id_method(CONTAINER, id, "pause");
-	if (url == NULL) {
+d_err_t docker_pause_container(docker_context* ctx, char* id) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "pause") != 0) {
 		return E_ALLOC_FAILED;
 	}
+
+	docker_call_request_data_set(call, "");
+	docker_call_request_method_set(call, HTTP_POST_STR);
+
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_post(ctx, result, url, NULL, "", &chunk, &response_obj);
+	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
+	json_object_put(response_obj);
 
-	if ((*result)->http_error_code == 404) {
-		(*result)->message = str_clone("container not found.");
-	}
+	//if ((*result)->http_error_code == 404) {
+	//	(*result)->message = str_clone("container not found.");
+	//}
 
-	//Free url, params list, chunk memory
-	free(url);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return ret;
 }
 
 /**
  * Unpause a container
  *
  * \param ctx docker context
- * \param result pointer to docker_result
  * \param id container id
  * \return error code
  */
-d_err_t docker_unpause_container(docker_context* ctx, docker_result** result,
-	char* id) {
-	char* url = create_service_url_id_method(CONTAINER, id, "unpause");
-	if (url == NULL) {
+d_err_t docker_unpause_container(docker_context* ctx, char* id) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "unpause") != 0) {
 		return E_ALLOC_FAILED;
 	}
 
+	docker_call_request_data_set(call, "");
+	docker_call_request_method_set(call, HTTP_POST_STR);
+
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_post(ctx, result, url, NULL, "", &chunk, &response_obj);
+	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
+	json_object_put(response_obj);
 
-	if ((*result)->http_error_code == 404) {
-		(*result)->message = str_clone("container not found.");
-	}
+	//if ((*result)->http_error_code == 404) {
+	//	(*result)->message = str_clone("container not found.");
+	//}
 
-	//Free url, params list, chunk memory
-	free(url);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return ret;
 }
 
 /**
  * Wait for a container
  *
  * \param ctx docker context
- * \param result pointer to docker_result
  * \param id container id
  * \param condition (optional - NULL for default "not-running") condition to wait for
  * \return error code
  */
-d_err_t docker_wait_container(docker_context* ctx, docker_result** result,
-	char* id, char* condition) {
-	char* url = create_service_url_id_method(CONTAINER, id, "wait");
-	if (url == NULL) {
+d_err_t docker_wait_container(docker_context* ctx, char* id, char* condition) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "wait") != 0) {
 		return E_ALLOC_FAILED;
 	}
-	arraylist* params;
-	arraylist_new(&params,
-		(void (*)(void*)) & free_url_param);
-	url_param* p;
 
 	if (condition != NULL) {
-		make_url_param(&p, "condition", str_clone(condition));
-		arraylist_add(params, p);
+		docker_call_params_add(call, "condition", str_clone(condition));
 	}
+	docker_call_request_data_set(call, "");
+	docker_call_request_method_set(call, HTTP_POST_STR);
 
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_post(ctx, result, url, NULL, "", &chunk, &response_obj);
+	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
+	json_object_put(response_obj);
 
-	//Free url, params list, chunk memory
-	free(url);
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return ret;
 }
 
 /**
@@ -840,26 +720,18 @@ d_err_t docker_wait_container(docker_context* ctx, docker_result** result,
  * \param link remove specified link
  * \return error code
  */
-d_err_t docker_remove_container(docker_context* ctx, docker_result** result,
-	char* id, int v, int force, int link) {
-	char* url = create_service_url_id_method(CONTAINER, NULL, id);
-	if (url == NULL) {
+d_err_t docker_remove_container(docker_context* ctx, char* id, int v, int force, int link) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, NULL, id) != 0) {
 		return E_ALLOC_FAILED;
 	}
 
-	arraylist* params;
-	arraylist_new(&params,
-		(void (*)(void*)) & free_url_param);
+	docker_call_request_method_set(call, HTTP_DELETE_STR);
 
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_delete(ctx, result, url, params, &chunk, &response_obj);
+	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
+	json_object_put(response_obj);
 
-	//Free url, params list, chunk memory
-	free(url);
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return ret;
 }

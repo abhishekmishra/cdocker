@@ -21,7 +21,6 @@
 #include "test_util.h"
 
 static docker_context* ctx = NULL;
-static docker_result* res;
 
 void log_pull_message(docker_image_create_status* status, void* client_cbargs) {
 	if (status) {
@@ -72,14 +71,14 @@ static int group_teardown(void **state) {
 
 static void test_start(void **state) {
 	char* id = *state;
-	docker_start_container(ctx, &res, id, NULL);
-	handle_error(res);
-	docker_wait_container(ctx, &res, id, NULL);
-	handle_error(res);
+	d_err_t e = docker_start_container(ctx, id, NULL);
+	assert_int_equal(e, E_SUCCESS);
+	e = docker_wait_container(ctx, id, NULL);
+	assert_int_equal(e, E_SUCCESS);
 	char* output;
-	docker_container_logs(ctx, &res, &output, id, DOCKER_PARAM_FALSE,
+	e = docker_container_logs(ctx, &output, id, DOCKER_PARAM_FALSE,
 	DOCKER_PARAM_TRUE, DOCKER_PARAM_FALSE, -1, -1, DOCKER_PARAM_FALSE, -1);
-	handle_error(res);
+	assert_int_equal(e, E_SUCCESS);
 	assert_non_null(output);
 	assert_string_equal(output, "hello world\n");
 }
@@ -95,7 +94,8 @@ static void test_inspect(void** state) {
 static void test_list(void **state) {
 	char* id = *state;
 	docker_ctr_list* containers = NULL;
-	docker_container_list(ctx, &containers, 0, 5, 1, "id", id, NULL);
+	d_err_t e = docker_container_list(ctx, &containers, 0, 5, 1, "id", id, NULL);
+	assert_int_equal(e, E_SUCCESS);
 	docker_log_info("Read %d containers.\n",
 			docker_ctr_list_length(containers));
 	assert_non_null(containers);
@@ -108,24 +108,24 @@ static void test_changes(void **state) {
 	char* id = *state;
 	docker_changes_list* changes;
 	//changes are empty because the instance is stopped by this time.
-	docker_container_changes(ctx, &res, &changes, id);
-	handle_error(res);
+	d_err_t e = docker_container_changes(ctx, &changes, id);
+	assert_int_equal(e, E_SUCCESS);
 	assert_null(changes);
 }
 
 static void test_stopping_stopped_container(void **state) {
 	char* id = *state;
-	docker_stop_container(ctx, &res, id, 0);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 304L);
+	d_err_t e = docker_stop_container(ctx, id, 0);
+	assert_int_equal(e, E_SUCCESS);
+	assert_int_equal(e, 304L);
 	//free_docker_result(res);
 }
 
 static void test_killing_stopped_container(void **state) {
 	char* id = *state;
-	docker_kill_container(ctx, &res, id, NULL);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 409);
+	d_err_t e = docker_kill_container(ctx, id, NULL);
+	assert_int_equal(e, E_SUCCESS);
+	assert_int_equal(e, 409);
 }
 
 //TODO: will need to create test for rename
@@ -139,49 +139,46 @@ static void test_killing_stopped_container(void **state) {
 
 static void test_pause_stopped_container(void **state) {
 	char* id = *state;
-	docker_pause_container(ctx, &res, id);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 409);
+	d_err_t e = docker_pause_container(ctx, id);
+	assert_int_equal(e, E_SUCCESS);
+	assert_int_equal(e, 409);
 }
 
 static void test_unpause_stopped_container(void **state) {
 	char* id = *state;
-	docker_unpause_container(ctx, &res, id);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 500);
+	d_err_t e = docker_unpause_container(ctx, id);
+	assert_int_equal(e, E_SUCCESS);
+	assert_int_equal(e, 500);
 }
 
 static void test_restart_container(void **state) {
 	char* id = *state;
-	docker_restart_container(ctx, &res, id, 0);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 204);
-	docker_wait_container(ctx, &res, id, NULL);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 200);
+	d_err_t e = docker_restart_container(ctx, id, 0);
+	assert_int_equal(e, E_SUCCESS);
+	e = docker_wait_container(ctx, id, NULL);
+	assert_int_equal(e, E_SUCCESS);
 }
 
 static void test_stats_container(void **state) {
 	char* id = NULL;
-	docker_image_create_from_image_cb(ctx, &res, &log_pull_message, NULL,
+	d_err_t e = docker_image_create_from_image_cb(ctx, &log_pull_message, NULL,
 			"bfirsh/reticulate-splines", "latest", NULL);
-	handle_error(res);
+	assert_int_equal(e, E_SUCCESS);
 
 	docker_ctr_create_params* p = make_docker_ctr_create_params();
 	docker_ctr_create_params_image_set(p, "bfirsh/reticulate-splines");
-	d_err_t e = docker_create_container(ctx, &id, p);
+	e = docker_create_container(ctx, &id, p);
 	assert_int_equal(e, E_SUCCESS);
 	free_docker_ctr_create_params(p);
 
 	docker_log_info("Started docker container id is %s\n", id);
 
-	docker_start_container(ctx, &res, id, NULL);
-	handle_error(res);
+	e = docker_start_container(ctx, id, NULL);
+	assert_int_equal(e, E_SUCCESS);
 
 	docker_container_stats* stats;
-	docker_container_get_stats(ctx, &res, &stats, id);
-	handle_error(res);
-
+	e = docker_container_get_stats(ctx, &stats, id);
+	assert_int_equal(e, E_SUCCESS);
 	docker_container_cpu_stats* cpu_stats =
 		docker_container_stats_cpu_stats_get(stats);
 	docker_log_info("Cpu usage is %lu, num cpus is %d, usage%% is %f",
@@ -189,10 +186,8 @@ static void test_stats_container(void **state) {
 		docker_container_cpu_stats_online_cpus_get(cpu_stats),
 		docker_container_stats_get_cpu_usage_percent(cpu_stats));
 
-	assert_int_equal(res->http_error_code, 200);
-
-	docker_stop_container(ctx, &res, id, 0);
-	handle_error(res);
+	e = docker_stop_container(ctx, id, 0);
+	assert_int_equal(e, E_SUCCESS);
 }
 
 int docker_container_tests() {

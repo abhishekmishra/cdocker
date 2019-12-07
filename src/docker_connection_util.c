@@ -796,7 +796,7 @@ d_err_t make_docker_call(docker_call** dcall, char* site_url, docker_object_type
 	(*dcall)->object = object;
 	(*dcall)->id = (char*)id;
 	(*dcall)->method = (char*)method;
-	(*dcall)->params = make_coll_al_map(&strcmp);
+	(*dcall)->params = make_coll_al_map((coll_al_map_compare_fn*)&strcmp);
 
 	(*dcall)->request_method = "GET";
 	(*dcall)->request_data = NULL;
@@ -931,7 +931,7 @@ void free_docker_call(docker_call* dcall)
 		if (dcall->response_data != NULL) {
 			free(dcall->response_data);
 		}
-		coll_al_map_foreach_fn(dcall->params, &free_param_value);
+		coll_al_map_foreach_fn(dcall->params, (coll_al_map_iter_fn*)&free_param_value);
 		free_coll_al_map(dcall->params);
 		free(dcall);
 	}
@@ -949,7 +949,7 @@ char* docker_call_get_url(docker_call* dcall) {
 	CURL* curl = curl_easy_init();
 
 	char* service_url = create_service_url_id_method(dcall->object, dcall->id, dcall->method);
-	coll_al_map* esc_params = make_coll_al_map(&strcmp);
+	coll_al_map* esc_params = make_coll_al_map((coll_al_map_compare_fn*)&strcmp);
 
 	char* final_url = NULL;
 	size_t final_url_len = 2; //for question mark and null terminator
@@ -988,7 +988,7 @@ char* docker_call_get_url(docker_call* dcall) {
 		}
 	}
 	curl_easy_cleanup(curl);
-	coll_al_map_foreach_fn(esc_params, &free_param_value);
+	coll_al_map_foreach_fn(esc_params, (coll_al_map_iter_fn*)&free_param_value);
 	free_coll_al_map(esc_params);
 	return final_url;
 }

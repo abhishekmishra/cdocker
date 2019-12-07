@@ -57,7 +57,6 @@ typedef json_object										docker_ctr_list;
 	* List docker containers
 	*
 	* \param ctx the docker context
-	* \param result the result object to return
 	* \param container_list array_list of containers to be returned
 	* \param all all or running only
 	* \param limit max containers to return
@@ -65,9 +64,8 @@ typedef json_object										docker_ctr_list;
 	* \param varargs pairs of filters char* filter_name, char* filter_value (terminated by a NULL)
 	* \return error code
 	*/
-d_err_t docker_container_list(docker_context* ctx, docker_result** result,
-	docker_ctr_list** container_list, int all, int limit, int size,
-	...);
+d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** container_list, 
+	int all, int limit, int size, ...);
 
 typedef json_object													docker_ctr_create_params;
 #define make_docker_ctr_create_params								(docker_ctr_create_params*)json_object_new_object
@@ -77,7 +75,7 @@ typedef json_object													docker_ctr_create_params;
 #define docker_ctr_create_params_cmd_add(ctr_create, cmd)			add_array_str(ctr_create, "Cmd", cmd)
 #define docker_ctr_create_params_env_add(ctr_create, env)			add_array_str(ctr_create, "Env", env)
 
-d_err_t docker_create_container(docker_context* ctx, docker_result** result,
+d_err_t docker_create_container(docker_context* ctx,
 	char** id, docker_ctr_create_params* params);
 
 typedef json_object									docker_ctr;

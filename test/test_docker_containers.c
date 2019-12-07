@@ -55,8 +55,8 @@ static int group_setup(void **state) {
 	docker_ctr_create_params_image_set(p, "alpine");
 	docker_ctr_create_params_cmd_add(p, "echo");
 	docker_ctr_create_params_cmd_add(p, "hello world");
-	docker_create_container(ctx, &res, &id, p);
-	handle_error(res);
+	d_err_t e = docker_create_container(ctx, &id, p);
+	assert_int_equal(e, E_SUCCESS);
 	assert_non_null(id);
 	*state = id;
 	printf("id in state = %s\n", id);
@@ -94,11 +94,11 @@ static void test_inspect(void** state) {
 
 static void test_list(void **state) {
 	char* id = *state;
-	docker_ctr_list* containers;
-	docker_container_list(ctx, &res, &containers, 0, 5, 1, "id", id, NULL);
-	handle_error(res);
+	docker_ctr_list* containers = NULL;
+	docker_container_list(ctx, &containers, 0, 5, 1, "id", id, NULL);
 	docker_log_info("Read %d containers.\n",
 			docker_ctr_list_length(containers));
+	assert_non_null(containers);
 	assert_int_equal(docker_ctr_list_length(containers), 1);
 }
 
@@ -169,9 +169,9 @@ static void test_stats_container(void **state) {
 
 	docker_ctr_create_params* p = make_docker_ctr_create_params();
 	docker_ctr_create_params_image_set(p, "bfirsh/reticulate-splines");
-	docker_create_container(ctx, &res, &id, p);
+	d_err_t e = docker_create_container(ctx, &id, p);
+	assert_int_equal(e, E_SUCCESS);
 	free_docker_ctr_create_params(p);
-	handle_error(res);
 
 	docker_log_info("Started docker container id is %s\n", id);
 

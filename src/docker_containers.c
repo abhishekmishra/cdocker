@@ -30,27 +30,15 @@
  * \param varargs pairs of filters char* filter_name, char* filter_value (terminated by a NULL)
  * \return error code
  */
-d_err_t docker_container_list(docker_context* ctx, docker_result** result,
-	docker_ctr_list** container_list, int all, int limit, int size,
-	...) {
-	char* method = "json";
-	char* containers = "containers/";
-	char* url = (char*)calloc(
-		(strlen(containers) + strlen(method) + 1), sizeof(char));
-	if (url == NULL) {
+d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** container_list,
+	int all, int limit, int size, ...) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, NULL, "json") != 0) {
 		return E_ALLOC_FAILED;
 	}
-	sprintf(url, "%s%s", containers, method);
-	docker_log_debug("List url is %s\n", url);
-
-	arraylist* params;
-	arraylist_new(&params,
-		(void (*)(void*)) & free_url_param);
-	url_param* p;
 
 	if (all > 0) {
-		make_url_param(&p, "all", "true");
-		arraylist_add(params, p);
+		docker_call_params_add(call, "all", "true");
 	}
 
 	if (limit > 0) {
@@ -59,13 +47,12 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 			return E_ALLOC_FAILED;
 		}
 		sprintf(lim_val, "%d", limit);
-		make_url_param(&p, "limit", lim_val);
-		arraylist_add(params, p);
+		docker_call_params_add(call, "limit", lim_val);
+		free(lim_val);
 	}
 
 	if (size > 0) {
-		make_url_param(&p, "size", "true");
-		arraylist_add(params, p);
+		docker_call_params_add(call, "size", "true");
 	}
 
 	va_list kvargs;
@@ -82,47 +69,43 @@ d_err_t docker_container_list(docker_context* ctx, docker_result** result,
 		}
 		add_filter_str(filters, filter_name, filter_value);
 	}
-	make_url_param(&p, "filters", (char*)filters_to_str(filters));
-	arraylist_add(params, p);
+	docker_call_params_add(call, "filters", (char*)filters_to_str(filters));
 
-	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, params, &chunk, container_list);
+	d_err_t err = docker_call_exec(ctx, call, container_list);
 
-	//Free url, params list, chunk memory
-	free(url);
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return err;
 
 }
 
-d_err_t docker_create_container(docker_context* ctx, docker_result** result,
+d_err_t docker_create_container(docker_context* ctx,
 	char** id, docker_ctr_create_params* params) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, NULL, "create") != 0) {
+		return E_ALLOC_FAILED;
+	}
+
+	docker_call_request_data_set(call, (char*)json_object_to_json_string(params));
+	docker_call_request_method_set(call, "POST");
+	docker_call_content_type_header_set(call, HEADER_JSON);
+
 	(*id) = NULL;
 	json_object* response_obj = NULL;
-	struct http_response_memory chunk;
 
-	docker_api_post(ctx, result, "containers/create", NULL,
-		(char*)json_object_to_json_string(params), &chunk,
-		&response_obj);
+	d_err_t err = docker_call_exec(ctx, call, &response_obj);
 
 	json_object* idObj;
 	if (json_object_object_get_ex(response_obj, "Id", &idObj)) {
 		const char* container_id = json_object_get_string(idObj);
-		(*id) = (char*)malloc((strlen(container_id) + 1) * sizeof(char));
-		strcpy((*id), container_id);
+		(*id) = str_clone(container_id);
 	}
 	else {
 		docker_log_debug("Id not found.");
 	}
 
-	//Free chunk memory
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	json_object_put(response_obj);
+	free_docker_call(call);
+	return err;
 }
 
 docker_ctr* docker_inspect_container(docker_context* ctx, char* id, int size) {

@@ -33,7 +33,7 @@ typedef json_object										docker_ctr_ls_item;
 #define docker_ctr_ls_item_id_get(ctr)					get_attr_str((json_object*)ctr, "Id")
 #define docker_ctr_ls_item_names_get(ctr)				get_attr_json_object((json_object*)ctr, "Names")
 #define docker_ctr_ls_item_names_length(ctr)			json_object_array_length(docker_ctr_ls_item_names_get(ctr))
-#define docker_ctr_ls_item_names_get_idx(ctr, i)		(char*) json_object_array_get_idx(docker_ctr_ls_item_names_get(ctr), i)
+#define docker_ctr_ls_item_names_get_idx(ctr, i)		(char*) json_object_get_string(json_object_array_get_idx(docker_ctr_ls_item_names_get(ctr), i))
 #define docker_ctr_ls_item_image_get(ctr)				get_attr_str((json_object*)ctr, "Image")
 #define docker_ctr_ls_item_image_id_get(ctr)			get_attr_str((json_object*)ctr, "ImageID")
 #define docker_ctr_ls_item_command_get(ctr)				get_attr_str((json_object*)ctr, "Command")

@@ -201,7 +201,7 @@ d_err_t docker_system_events_cb(docker_context* ctx,
 
 	json_object_put(response_obj);
 	free_docker_call(call);
-	return E_SUCCESS;
+	return err;
 }
 
 d_err_t docker_system_df(docker_context* ctx, docker_df** df) {
@@ -213,5 +213,5 @@ d_err_t docker_system_df(docker_context* ctx, docker_df** df) {
 	d_err_t err = docker_call_exec(ctx, call, (json_object**)df);
 
 	free_docker_call(call);
-	return E_SUCCESS;
+	return err;
 }

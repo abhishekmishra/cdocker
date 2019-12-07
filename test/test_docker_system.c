@@ -96,6 +96,7 @@ static void test_events(void **state) {
 		assert_non_null(docker_event_action_get(evt));
 		docker_log_info("Event action is %s", docker_event_action_get(evt));
 	}
+	free_docker_event_list(events);
 }
 
 static void test_df(void** state) {

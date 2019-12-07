@@ -317,7 +317,9 @@ void handle_response(CURLcode res, CURL* curl, docker_result** result,
 	if (chunk->size > 0)
 	{
 		response_obj = json_tokener_parse(chunk->memory);
-		(*response) = response_obj;
+		//increment reference count so that the caller can use
+		//and then free the json object.
+		(*response) = json_object_get(response_obj);
 		docker_log_debug("Response = %s",
 			json_object_to_json_string(response_obj));
 	}

@@ -52,10 +52,10 @@ typedef json_object											docker_image;
 #define docker_image_created_get(img)						get_attr_unsigned_long((json_object*)img, "Created")
 #define docker_image_repo_tags_get(img)						get_attr_json_object((json_object*)img, "RepoTags")
 #define docker_image_repo_tags_length(img)					json_object_array_length(docker_image_repo_tags_get(img))
-#define docker_image_repo_tags_get_idx(img, i)				(char*) json_object_array_get_idx(docker_image_repo_tags_get(img), i)
+#define docker_image_repo_tags_get_idx(img, i)				(char*)json_object_get_string(json_object_array_get_idx(docker_image_repo_tags_get(img), i))
 #define docker_image_repo_digests_get(img)					get_attr_json_object((json_object*)img, "RepoDigests")
 #define docker_image_repo_digests_length(img)				json_object_array_length(docker_image_repo_digests_get(img))
-#define docker_image_repo_digests_get_idx(img, i)			(char*) json_object_array_get_idx(docker_image_repo_digests_get(img), i)
+#define docker_image_repo_digests_get_idx(img, i)			(char*)json_object_get_string(json_object_array_get_idx(docker_image_repo_digests_get(img), i))
 
 typedef json_object											docker_image_list;
 #define free_docker_image_list(image_ls)					json_object_put(image_ls)

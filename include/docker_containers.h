@@ -255,7 +255,6 @@ d_err_t docker_container_get_stats(docker_context* ctx,
 * \return error code
 */
 d_err_t docker_container_get_stats_cb(docker_context* ctx,
-	docker_result** result,
 	void (*docker_container_stats_cb)(docker_container_stats* stats,
 		void* cbargs), void* cbargs, char* id);
 

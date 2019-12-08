@@ -397,14 +397,12 @@ void parse_container_stats_cb(char* msg, void* cb, void* cbargs) {
  * Get stats from a running container. (the streaming version)
  *
  * \param ctx docker context
- * \param result pointer to docker_result
  * \param docker_container_stats_cb the callback which receives the stats object, and any client args
  * \param cbargs client args to be passed on to the callback (closure)
  * \param id container id
  * \return error code
  */
 d_err_t docker_container_get_stats_cb(docker_context* ctx,
-	docker_result** result,
 	void (*docker_container_stats_cb)(docker_container_stats* stats,
 		void* cbargs), void* cbargs, char* id) {
 	if (id == NULL || strlen(id) == 0) {

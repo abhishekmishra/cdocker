@@ -76,6 +76,27 @@ void free_docker_result(docker_result* result) {
 	}
 }
 
+docker_result* docker_result_clone(docker_result* result) {
+	if (result != NULL) {
+		docker_result* res_new;
+		d_err_t e = new_docker_result(&res_new);
+		if (e != E_SUCCESS) {
+			return NULL;
+		}
+		res_new->error_code = result->error_code;
+		res_new->http_error_code = result->http_error_code;
+		res_new->start_time = result->start_time;
+		res_new->end_time = result->end_time;
+		res_new->url = str_clone(result->url);
+		res_new->method = str_clone(result->method);
+		res_new->request_json_str = str_clone(result->request_json_str);
+		res_new->response_json_str = str_clone(result->response_json_str);
+		res_new->message = str_clone(result->message);
+		return res_new;
+	}
+	return NULL;
+}
+
 d_err_t docker_result_get_error_code(docker_result* result) {
 	if (result != NULL) {
 		return result->error_code;

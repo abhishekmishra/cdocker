@@ -652,8 +652,9 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 			result->start_time = start;
 			result->end_time = end;
 
-			if (ctx->result_handler_fn != NULL) {
-				(*(docker_context_result_handler_get(ctx)))(ctx, result);
+			docker_result_handler_fn* fn = docker_context_result_handler_get(ctx);
+			if (fn != NULL) {
+				(*fn)(ctx, result);
 			}
 
 			err = result->error_code;

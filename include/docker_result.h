@@ -117,6 +117,8 @@ MODULE_API d_err_t new_docker_result(docker_result** result);
  */
 MODULE_API void free_docker_result(docker_result* result);
 
+MODULE_API docker_result* docker_result_clone(docker_result* result);
+
 d_err_t docker_result_get_error_code(docker_result* result);
 time_t docker_result_get_start_time(docker_result* result);
 time_t docker_result_get_end_time(docker_result* result);

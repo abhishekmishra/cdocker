@@ -55,15 +55,16 @@ typedef enum {
 	NONE = 0, CONTAINER = 1, IMAGE = 2, SYSTEM = 3, NETWORK = 4, VOLUME = 5
 } docker_object_type;
 
-typedef void (docker_result_handler_fn) (docker_result* result);
+typedef void (docker_result_handler_fn) (struct docker_context_t* ctx, docker_result* result);
 
 /**
  * A docker context for a specific docker server.
  */
-typedef struct docker_context {
+typedef struct docker_context_t {
 	char* url;
 	char* api_version;
 	docker_result_handler_fn* result_handler_fn;
+	void* client_args;
 } docker_context;
 
 /**
@@ -94,7 +95,13 @@ MODULE_API d_err_t make_docker_context_default_local(docker_context** ctx);
  * @param result_handler_fn callback which receives the docker_result object.
  * @return error code
  */
-MODULE_API d_err_t docker_context_set_result_handler(docker_context* ctx, docker_result_handler_fn* result_handler_fn);
+MODULE_API d_err_t docker_context_result_handler_set(docker_context* ctx, docker_result_handler_fn* result_handler_fn);
+
+MODULE_API docker_result_handler_fn* docker_context_result_handler_get(docker_context* ctx);
+
+MODULE_API d_err_t docker_context_client_args_set(docker_context* ctx, void* client_args);
+
+MODULE_API void* docker_context_client_args_get(docker_context* ctx);
 
 /**
  * Free docker context memory.

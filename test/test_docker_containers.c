@@ -23,7 +23,7 @@
 static docker_context* ctx = NULL;
 static int http_response_code = 0;
 
-void handle_result(docker_result* res) {
+void handle_result(docker_context* ctx, docker_result* res) {
 	http_response_code = docker_result_get_http_error_code(res);
 }
 
@@ -55,7 +55,7 @@ static int group_setup(void **state) {
 
 	curl_global_init(CURL_GLOBAL_ALL);
 	make_docker_context_default_local(&ctx);
-	docker_context_set_result_handler(ctx, &handle_result);
+	docker_context_result_handler_set(ctx, &handle_result);
 	p = make_docker_ctr_create_params();
 	docker_ctr_create_params_image_set(p, "alpine");
 	docker_ctr_create_params_cmd_add(p, "echo");

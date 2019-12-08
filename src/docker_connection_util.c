@@ -108,12 +108,34 @@ d_err_t make_docker_context_default_local(docker_context** ctx) {
 #endif
 }
 
-d_err_t docker_context_set_result_handler(docker_context* ctx, docker_result_handler_fn* result_handler_fn) {
+d_err_t docker_context_result_handler_set(docker_context* ctx, docker_result_handler_fn* result_handler_fn) {
 	if (ctx != NULL) {
 		ctx->result_handler_fn = result_handler_fn;
 	}
 	return E_SUCCESS;
 }
+
+docker_result_handler_fn* docker_context_result_handler_get(docker_context* ctx) {
+	if (ctx != NULL) {
+		return ctx->result_handler_fn;
+	}
+	return NULL;
+}
+
+d_err_t docker_context_client_args_set(docker_context* ctx, void* client_args) {
+	if (ctx != NULL) {
+		ctx->client_args = client_args;
+	}
+	return E_SUCCESS;
+}
+
+void* docker_context_client_args_get(docker_context* ctx) {
+	if (ctx != NULL) {
+		return ctx->client_args;
+	}
+	return NULL;
+}
+
 
 /**
  * Free docker context memory.
@@ -631,7 +653,7 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 			result->end_time = end;
 
 			if (ctx->result_handler_fn != NULL) {
-				ctx->result_handler_fn(result);
+				(*(docker_context_result_handler_get(ctx)))(ctx, result);
 			}
 
 			err = result->error_code;

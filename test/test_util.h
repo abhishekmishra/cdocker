@@ -30,6 +30,6 @@
 
 void handle_error(docker_result* res);
 
-void handle_result_for_test(docker_result* result);
+void handle_result_for_test(docker_context* ctx, docker_result* res);
 
 #endif /* TEST_TEST_UTIL_H_ */

@@ -49,7 +49,7 @@ typedef json_object											docker_image;
 #define docker_image_virtual_size_get(img)					get_attr_long_long((json_object*)img, "VirtualSize")
 #define docker_image_size_get(img)							get_attr_long_long((json_object*)img, "Size")
 #define docker_image_author_get(img)						get_attr_str((json_object*)img, "Author")
-#define docker_image_created_get(img)						get_attr_str((json_object*)img, "Created")
+#define docker_image_created_get(img)						get_attr_unsigned_long((json_object*)img, "Created")
 #define docker_image_repo_tags_get(img)						get_attr_json_object((json_object*)img, "RepoTags")
 #define docker_image_repo_tags_length(img)					json_object_array_length(docker_image_repo_tags_get(img))
 #define docker_image_repo_tags_get_idx(img, i)				(char*) json_object_array_get_idx(docker_image_repo_tags_get(img), i)

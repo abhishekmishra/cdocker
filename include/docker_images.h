@@ -66,7 +66,6 @@ typedef json_object											docker_image_list;
  * List images matching the filters.
  *
  * \param ctx docker context
- * \param result the docker result object to return
  * \param images list of images to be returned
  * \param all (0 indicates false, true otherwise)
  * \param digests add repo digests in return object (0 is false, true otherwise)
@@ -77,7 +76,7 @@ typedef json_object											docker_image_list;
  * \param filter_since <image-name>[:<tag>], <image id> or <image@digest>
  * \return error code
  */
-d_err_t docker_images_list(docker_context* ctx, docker_result** result,
+d_err_t docker_images_list(docker_context* ctx,
 		docker_image_list** images, int all, int digests, char* filter_before,
 		int filter_dangling, char* filter_label, char* filter_reference,
 		char* filter_since);
@@ -138,7 +137,6 @@ d_err_t docker_image_create_from_image_cb(docker_context* ctx,
  * Build a new image from the files in a folder, with a progress callback
  *
  * \param ctx docker context
- * \param result the docker result object to return
  * \param folder the folder containing the docker image build files (if NULL, default is current directory)
  * \param dockerfile name of the dockerfile. (If NULL, default "Dockerfile" is assumed)
  * \param status_cb callback to call for updates
@@ -146,7 +144,7 @@ d_err_t docker_image_create_from_image_cb(docker_context* ctx,
  * \param rest options to the build command
  * \return error code.
  */
-d_err_t docker_image_build_cb(docker_context* ctx, docker_result** result,
+d_err_t docker_image_build_cb(docker_context* ctx, 
 		char* folder, char* dockerfile,
 		void (*status_cb)(docker_build_status*, void* cbargs),
 		void* cbargs, ...);

@@ -32,35 +32,16 @@
 #include "docker_images.h"
 #include "tinydir.h"
 
-/**
- * List images matching the filters.
- *
- * \param ctx docker context
- * \param result the docker result object to return
- * \param images list of images to be returned
- * \param all (0 indicates false, true otherwise)
- * \param digests add repo digests in return object (0 is false, true otherwise)
- * \param filter_before <image-name>[:<tag>], <image id> or <image@digest>
- * \param filter_dangling 0 is false, true otherwise.
- * \param filter_label label=key or label="key=value" of an image label
- * \param filter_reference <image-name>[:<tag>]
- * \param filter_since <image-name>[:<tag>], <image id> or <image@digest>
- * \return error code
- */
-d_err_t docker_images_list(docker_context* ctx, docker_result** result,
-		docker_image_list** images, int all, int digests, char* filter_before,
+d_err_t docker_images_list(docker_context* ctx, docker_image_list** images, 
+		int all, int digests, char* filter_before,
 		int filter_dangling, char* filter_label, char* filter_reference,
 		char* filter_since)
 {
-	char* url = create_service_url_id_method(IMAGE, NULL, "json");
-	if (url == NULL) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, IMAGE, NULL, "json") != 0) {
 		return E_ALLOC_FAILED;
 	}
 
-	arraylist* params;
-	arraylist_new(&params, (void (*)(void *)) &free_url_param);
-
-	url_param* p;
 	json_object* filters = make_filters();
 	if (filter_before != NULL)
 	{
@@ -82,29 +63,24 @@ d_err_t docker_images_list(docker_context* ctx, docker_result** result,
 	{
 		add_filter_str(filters, "since", str_clone(filter_since));
 	}
-	make_url_param(&p, "filters", (char *) filters_to_str(filters));
-	arraylist_add(params, p);
+	char* filters_str = (char*)filters_to_str(filters);
+	docker_call_params_add(call, "filters", filters_str);
+	free(filters_str);
 
 	if (all != 0)
 	{
-		make_url_param(&p, "all", "true");
-		arraylist_add(params, p);
+		docker_call_params_add(call, "all", "true");
 	}
 
 	if (digests != 0)
 	{
-		make_url_param(&p, "digests", "true");
-		arraylist_add(params, p);
+		docker_call_params_add(call, "digests", "true");
 	}
 
-	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, params, &chunk, images);
+	d_err_t err = docker_call_exec(ctx, call, images);
 
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return err;
 }
 
 void parse_status_cb(char* msg, void* cb, void* cbargs)
@@ -160,17 +136,6 @@ void parse_status_cb(char* msg, void* cb, void* cbargs)
 }
 
 //Docker Image Create commands
-/**
- * see https://docs.docker.com/engine/api/v1.39/#operation/ImageCreate
- * Create a new image by pulling image:tag for platform
- *
- * \param ctx docker context
- * \param from_image image name
- * \param tag which tag to pull, for e.g. "latest"
- * \param platform which platform to pull the image for (format os[/arch[/variant]]),
- * 			default is ""
- * \return error code.
- */
 d_err_t docker_image_create_from_image(docker_context* ctx,
 		char* from_image, char* tag, char* platform)
 {
@@ -178,19 +143,6 @@ d_err_t docker_image_create_from_image(docker_context* ctx,
 			from_image, tag, platform);
 }
 
-/**
- * see https://docs.docker.com/engine/api/v1.39/#operation/ImageCreate
- * Create a new image by pulling image:tag for platform, with a progress callback
- *
- * \param ctx docker context
- * \param status_cb callback to call for updates
- * \param cbargs callback args for the upate call
- * \param from_image image name
- * \param tag which tag to pull, for e.g. "latest"
- * \param platform which platform to pull the image for (format os[/arch[/variant]]),
- * 			default is ""
- * \return error code.
- */
 d_err_t docker_image_create_from_image_cb(docker_context* ctx,
 		void (*status_cb)(docker_image_create_status*, void* cbargs),
 		void* cbargs, char* from_image, char* tag, char* platform)
@@ -302,30 +254,18 @@ void parse_build_response_cb(char* msg, void* cb, void* cbargs)
 }
 
 
-/**
- * see https://docs.docker.com/engine/api/v1.39/#operation/ImageBuild
- * Build a new image from the files in a folder, with a progress callback
- *
- * \param ctx docker context
- * \param result the docker result object to return
- * \param folder the folder containing the docker image build files
- * \param dockerfile name of the dockerfile. (If NULL, default "Dockerfile" is assumed)
- * \param status_cb callback to call for updates
- * \param cbargs callback args for the upate call
- * \param rest options to the build command
- * \return error code.
- */
-d_err_t docker_image_build_cb(docker_context* ctx, docker_result** result,
+d_err_t docker_image_build_cb(docker_context* ctx,
 		char* folder, char* dockerfile,
 		void (*status_cb)(docker_build_status*, void* cbargs),
 		void* cbargs, ...)
 {
-	char* url = create_service_url_id_method(SYSTEM, NULL, "build");
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, SYSTEM, NULL, "build") != 0) {
+		return E_ALLOC_FAILED;
+	}
+
 	char* folder_path = ".";
 	char* docker_file_name = DEFAULT_DOCKER_FILE_NAME;
-
-	arraylist* params;
-	arraylist_new(&params, (void (*)(void *)) &free_url_param);
 
 	//Get folder and dockerfile name
 	if (folder != NULL)
@@ -384,19 +324,22 @@ d_err_t docker_image_build_cb(docker_context* ctx, docker_result** result,
 	archive_write_close(a); // Note 4
 	archive_write_free(a); // Note 5
 	free(sub_dir_ls);
-
-	//Post tarball buffer to the API
-	json_object *response_obj = NULL;
-	struct http_response_memory chunk;
 	out_buf[archive_size] = '\0';
-	printf("Sending build context to docker daemon - %s\n", calculate_size(archive_size));
-	docker_api_post_buf_cb_w_content_type(ctx, result, url, params, out_buf, out_buf_len, &chunk, &response_obj,
-			&parse_build_response_cb, status_cb, cbargs, HEADER_TAR);
 
-	if ((*result)->http_error_code > 200)
-	{
-		return E_UNKNOWN_ERROR;
-	}
+	docker_call_request_data_set(call, out_buf);
+	docker_call_request_data_len_set(call, out_buf_len);
+	docker_call_request_method_set(call, HTTP_POST_STR);
+	docker_call_content_type_header_set(call, HEADER_TAR);
+	docker_call_status_cb_set(call, &parse_build_response_cb);
+	docker_call_cb_args_set(call, status_cb);
+	docker_call_client_cb_args_set(call, cbargs);
 
-	return E_SUCCESS;
+	json_object *response_obj = NULL;
+	docker_log_debug("Sending build context to docker daemon - %s\n", calculate_size(archive_size));
+
+	d_err_t err = docker_call_exec(ctx, call, &response_obj);
+
+	json_object_put(response_obj);
+	free_docker_call(call);
+	return err;
 }

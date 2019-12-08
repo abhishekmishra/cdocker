@@ -34,7 +34,6 @@
 #include "test_util.h"
 
 static docker_context* ctx = NULL;
-static docker_result* res;
 
 static int group_setup(void **state) {
 	curl_global_init(CURL_GLOBAL_ALL);
@@ -56,9 +55,8 @@ static void test_pull_alpine_latest(void **state) {
 
 static void test_list_images(void **state) {
 	docker_image_list* images;
-	docker_images_list(ctx, &res, &images, 0, 1, NULL, 0, NULL, NULL, NULL);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 200);
+	d_err_t e = docker_images_list(ctx, &images, 0, 1, NULL, 0, NULL, NULL, NULL);
+	assert_int_equal(e, E_SUCCESS);
 	assert_non_null(images);
 	assert_int_not_equal(docker_image_list_length(images), 0);
 	for (int i = 0; i < docker_image_list_length(images); i++) {

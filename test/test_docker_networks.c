@@ -36,11 +36,16 @@
 #include <json-c/arraylist.h>
 
 static docker_context* ctx = NULL;
-static docker_result* res;
+static int http_response_code = 0;
+
+void handle_result_net(docker_result* res) {
+	http_response_code = docker_result_get_http_error_code(res);
+}
 
 static int group_setup(void **state) {
 	curl_global_init(CURL_GLOBAL_ALL);
 	make_docker_context_default_local(&ctx);
+	docker_context_set_result_handler(ctx, &handle_result_net);
 	return E_SUCCESS;
 }
 
@@ -53,22 +58,22 @@ static int group_teardown(void **state) {
 
 static void test_list_networks(void **state) {
 	docker_network_list* networks;
-	docker_networks_list(ctx, &res, &networks, NULL, NULL, NULL, NULL, NULL, NULL);
-	handle_error(res);
+	d_err_t e = docker_networks_list(ctx, &networks, NULL, NULL, NULL, NULL, NULL, NULL);
+	assert_int_equal(e, E_SUCCESS);
 	size_t len_nets = docker_network_list_length(networks);
 	for(int i = 0; i < len_nets; i++) {
 		docker_network* ni = docker_network_list_get_idx(networks, i);
 		assert_non_null(ni);
 		assert_non_null(docker_network_name_get(ni));
 	}
-	assert_int_equal(res->http_error_code, 200);
+	assert_int_equal(http_response_code, 200);
 }
 
 static void test_inspect_network(void **state) {
 	docker_network* net;
-	docker_network_inspect(ctx, &res, &net, "host", 0, NULL);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 200);
+	d_err_t e = docker_network_inspect(ctx, &net, "host", 0, NULL);
+	assert_int_equal(e, E_SUCCESS);
+	assert_int_equal(http_response_code, 200);
 	assert_string_equal(docker_network_name_get(net), "host");
 }
 

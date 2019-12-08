@@ -90,7 +90,6 @@ d_err_t docker_system_info(docker_context* ctx,
 		return E_ALLOC_FAILED;
 	}
 
-	struct http_response_memory chunk;
 	d_err_t err = docker_call_exec(ctx, call, (json_object**)info);
 
 	free_docker_call(call);

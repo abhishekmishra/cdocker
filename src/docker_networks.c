@@ -22,34 +22,15 @@
 #include "docker_util.h"
 #include "docker_networks.h"
 
-/**
- * List all networks which match the filters given.
- * If all filters are null, then all networks are listed.
- *
- * \param ctx docker context
- * \param result the result object to be returned
- * \param networks the arraylist of networks to be returned
- * \param filter_driver
- * \param filter_id
- * \param filter_label
- * \param filter_name
- * \param filter_scope
- * \param filter_type
- * \return error code
- */
-d_err_t docker_networks_list(docker_context* ctx, docker_result** result,
+d_err_t docker_networks_list(docker_context* ctx, 
 		docker_network_list** networks, char* filter_driver, char* filter_id,
 		char* filter_label, char* filter_name, char* filter_scope,
 		char* filter_type) {
-	char* url = create_service_url_id_method(NETWORK, NULL, "");
-	if (url == NULL) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, NETWORK, NULL, "") != 0) {
 		return E_ALLOC_FAILED;
 	}
 
-	arraylist* params;
-	arraylist_new(&params, 
-			(void (*)(void *)) &free_url_param);
-	url_param* p;
 	json_object* filters = make_filters();
 	if (filter_driver != NULL) {
 		add_filter_str(filters, "driver", str_clone(filter_driver));
@@ -69,57 +50,35 @@ d_err_t docker_networks_list(docker_context* ctx, docker_result** result,
 	if (filter_type != NULL) {
 		add_filter_str(filters, "type", str_clone(filter_type));
 	}
-	make_url_param(&p, "filters", (char *) filters_to_str(filters));
-	arraylist_add(params, p);
+	char* filter_str = (char*)filters_to_str(filters);
+	docker_call_params_add(call, "filters", filter_str);
+	free(filter_str);
 
-	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, params, &chunk, networks);
+	d_err_t err = docker_call_exec(ctx, call, networks);
 
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	arraylist_free(params);
-	return E_SUCCESS;
+	free_docker_call(call);
+	return err;
 }
 
-/**
- * Inspect details of a network looked up by name or id.
- *
- * \param ctx docker context
- * \param result the result object to be returned
- * \param net details of the network returned
- * \param id_or_name id or name of the network to be looked up
- * \param verbose whether inspect output is verbose (0 means false, true otherwise)
- * \param scope filter by one of swarm, global, or local
- * \return error code
- */
-d_err_t docker_network_inspect(docker_context* ctx, docker_result** result,
+d_err_t docker_network_inspect(docker_context* ctx, 
 		docker_network** net, char* id_or_name, int verbose, char* scope) {
 	if (id_or_name == NULL) {
 		return E_INVALID_INPUT;
 	}
-	char* url = create_service_url_id_method(NETWORK, NULL, id_or_name);
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, NETWORK, NULL, id_or_name) != 0) {
+		return E_ALLOC_FAILED;
+	}
 
-	arraylist* params;
-	arraylist_new(&params, 
-			(void (*)(void *)) &free_url_param);
-	url_param* p;
 	if (verbose != 0) {
-		make_url_param(&p, "verbose", str_clone("true"));
-		arraylist_add(params, p);
+		docker_call_params_add(call, "verbose", str_clone("true"));
 	}
 	if (scope != NULL) {
-		make_url_param(&p, "scope", str_clone(scope));
-		arraylist_add(params, p);
+		docker_call_params_add(call, "scope", str_clone(scope));
 	}
 
-	json_object *response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, params, &chunk, net);
+	d_err_t err = docker_call_exec(ctx, call, net);
 
-	arraylist_free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return err;
 }

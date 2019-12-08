@@ -77,7 +77,6 @@ typedef json_object											docker_network_list;
  * If all filters are null, then all networks are listed.
  *
  * \param ctx docker context
- * \param result the result object to be returned
  * \param networks the array_list of networks to be returned
  * \param filter_driver
  * \param filter_id
@@ -87,8 +86,8 @@ typedef json_object											docker_network_list;
  * \param filter_type
  * \return error code
  */
-d_err_t docker_networks_list(docker_context* ctx, docker_result** result,
-		docker_network_list** networks, char* filter_driver, char* filter_id,
+d_err_t docker_networks_list(docker_context* ctx, docker_network_list** networks, 
+		char* filter_driver, char* filter_id,
 		char* filter_label, char* filter_name, char* filter_scope,
 		char* filter_type);
 
@@ -96,15 +95,14 @@ d_err_t docker_networks_list(docker_context* ctx, docker_result** result,
  * Inspect details of a network looked up by name or id.
  *
  * \param ctx docker context
- * \param result the result object to be returned
  * \param net details of the network returned
  * \param id_or_name id or name of the network to be looked up
  * \param verbose whether inspect output is verbose (0 means false, true otherwise)
  * \param scope filter by one of swarm, global, or local
  * \return error code
  */
-d_err_t docker_network_inspect(docker_context* ctx, docker_result** result,
-		docker_network** net, char* id_or_name, int verbose, char* scope);
+d_err_t docker_network_inspect(docker_context* ctx, docker_network** net, 
+	char* id_or_name, int verbose, char* scope);
 
 #ifdef __cplusplus 
 }

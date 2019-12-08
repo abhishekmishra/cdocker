@@ -32,33 +32,14 @@
 #include <time.h>
 #include "docker_volumes.h"
 
-/**
- * Get the list of volumes, matching the filters provided.
- * (Any and all filters can be null/0.)
- *
- * \param ctx the docker context
- * \param result the result object to be returned.
- * \param volumes the list of docker_volume_item objects
- * \param warnings the list of warnings
- * \param filter_dangling 0 indicates false, anything else is true
- * \param filter_driver driver filter
- * \param filter_label
- * \param filter_name
- * \return error code.
- */
-d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
-		docker_volume_list** volumes, docker_volume_warnings** warnings,
-		int filter_dangling, char* filter_driver, char* filter_label,
-		char* filter_name) {
-	char* url = create_service_url_id_method(VOLUME, NULL, NULL);
-	if (url == NULL) {
+d_err_t docker_volumes_list(docker_context* ctx, docker_volume_list** volumes, 
+		docker_volume_warnings** warnings,	int filter_dangling, 
+		char* filter_driver, char* filter_label, char* filter_name) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, VOLUME, NULL, NULL) != 0) {
 		return E_ALLOC_FAILED;
 	}
 
-	arraylist* params;
-	arraylist_new(&params,
-			(void (*)(void *)) &free_url_param);
-	url_param* p;
 	json_object* filters = make_filters();
 
 	if (filter_dangling == 0) {
@@ -73,37 +54,22 @@ d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
 	if (filter_name != NULL) {
 		add_filter_str(filters, "name", filter_name);
 	}
-	make_url_param(&p, "filters", (char*) filters_to_str(filters));
-	arraylist_add(params, p);
+	char* filter_str = (char*)filters_to_str(filters);
+	docker_call_params_add(call, "filters", filter_str);
+	free(filter_str);
 
 	json_object *response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, params, &chunk, &response_obj);
+	d_err_t err = docker_call_exec(ctx, call, &response_obj);
 
 	*volumes = json_object_get(get_attr_json_object(response_obj, "Volumes"));
 	*warnings = json_object_get(get_attr_json_object(response_obj, "Warnings"));
 
 	json_object_put(response_obj);
-	free(params);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return err;
 }
 
-/**
- * Create a new volume by providing name, driver and an optional list of key/value pairs for labels
- *
- * \param ctx the docker context
- * \param result the result object to return
- * \param volume the volume object to return
- * \param name name of the volume to create (cannot be NULL)
- * \param driver name of the driver to use
- * \param num_labels the number of labels to be attached.
- * \param key/values char* key, char* value args pair for each label
- * \return error code
- */
-d_err_t docker_volume_create(docker_context* ctx, docker_result** result,
+d_err_t docker_volume_create(docker_context* ctx, 
 		docker_volume** volume, char* name, char* driver, int num_labels,
 		...) {
 	va_list kvargs;
@@ -123,99 +89,63 @@ d_err_t docker_volume_create(docker_context* ctx, docker_result** result,
 	const char* request_str = json_object_get_string(request_obj);
 	docker_log_debug("Request body is %s", request_str);
 
-	char* url = create_service_url_id_method(VOLUME, NULL, "create");
-	if (url == NULL) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, VOLUME, NULL, "create") != 0) {
 		return E_ALLOC_FAILED;
 	}
 
-	struct http_response_memory chunk;
-	docker_api_post(ctx, result, url, NULL, request_str, &chunk, volume);
+	docker_call_request_data_set(call, (char*) request_str);
+	docker_call_request_method_set(call, "POST");
+	docker_call_content_type_header_set(call, HEADER_JSON);
+
+	d_err_t err = docker_call_exec(ctx, call, volume);
 
 	json_object_put(request_obj);
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return err;
 }
 
-/**
- * Inspect an existing volume.
- *
- * \param ctx the docker context
- * \param result the result object to return
- * \param volume the volume object to return
- * \param name name of the volume to inspect (cannot be NULL)
- * \return error code
- */
-d_err_t docker_volume_inspect(docker_context* ctx, docker_result** result,
-		docker_volume** volume, char* name) {
+d_err_t docker_volume_inspect(docker_context* ctx, docker_volume** volume, char* name) {
 	if (name == NULL) {
 		return E_INVALID_INPUT;
 	}
-	char* url = create_service_url_id_method(VOLUME, NULL, name);
-	if (url == NULL) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, VOLUME, NULL, name) != 0) {
 		return E_ALLOC_FAILED;
 	}
 
-	struct http_response_memory chunk;
-	docker_api_get(ctx, result, url, NULL, &chunk, volume);
+	d_err_t err = docker_call_exec(ctx, call, volume);
 
-	if (chunk.memory != NULL) {
-		free(chunk.memory);
-	}
-	return E_SUCCESS;
+	free_docker_call(call);
+	return err;
 }
 
-/**
- * Delete the given volume (identified by name).
- *
- * \param ctx the docker context
- * \param result the result object to return
- * \param name name of the volume to delete
- * \param force force delete if this value is 1
- * \return error code
- */
-d_err_t docker_volume_delete(docker_context* ctx, docker_result** result,
+d_err_t docker_volume_delete(docker_context* ctx,
 		const char* name, int force) {
-	char* url = create_service_url_id_method(VOLUME, NULL, name);
-
-	arraylist* params;
-	arraylist_new(&params,
-			(void (*)(void *)) &free_url_param);
-	url_param* p;
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, VOLUME, NULL, name) != 0) {
+		return E_ALLOC_FAILED;
+	}
 	if (force == 1) {
-		make_url_param(&p, "force", str_clone("true"));
-		arraylist_add(params, p);
+		docker_call_params_add(call, "force", str_clone("true"));
 	}
 
+	docker_call_request_method_set(call, HTTP_DELETE_STR);
 	json_object *response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_delete(ctx, result, url, params, &chunk, &response_obj);
+	d_err_t err = docker_call_exec(ctx, call, &response_obj);
 
-	return E_SUCCESS;
+	json_object_put(response_obj);
+	free_docker_call(call);
+	return err;
 }
 
-/**
- * Delete unused volumes.
- *
- * \param ctx the docker context
- * \param result the result object to return
- * \param volumes_deleted array_list with names of volumes deleted
- * \param space_reclaimed num bytes freed.
- * \param num_label_filters how many label filters are there
- * \param varargs triples (int filter_not, char* label_name, char* label_value)
- * \return error code
- */
 d_err_t docker_volumes_delete_unused(docker_context* ctx,
-		docker_result** result, arraylist** volumes_deleted,
+		arraylist** volumes_deleted,
 		unsigned long* space_reclaimed, int num_label_filters, ...) {
-	char* url = create_service_url_id_method(VOLUME, NULL, "prune");
-
-	arraylist* params;
-	arraylist_new(&params,
-			(void (*)(void *)) &free_url_param);
-
-	url_param* p;
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, VOLUME, NULL, "prune") != 0) {
+		return E_ALLOC_FAILED;
+	}
 
 	va_list kvargs;
 	va_start(kvargs, num_label_filters);
@@ -229,11 +159,17 @@ d_err_t docker_volumes_delete_unused(docker_context* ctx,
 		if (label_value != NULL) {
 			filter_value = (char*) calloc(
 					strlen(label_name) + strlen(label_value) + 2, sizeof(char));
+			if (filter_value == NULL) {
+				return E_ALLOC_FAILED;
+			}
 			strcpy(filter_value, label_name);
 			strcat(filter_value, "=");
 			strcat(filter_value, label_value);
 		} else {
 			filter_value = (char*) calloc(strlen(label_name) + 1, sizeof(char));
+			if (filter_value == NULL) {
+				return E_ALLOC_FAILED;
+			}
 			strcpy(filter_value, label_name);
 		}
 		if (filter_not == 1) {
@@ -242,14 +178,18 @@ d_err_t docker_volumes_delete_unused(docker_context* ctx,
 			add_filter_str(filters, "label", filter_value);
 		}
 	}
-	make_url_param(&p, "filters", (char*) filters_to_str(filters));
-	arraylist_add(params, p);
+	char* filters_str = (char*)filters_to_str(filters);
+	docker_call_params_add(call, "filters", filters_str);
+	free(filters_str);
+
+	docker_call_request_data_set(call, "");
+	docker_call_request_method_set(call, "POST");
+	docker_call_content_type_header_set(call, HEADER_JSON);
 
 	json_object *response_obj = NULL;
-	struct http_response_memory chunk;
-	docker_api_post(ctx, result, url, params, "", &chunk, &response_obj);
+	d_err_t err = docker_call_exec(ctx, call, &response_obj);
 
-	if ((*result)->http_error_code == 200) {
+	if (docker_call_http_code_get(call) == 200) {
 		if (response_obj) {
 			arraylist* vols_del;
 			arraylist_new(&vols_del, &free);
@@ -271,5 +211,8 @@ d_err_t docker_volumes_delete_unused(docker_context* ctx,
 					"SpaceReclaimed");
 		}
 	}
-	return E_SUCCESS;
+
+	json_object_put(response_obj);
+	free_docker_call(call);
+	return err;
 }

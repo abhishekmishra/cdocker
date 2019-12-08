@@ -63,7 +63,6 @@ typedef json_object										docker_volume_warnings;
  * (Any and all filters can be null/0.)
  *
  * \param ctx the docker context
- * \param result the result object to be returned.
  * \param volumes the list of docker_volume_item objects
  * \param warnings the list of warnings
  * \param filter_dangling 0 indicates false, anything else is true
@@ -72,7 +71,7 @@ typedef json_object										docker_volume_warnings;
  * \param filter_name
  * \return error code.
  */
-d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
+d_err_t docker_volumes_list(docker_context* ctx, 
 		docker_volume_list** volumes, docker_volume_warnings** warnings,
 		int filter_dangling, char* filter_driver, char* filter_label,
 		char* filter_name);
@@ -81,7 +80,6 @@ d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
  * Create a new volume by providing name, driver and an optional list of key/value pairs for labels
  *
  * \param ctx the docker context
- * \param result the result object to return
  * \param volume the volume object to return
  * \param name name of the volume to create (cannot be NULL)
  * \param driver name of the driver to use
@@ -89,7 +87,7 @@ d_err_t docker_volumes_list(docker_context* ctx, docker_result** result,
  * \param key/values char* key, char* value args pair for each label
  * \return error code
  */
-d_err_t docker_volume_create(docker_context* ctx, docker_result** result,
+d_err_t docker_volume_create(docker_context* ctx, 
 		docker_volume** volume, char* name, char* driver, int num_labels,
 		...);
 
@@ -97,31 +95,28 @@ d_err_t docker_volume_create(docker_context* ctx, docker_result** result,
  * Inspect an existing volume.
  *
  * \param ctx the docker context
- * \param result the result object to return
  * \param volume the volume object to return
  * \param name name of the volume to inspect (cannot be NULL)
  * \return error code
  */
-d_err_t docker_volume_inspect(docker_context* ctx, docker_result** result,
+d_err_t docker_volume_inspect(docker_context* ctx, 
 		docker_volume** volume, char* name);
 
 /**
  * Delete the given volume (identified by name).
  *
  * \param ctx the docker context
- * \param result the result object to return
  * \param name name of the volume to delete
  * \param force force delete if this value is 1
  * \return error code
  */
-d_err_t docker_volume_delete(docker_context* ctx, docker_result** result,
+d_err_t docker_volume_delete(docker_context* ctx, 
 		const char* name, int force);
 
 /**
  * Delete unused volumes.
  *
  * \param ctx the docker context
- * \param result the result object to return
  * \param volumes_deleted array_list with names of volumes deleted
  * \param space_reclaimed num bytes freed.
  * \param num_label_filters how many label filters are there
@@ -129,7 +124,7 @@ d_err_t docker_volume_delete(docker_context* ctx, docker_result** result,
  * \return error code
  */
 d_err_t docker_volumes_delete_unused(docker_context* ctx,
-		docker_result** result, arraylist** volumes_deleted,
+		arraylist** volumes_deleted,
 		unsigned long* space_reclaimed, int num_label_filters, ...);
 
 #ifdef __cplusplus 

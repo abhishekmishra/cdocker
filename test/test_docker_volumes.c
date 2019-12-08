@@ -34,12 +34,16 @@
 #include "test_util.h"
 
 static docker_context* ctx = NULL;
-static docker_result* res;
+static int http_response_code = 0;
+
+void handle_result_vol(docker_result* res) {
+	http_response_code = docker_result_get_http_error_code(res);
+}
 
 static int group_setup(void **state) {
 	curl_global_init(CURL_GLOBAL_ALL);
 	make_docker_context_default_local(&ctx);
-	docker_context_set_result_handler(ctx, &handle_result_for_test);
+	docker_context_set_result_handler(ctx, &handle_result_vol);
 	return E_SUCCESS;
 }
 
@@ -52,27 +56,27 @@ static int group_teardown(void **state) {
 
 static void test_create_volumes(void **state) {
 	docker_volume* vi = NULL;
-	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol01", "local", 1,
+	d_err_t e = docker_volume_create(ctx, &vi, "clibdocker_test_vol01", "local", 1,
 			"clibdocker_test_label", "clibdocker_test_value");
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 201);
+	assert_int_equal(e, E_SUCCESS);
+	assert_int_equal(http_response_code, 201);
 	assert_non_null(vi);
 	assert_non_null(docker_volume_name_get(vi));
 	assert_string_equal(docker_volume_name_get(vi), "clibdocker_test_vol01");
 
-	docker_volume_create(ctx, &res, &vi, "clibdocker_test_vol02", "local", 1,
+	e = docker_volume_create(ctx, &vi, "clibdocker_test_vol02", "local", 1,
 			"clibdocker_test_label", "clibdocker_test_value");
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 201);
+	assert_int_equal(e, E_SUCCESS);
+	assert_int_equal(http_response_code, 201);
 	assert_non_null(vi);
 	assert_non_null(docker_volume_name_get(vi));
 	assert_string_equal(docker_volume_name_get(vi), "clibdocker_test_vol02");
 }
 static void test_inspect_volume(void **state) {
 	docker_volume* vi = NULL;
-	docker_volume_inspect(ctx, &res, &vi, "clibdocker_test_vol01");
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 200);
+	d_err_t e = docker_volume_inspect(ctx, &vi, "clibdocker_test_vol01");
+	assert_int_equal(e, E_SUCCESS);
+	assert_int_equal(http_response_code, 200);
 	assert_non_null(vi);
 	assert_non_null(docker_volume_name_get(vi));
 	assert_string_equal(docker_volume_name_get(vi), "clibdocker_test_vol01");
@@ -81,29 +85,29 @@ static void test_inspect_volume(void **state) {
 static void test_list_volumes(void **state) {
 	docker_volume_list* volumes;
 	docker_volume_warnings* warnings;
-	docker_volumes_list(ctx, &res, &volumes, &warnings, 1, NULL, "clibdocker_test_label=clibdocker_test_value", NULL);
-	handle_error(res);
+	d_err_t e = docker_volumes_list(ctx, &volumes, &warnings, 1, NULL, "clibdocker_test_label=clibdocker_test_value", NULL);
+	assert_int_equal(e, E_SUCCESS);
 	size_t len_vols = docker_volume_list_length(volumes);
-	assert_int_equal(res->http_error_code, 200);
+	assert_int_equal(http_response_code, 200);
 	assert_int_equal(len_vols, 2);
 }
 
 static void test_delete_volume(void **state) {
-	docker_volume_delete(ctx, &res, "clibdocker_test_vol01", 0);
-	handle_error(res);
-	assert_int_equal(res->http_error_code, 204);
+	d_err_t e = docker_volume_delete(ctx, "clibdocker_test_vol01", 0);
+	assert_int_equal(e, E_SUCCESS);
+	assert_int_equal(http_response_code, 204);
 }
 
 static void test_prune_unused_volumes(void **state) {
 	arraylist* volumes_deleted;
 	unsigned long space_reclaimed;
-	docker_volumes_delete_unused(ctx, &res, &volumes_deleted, &space_reclaimed, 0, "clibdocker_test_label", "clibdocker_test_value");
-	handle_error(res);
+	d_err_t e = docker_volumes_delete_unused(ctx, &volumes_deleted, &space_reclaimed, 0, "clibdocker_test_label", "clibdocker_test_value");
+	assert_int_equal(e, E_SUCCESS);
 	for (int i = 0; i < arraylist_length(volumes_deleted); i++) {
 		docker_log_info("Deleted unused volume %s",
 				(char* )arraylist_get(volumes_deleted, i));
 	}
-	assert_int_equal(res->http_error_code, 200);
+	assert_int_equal(http_response_code, 200);
 }
 
 int docker_volumes_tests() {

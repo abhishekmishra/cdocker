@@ -21,6 +21,11 @@
 #include "test_util.h"
 
 static docker_context* ctx = NULL;
+static int http_response_code = 0;
+
+void handle_result(docker_result* res) {
+	http_response_code = docker_result_get_http_error_code(res);
+}
 
 void log_pull_message(docker_image_create_status* status, void* client_cbargs) {
 	if (status) {
@@ -50,6 +55,7 @@ static int group_setup(void **state) {
 
 	curl_global_init(CURL_GLOBAL_ALL);
 	make_docker_context_default_local(&ctx);
+	docker_context_set_result_handler(ctx, &handle_result);
 	p = make_docker_ctr_create_params();
 	docker_ctr_create_params_image_set(p, "alpine");
 	docker_ctr_create_params_cmd_add(p, "echo");
@@ -116,16 +122,16 @@ static void test_changes(void **state) {
 static void test_stopping_stopped_container(void **state) {
 	char* id = *state;
 	d_err_t e = docker_stop_container(ctx, id, 0);
-	assert_int_equal(e, E_SUCCESS);
-	assert_int_equal(e, 304L);
+	assert_int_equal(e, E_INVALID_INPUT);
+	assert_int_equal(http_response_code, 304L);
 	//free_docker_result(res);
 }
 
 static void test_killing_stopped_container(void **state) {
 	char* id = *state;
 	d_err_t e = docker_kill_container(ctx, id, NULL);
-	assert_int_equal(e, E_SUCCESS);
-	assert_int_equal(e, 409);
+	assert_int_equal(e, E_INVALID_INPUT);
+	assert_int_equal(http_response_code, 409);
 }
 
 //TODO: will need to create test for rename
@@ -140,15 +146,15 @@ static void test_killing_stopped_container(void **state) {
 static void test_pause_stopped_container(void **state) {
 	char* id = *state;
 	d_err_t e = docker_pause_container(ctx, id);
-	assert_int_equal(e, E_SUCCESS);
-	assert_int_equal(e, 409);
+	assert_int_equal(e, E_INVALID_INPUT);
+	assert_int_equal(http_response_code, 409);
 }
 
 static void test_unpause_stopped_container(void **state) {
 	char* id = *state;
 	d_err_t e = docker_unpause_container(ctx, id);
-	assert_int_equal(e, E_SUCCESS);
-	assert_int_equal(e, 500);
+	assert_int_equal(e, E_INVALID_INPUT);
+	assert_int_equal(http_response_code, 500);
 }
 
 static void test_restart_container(void **state) {

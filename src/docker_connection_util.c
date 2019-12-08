@@ -802,7 +802,11 @@ d_err_t make_docker_call(docker_call** dcall, char* site_url, docker_object_type
 	(*dcall)->request_data = NULL;
 	(*dcall)->request_data_len = -1L;
 
-	(*dcall)->response_data = NULL;
+	//(*dcall)->response_data = NULL;
+
+	(*dcall)->memory = malloc(1);
+	(*dcall)->size = 0;
+	(*dcall)->flush_end = 0;
 
 	(*dcall)->status_cb = NULL;
 	(*dcall)->cb_args = NULL;
@@ -862,17 +866,37 @@ long docker_call_request_data_len_get(docker_call* dcall) {
 	return -1L;
 }
 
-void docker_call_response_data_set(docker_call* dcall, char* response_data) {
-	if (dcall != NULL && response_data != NULL) {
-		dcall->response_data = str_clone(response_data);
-	}
-}
+//void docker_call_response_data_set(docker_call* dcall, char* response_data) {
+//	if (dcall != NULL && response_data != NULL) {
+//		dcall->memory = str_clone(response_data);
+//	}
+//}
 
 char* docker_call_response_data_get(docker_call* dcall) {
 	if (dcall != NULL) {
-		return dcall->response_data;
+		return dcall->memory;
 	}
 	return NULL;
+}
+
+size_t docker_call_response_data_length(docker_call* dcall) {
+	if (dcall != NULL) {
+		return dcall->size;
+	}
+	return NULL;
+}
+
+int docker_call_http_code_get(docker_call* dcall) {
+	if (dcall != NULL) {
+		return dcall->http_error_code;
+	}
+	return NULL;
+}
+
+void docker_call_http_code_set(docker_call* dcall, int http_code) {
+	if (dcall != NULL) {
+		dcall->http_error_code = http_code;
+	}
 }
 
 void docker_call_status_cb_set(docker_call* dcall, status_callback* status_callback) {
@@ -928,8 +952,8 @@ void free_docker_call(docker_call* dcall)
 {
 	if (dcall != NULL)
 	{
-		if (dcall->response_data != NULL) {
-			free(dcall->response_data);
+		if (dcall->memory != NULL) {
+			free(dcall->memory);
 		}
 		coll_al_map_foreach_fn(dcall->params, (coll_al_map_iter_fn*)&free_param_value);
 		free_coll_al_map(dcall->params);
@@ -993,6 +1017,102 @@ char* docker_call_get_url(docker_call* dcall) {
 	return final_url;
 }
 
+static size_t write_memory_callback_v2(void* contents, size_t size, size_t nmemb,
+	void* userp)
+{
+	size_t realsize = size * nmemb;
+	docker_call* mem = (docker_call*) userp;
+
+	char* ptr = realloc(mem->memory, mem->size + realsize + 1);
+	if (ptr == NULL)
+	{
+		/* out of memory! */
+		docker_log_debug("not enough memory (realloc returned NULL)");
+		return 0;
+	}
+
+	mem->memory = ptr;
+	memcpy(&(mem->memory[mem->size]), contents, realsize);
+	mem->size += realsize;
+	mem->memory[mem->size] = 0;
+	//	docker_log_debug("MEMORY-------\n%s\n", mem->memory);
+
+	/** if callback is not null, and current memory contents end with a newline,
+	* then flush it to the callback, and empty the memory contents.
+	*/
+	if (mem->status_cb != NULL && mem->memory)
+	{
+		char* flush_str = mem->memory + (mem->flush_end * sizeof(char));
+		if (flush_str[strlen(flush_str) - 1] == '\n')
+		{
+			char* msg = str_clone(flush_str);
+			mem->status_cb(msg, mem->cb_args, mem->client_cb_args);
+			mem->flush_end += strlen(flush_str);
+		}
+	}
+	return realsize;
+}
+
+void handle_response_v2(CURLcode res, CURL* curl, docker_result** result,
+	docker_call* call, json_object** response)
+{
+	docker_log_debug("%lu bytes retrieved\n", (unsigned long)call->size);
+	json_object* response_obj = NULL;
+	if (call->size > 0)
+	{
+		response_obj = json_tokener_parse(call->memory);
+		//increment reference count so that the caller can use
+		//and then free the json object.
+		(*response) = json_object_get(response_obj);
+		docker_log_debug("Response = %s",
+			json_object_to_json_string(response_obj));
+	}
+	else
+	{
+		docker_log_debug("Response = Empty");
+	}
+
+	new_docker_result(result);
+
+	/* Check for errors */
+	if (res != CURLE_OK)
+	{
+		fprintf(stderr, "curl_easy_perform() failed: %s\n",
+			curl_easy_strerror(res));
+		(*result)->error_code = E_CONNECTION_FAILED;
+	}
+	else
+	{
+		long response_code;
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+		char* effective_url = NULL;
+		curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effective_url);
+
+		docker_call_http_code_set(call, response_code);
+		(*result)->http_error_code = response_code;
+		(*result)->url = str_clone(effective_url);
+
+		if (response_code == 200 || response_code == 201
+			|| response_code == 204)
+		{
+			(*result)->error_code = E_SUCCESS;
+		}
+		else
+		{
+			(*result)->error_code = E_INVALID_INPUT;
+			(*result)->message = str_clone("error");
+		}
+		if ((*result)->http_error_code >= 400)
+		{
+			char* msg = get_attr_str(response_obj, "message");
+			if (msg)
+			{
+				(*result)->message = str_clone(msg);
+			}
+		}
+	}
+}
+
 d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** response) {
 	CURL* curl;
 	CURLcode res;
@@ -1003,16 +1123,16 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 	start = time(NULL);
 
 	// allocate memory for the response string
-	docker_call_mem* chunk = (docker_call_mem*)calloc(1, sizeof(docker_call_mem));
-	if (chunk == NULL) {
-		return E_ALLOC_FAILED;
-	}
-	chunk->memory = malloc(1); /* will be grown as needed by the realloc above */
-	chunk->size = 0; /* no data at this point */
-	chunk->flush_end = 0;
-	chunk->status_callback = docker_call_status_cb_get(dcall);
-	chunk->cbargs = docker_call_cb_args_get(dcall);
-	chunk->client_cbargs = docker_call_client_cb_args_get(dcall);
+	//docker_call_mem* chunk = (docker_call_mem*)calloc(1, sizeof(docker_call_mem));
+	//if (chunk == NULL) {
+	//	return E_ALLOC_FAILED;
+	//}
+	//chunk->memory = malloc(1); /* will be grown as needed by the realloc above */
+	//chunk->size = 0; /* no data at this point */
+	//chunk->flush_end = 0;
+	//chunk->status_callback = docker_call_status_cb_get(dcall);
+	//chunk->cbargs = docker_call_cb_args_get(dcall);
+	//chunk->client_cbargs = docker_call_client_cb_args_get(dcall);
 
 	// allocate the docker result object
 	docker_result* result;
@@ -1056,10 +1176,10 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 		}
 
 		/* send all data to this function  */
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback_v2);
 
 		/* we pass our 'chunk' struct to the callback function */
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)chunk);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)dcall);
 
 		/* some servers don't like requests that are made without a user-agent
 		 field, so we provide one */
@@ -1069,7 +1189,7 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 		res = curl_easy_perform(curl);
 
 		/* Check for errors, and handle response */
-		handle_response(res, curl, &result, chunk, response);
+		handle_response_v2(res, curl, &result, dcall, response);
 
 		// Mark end time of request
 		end = time(NULL);
@@ -1081,10 +1201,18 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 			{
 				result->request_json_str = str_clone(docker_call_request_data_get(dcall));
 			}
-			if (chunk->memory != NULL)
+			if (dcall->memory != NULL)
 			{
-				result->response_json_str = str_clone(chunk->memory);
-				docker_call_response_data_set(dcall, str_clone(chunk->memory));
+				size_t data_len = docker_call_response_data_length(dcall);
+				result->response_json_str = 
+					(char*)calloc(data_len + 1, sizeof(char));
+				if (result->response_json_str == NULL) {
+					return E_ALLOC_FAILED;
+				}
+				memcpy(result->response_json_str, 
+					docker_call_response_data_get(dcall), 
+					data_len);
+				result->response_json_str[data_len] = '\0';
 			}
 			result->start_time = start;
 			result->end_time = end;
@@ -1093,9 +1221,7 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 				ctx->result_handler_fn(result);
 			}
 
-			if (result->http_error_code >= 300) {
-				err = result->http_error_code;
-			}
+			err = result->error_code;
 
 			// cleanup docker_result
 			free_docker_result(result);
@@ -1107,12 +1233,6 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 		// free url
 		free(docker_url);
 	}
-
-	// cleanup chunk
-	if (chunk->memory != NULL) {
-		free(chunk->memory);
-	}
-	free(chunk);
 
 	return err;
 }

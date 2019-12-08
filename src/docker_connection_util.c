@@ -229,9 +229,11 @@ d_err_t make_docker_call(docker_call** dcall, char* site_url, docker_object_type
 	(*dcall)->request_data = NULL;
 	(*dcall)->request_data_len = -1L;
 
-	//(*dcall)->response_data = NULL;
-
-	(*dcall)->memory = malloc(1);
+	(*dcall)->capacity = 1024 * 1024;
+	(*dcall)->memory = malloc((*dcall)->capacity);
+	if ((*dcall)->memory == NULL) {
+		return E_ALLOC_FAILED;
+	}
 	(*dcall)->size = 0;
 	(*dcall)->flush_end = 0;
 
@@ -292,12 +294,6 @@ size_t docker_call_request_data_len_get(docker_call* dcall) {
 	}
 	return -1L;
 }
-
-//void docker_call_response_data_set(docker_call* dcall, char* response_data) {
-//	if (dcall != NULL && response_data != NULL) {
-//		dcall->memory = str_clone(response_data);
-//	}
-//}
 
 char* docker_call_response_data_get(docker_call* dcall) {
 	if (dcall != NULL) {
@@ -449,16 +445,21 @@ static size_t write_memory_callback_v2(void* contents, size_t size, size_t nmemb
 {
 	size_t realsize = size * nmemb;
 	docker_call* mem = (docker_call*) userp;
+	size_t new_size = mem->size + realsize + 1;
 
-	char* ptr = realloc(mem->memory, mem->size + realsize + 1);
-	if (ptr == NULL)
-	{
-		/* out of memory! */
-		docker_log_debug("not enough memory (realloc returned NULL)");
-		return 0;
+	if (new_size > mem->capacity) {
+		//realloc twice the new size
+		mem->capacity = 2 * new_size;
+		char* ptr = realloc(mem->memory, mem->capacity);
+		if (ptr == NULL)
+		{
+			/* out of memory! */
+			docker_log_debug("not enough memory (realloc returned NULL)");
+			return 0;
+		}
+
+		mem->memory = ptr;
 	}
-
-	mem->memory = ptr;
 	memcpy(&(mem->memory[mem->size]), contents, realsize);
 	mem->size += realsize;
 	mem->memory[mem->size] = 0;

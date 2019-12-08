@@ -127,6 +127,7 @@ typedef struct docker_call_t {
 
 	// HTTP Response Internals
 	char* memory;
+	size_t capacity;
 	size_t size;
 	size_t flush_end;
 

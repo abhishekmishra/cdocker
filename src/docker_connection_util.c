@@ -883,14 +883,14 @@ size_t docker_call_response_data_length(docker_call* dcall) {
 	if (dcall != NULL) {
 		return dcall->size;
 	}
-	return NULL;
+	return 0;
 }
 
 int docker_call_http_code_get(docker_call* dcall) {
 	if (dcall != NULL) {
 		return dcall->http_error_code;
 	}
-	return NULL;
+	return 0;
 }
 
 void docker_call_http_code_set(docker_call* dcall, int http_code) {

@@ -95,7 +95,6 @@ int get_attr_int(json_object* obj, char* name) {
 	int attr = -1;
 	if (json_object_object_get_ex(obj, name, &extractObj)) {
 		sscanf(json_object_get_string(extractObj), "%d", &attr);
-		free(extractObj);
 	}
 //	docker_log_debug("%s is |%d|.", name, attr);
 	return attr;
@@ -118,7 +117,6 @@ long get_attr_long(json_object* obj, char* name) {
 	long attr = -1;
 	if (json_object_object_get_ex(obj, name, &extractObj)) {
 		sscanf(json_object_get_string(extractObj), "%ld", &attr);
-		free(extractObj);
 	}
 	return attr;
 }
@@ -140,7 +138,6 @@ unsigned long get_attr_unsigned_long(json_object* obj, char* name) {
 	unsigned long attr = -1;
 	if (json_object_object_get_ex(obj, name, &extractObj)) {
 		sscanf(json_object_get_string(extractObj), "%lu", &attr);
-		free(extractObj);
 	}
 	return attr;
 }
@@ -162,7 +159,6 @@ long long get_attr_long_long(json_object* obj, char* name) {
 	long long attr = -1;
 	if (json_object_object_get_ex(obj, name, &extractObj)) {
 		sscanf(json_object_get_string(extractObj), "%lld", &attr);
-		free(extractObj);
 	}
 	return attr;
 }

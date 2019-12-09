@@ -33,7 +33,7 @@
 
 char* str_clone(const char* from) {
 	char* to = NULL;
-	if ((from != NULL) && (strlen(from) > 0)) {
+	if ((from != NULL)) {
 		to = (char*) malloc((strlen(from) + 1) * sizeof(char));
 		if (to != NULL) {
 			strcpy(to, from);

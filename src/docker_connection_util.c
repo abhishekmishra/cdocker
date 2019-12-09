@@ -466,7 +466,7 @@ static size_t write_memory_callback_v2(void* contents, size_t size, size_t nmemb
 	void* userp)
 {
 	size_t realsize = size * nmemb;
-	docker_call* mem = (docker_call*) userp;
+	docker_call* mem = (docker_call*)userp;
 	size_t new_size = mem->size + realsize + 1;
 
 	if (new_size > mem->capacity) {
@@ -503,8 +503,8 @@ static size_t write_memory_callback_v2(void* contents, size_t size, size_t nmemb
 	return realsize;
 }
 
-void handle_response_v2(CURLcode res, CURL* curl, docker_result** result,
-	docker_call* call, json_object** response)
+void handle_response_v2(long response_code, char* effective_url,
+	docker_result* result, docker_call* call, json_object** response)
 {
 	docker_log_debug("%lu bytes retrieved\n", (unsigned long)call->size);
 	json_object* response_obj = NULL;
@@ -522,109 +522,198 @@ void handle_response_v2(CURLcode res, CURL* curl, docker_result** result,
 		docker_log_debug("Response = Empty");
 	}
 
-	/* Check for errors */
-	if (res != CURLE_OK)
+	docker_call_http_code_set(call, response_code);
+	result->http_error_code = response_code;
+	result->url = str_clone(effective_url);
+
+	if (response_code == 200 || response_code == 201
+		|| response_code == 204)
 	{
-		fprintf(stderr, "curl_easy_perform() failed: %s\n",
-			curl_easy_strerror(res));
-		(*result)->error_code = E_CONNECTION_FAILED;
+		result->error_code = E_SUCCESS;
 	}
 	else
 	{
-		long response_code;
-		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-		char* effective_url = NULL;
-		curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effective_url);
-
-		docker_call_http_code_set(call, response_code);
-		(*result)->http_error_code = response_code;
-		(*result)->url = str_clone(effective_url);
-
-		if (response_code == 200 || response_code == 201
-			|| response_code == 204)
+		result->error_code = E_INVALID_INPUT;
+		result->message = str_clone("error");
+	}
+	if (result->http_error_code >= 400)
+	{
+		char* msg = get_attr_str(response_obj, "message");
+		if (msg)
 		{
-			(*result)->error_code = E_SUCCESS;
-		}
-		else
-		{
-			(*result)->error_code = E_INVALID_INPUT;
-			(*result)->message = str_clone("error");
-		}
-		if ((*result)->http_error_code >= 400)
-		{
-			char* msg = get_attr_str(response_obj, "message");
-			if (msg)
-			{
-				(*result)->message = str_clone(msg);
-			}
+			result->message = str_clone(msg);
 		}
 	}
+
 }
 
 d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** response) {
-	CURL* curl;
-	CURLcode res;
-	struct curl_slist* headers = NULL;
 	time_t start, end;
 	d_err_t err = E_SUCCESS;
+	docker_result* result;
 
+	// set the start time
 	start = time(NULL);
 
 	// allocate the docker result object
-	docker_result* result;
 	err = new_docker_result(&result);
 	if (err != E_SUCCESS) {
 		return err;
 	}
 
-	/* get a curl handle */
-	curl = curl_easy_init();
+	char* docker_http_method = docker_call_request_method_get(dcall);
 
-	if (curl)
-	{
-		// Set the URL
-		char* docker_url = docker_call_get_url(dcall);
-		if (is_unix_socket(ctx->url))
+#ifdef _WIN32
+	if (docker_call_status_cb_get(dcall) == NULL &&
+		(docker_http_method == NULL || strcmp(docker_http_method, HTTP_GET_STR) == 0)) {
+		//TODO free at the end
+		dcall->site_url = "/";
+		char* service_url = docker_call_get_url(dcall);
+		if (service_url == NULL) {
+			return E_ALLOC_FAILED;
+		}
+		HANDLE hPipe;
+		char* lpvMessage = (char*)calloc(strlen(service_url) + 50, sizeof(char));
+		if (lpvMessage == NULL) {
+			return E_ALLOC_FAILED;
+		}
+		lpvMessage[0] = '\0';
+		strcat(lpvMessage, "GET ");
+		strcat(lpvMessage, service_url);
+		strcat(lpvMessage, " HTTP/1.0\n\n");
+		//"GET /version HTTP/1.0\n\n";
+
+		char  chBuf[NPIPE_READ_BUFSIZE + 1]; //one extra for null terminator
+		BOOL   fSuccess = FALSE;
+		DWORD  cbRead, cbToWrite, cbWritten, dwMode;
+		LPCTSTR lpszPipename = TEXT(DOCKER_DEFAULT_WINDOWS_NAMED_PIPE);
+
+		// Try to open a named pipe; wait for it, if necessary. 
+
+		while (1)
 		{
-			curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, ctx->url);
+			hPipe = CreateFile(
+				lpszPipename,   // pipe name 
+				GENERIC_READ |  // read and write access 
+				GENERIC_WRITE,
+				0,              // no sharing 
+				NULL,           // default security attributes
+				OPEN_EXISTING,  // opens existing pipe 
+				0,              // default attributes 
+				NULL);          // no template file 
+
+		  // Break if the pipe handle is valid. 
+
+			if (hPipe != INVALID_HANDLE_VALUE)
+				break;
+
+			// Exit if an error other than ERROR_PIPE_BUSY occurs. 
+
+			if (GetLastError() != ERROR_PIPE_BUSY)
+			{
+				_tprintf(TEXT("Could not open pipe. GLE=%d\n"), GetLastError());
+				return -1;
+			}
+
+			// All pipe instances are busy, so wait for 20 seconds. 
+
+			if (!WaitNamedPipe(lpszPipename, 20000))
+			{
+				printf("Could not open pipe: 20 second wait timed out.");
+				return -1;
+			}
 		}
-		curl_easy_setopt(curl, CURLOPT_URL, docker_url);
 
-		// Set the custom request if any (not required for GET/POST)
-		if (docker_call_request_method_get(dcall) != NULL) {
-			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, docker_call_request_method_get(dcall));
+		// The pipe connected; change to message-read mode. 
+
+		dwMode = PIPE_READMODE_MESSAGE;
+		fSuccess = SetNamedPipeHandleState(
+			hPipe,    // pipe handle 
+			&dwMode,  // new pipe mode 
+			NULL,     // don't set maximum bytes 
+			NULL);    // don't set maximum time 
+		if (!fSuccess)
+		{
+			_tprintf(TEXT("SetNamedPipeHandleState failed. GLE=%d\n"), GetLastError());
+			return -1;
 		}
 
-		// Set content type headers if any
-		if (docker_call_content_type_header_get(dcall) != NULL) {
-			headers = curl_slist_append(headers, "Expect:");
-			headers = curl_slist_append(headers, docker_call_content_type_header_get(dcall));
-			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+		// Send a message to the pipe server. 
+
+		cbToWrite = (strlen(lpvMessage) + 1) * sizeof(char);
+		//printf("Sending %d byte message: \"%s\"\n", cbToWrite, lpvMessage);
+
+		fSuccess = WriteFile(
+			hPipe,                  // pipe handle 
+			lpvMessage,             // message 
+			cbToWrite,              // message length 
+			&cbWritten,             // bytes written 
+			NULL);                  // not overlapped 
+
+		if (!fSuccess)
+		{
+			_tprintf(TEXT("WriteFile to pipe failed. GLE=%d\n"), GetLastError());
+			return -1;
 		}
 
-		// Now specify the POST data if request type is POST
-		// and request_data is not NULL.
-		if (docker_call_request_data_get(dcall) != NULL &&
-			strcmp(docker_call_request_method_get(dcall), "POST") == 0) {
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, docker_call_request_data_get(dcall));
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, docker_call_request_data_len_get(dcall));
-		}
+		//printf("\nMessage sent to server, receiving reply as follows:\n");
 
-		/* send all data to this function  */
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback_v2);
+		int crlf_count = 0;
+		bool start_content = false;
+		int last_error = -1;
+		do
+		{
+			// Read from the pipe. 
 
-		/* we pass our 'chunk' struct to the callback function */
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)dcall);
+			fSuccess = ReadFile(
+				hPipe,    // pipe handle 
+				chBuf,    // buffer to receive reply 
+				NPIPE_READ_BUFSIZE / sizeof(TCHAR) * sizeof(char),  // size of buffer 
+				&cbRead,  // number of bytes read 
+				NULL);    // not overlapped 
 
-		/* some servers don't like requests that are made without a user-agent
-		 field, so we provide one */
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+			chBuf[cbRead] = NULL;
+			//printf("\n%s\n", chBuf);
 
-		/* Perform the request, res will get the return code */
-		res = curl_easy_perform(curl);
+			//TODO: replace this bit with a http response parser.
+			if (start_content) {
+				write_memory_callback_v2(chBuf, (size_t)cbRead, 1, dcall);
+			}
+			else {
+				bool cr = false;
+				for (size_t i = 0; i < cbRead; i++) {
+					if (cr) {
+						if (chBuf[i] == '\n') {
+							crlf_count += 1;
+							cr = false;
+						}
+					}
+					else if (chBuf[i] == '\r') {
+						cr = true;
+					}
+					else {
+						cr = false;
+						crlf_count = 0;
+					}
+				}
+				if (crlf_count == 2) {
+					start_content = true;
+				}
+			}
+			last_error = GetLastError();
+			if (!fSuccess && last_error != ERROR_MORE_DATA) {
+				break;
+			}
+		} while (fSuccess || last_error == ERROR_MORE_DATA);  // repeat loop if ERROR_MORE_DATA 
 
+		//if (!fSuccess)
+		//{
+		//	_tprintf(TEXT("ReadFile from pipe failed. GLE=%d\n"), GetLastError());
+		//	return -1;
+		//}
+		//else {
 		/* Check for errors, and handle response */
-		handle_response_v2(res, curl, &result, dcall, response);
+		handle_response_v2(200L, service_url, result, dcall, response);
 
 		// Mark end time of request
 		end = time(NULL);
@@ -639,13 +728,13 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 			if (dcall->memory != NULL)
 			{
 				size_t data_len = docker_call_response_data_length(dcall);
-				result->response_json_str = 
+				result->response_json_str =
 					(char*)calloc(data_len + 1, sizeof(char));
 				if (result->response_json_str == NULL) {
 					return E_ALLOC_FAILED;
 				}
-				memcpy(result->response_json_str, 
-					docker_call_response_data_get(dcall), 
+				memcpy(result->response_json_str,
+					docker_call_response_data_get(dcall),
 					data_len);
 				result->response_json_str[data_len] = '\0';
 			}
@@ -659,16 +748,128 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 
 			err = result->error_code;
 
-			// cleanup docker_result
-			free_docker_result(result);
 		}
 
-		/* always cleanup */
-		curl_easy_cleanup(curl);
+		//}
 
-		// free url
-		free(docker_url);
+		//printf("\n<End of message, press ENTER to terminate connection and exit>");
+
+		CloseHandle(hPipe);
 	}
+	else {
+#endif
+		CURL* curl;
+		CURLcode res;
+		struct curl_slist* headers = NULL;
+
+		/* get a curl handle */
+		curl = curl_easy_init();
+
+		if (curl)
+		{
+			// Set the URL
+			char* docker_url = docker_call_get_url(dcall);
+			if (is_unix_socket(ctx->url))
+			{
+				curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, ctx->url);
+			}
+			curl_easy_setopt(curl, CURLOPT_URL, docker_url);
+
+			// Set the custom request if any (not required for GET/POST)
+			if (docker_call_request_method_get(dcall) != NULL) {
+				curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, docker_call_request_method_get(dcall));
+			}
+
+			// Set content type headers if any
+			if (docker_call_content_type_header_get(dcall) != NULL) {
+				headers = curl_slist_append(headers, "Expect:");
+				headers = curl_slist_append(headers, docker_call_content_type_header_get(dcall));
+				curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+			}
+
+			// Now specify the POST data if request type is POST
+			// and request_data is not NULL.
+			if (docker_call_request_data_get(dcall) != NULL &&
+				strcmp(docker_call_request_method_get(dcall), "POST") == 0) {
+				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, docker_call_request_data_get(dcall));
+				curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, docker_call_request_data_len_get(dcall));
+			}
+
+			/* send all data to this function  */
+			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback_v2);
+
+			/* we pass our 'chunk' struct to the callback function */
+			curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)dcall);
+
+			/* some servers don't like requests that are made without a user-agent
+			 field, so we provide one */
+			curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+			/* Perform the request, res will get the return code */
+			res = curl_easy_perform(curl);
+
+			long response_code;
+			char* effective_url;
+			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+			curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effective_url);
+
+			/* Check for errors */
+			if (res != CURLE_OK)
+			{
+				fprintf(stderr, "curl_easy_perform() failed: %s\n",
+					curl_easy_strerror(res));
+				result->error_code = E_CONNECTION_FAILED;
+			}
+			else {
+				/* Check for errors, and handle response */
+				handle_response_v2(response_code, effective_url, result, dcall, response);
+
+				// Mark end time of request
+				end = time(NULL);
+
+				if (result != NULL)
+				{
+					result->method = docker_call_request_method_get(dcall);
+					if (docker_call_request_data_get(dcall) != NULL)
+					{
+						result->request_json_str = str_clone(docker_call_request_data_get(dcall));
+					}
+					if (dcall->memory != NULL)
+					{
+						size_t data_len = docker_call_response_data_length(dcall);
+						result->response_json_str =
+							(char*)calloc(data_len + 1, sizeof(char));
+						if (result->response_json_str == NULL) {
+							return E_ALLOC_FAILED;
+						}
+						memcpy(result->response_json_str,
+							docker_call_response_data_get(dcall),
+							data_len);
+						result->response_json_str[data_len] = '\0';
+					}
+					result->start_time = start;
+					result->end_time = end;
+
+					docker_result_handler_fn* fn = docker_context_result_handler_get(ctx);
+					if (fn != NULL) {
+						(*fn)(ctx, result);
+					}
+
+					err = result->error_code;
+
+				}
+			}
+			/* always cleanup */
+			curl_easy_cleanup(curl);
+
+			// free url
+			free(docker_url);
+		}
+#ifdef _WIN32
+		// cleanup docker_result
+		free_docker_result(result);
+	}
+#endif
 
 	return err;
 }

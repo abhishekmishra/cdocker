@@ -18,18 +18,18 @@
 #include <string.h>
 #include "docker_connection_util.h"
 
-/**
- * List docker containers
- *
- * \param ctx the docker context
- * \param result the result object to return
- * \param container_list array_list of containers to be returned
- * \param all all or running only
- * \param limit max containers to return
- * \param size return the size of containers in response
- * \param varargs pairs of filters char* filter_name, char* filter_value (terminated by a NULL)
- * \return error code
- */
+ /**
+  * List docker containers
+  *
+  * \param ctx the docker context
+  * \param result the result object to return
+  * \param container_list array_list of containers to be returned
+  * \param all all or running only
+  * \param limit max containers to return
+  * \param size return the size of containers in response
+  * \param varargs pairs of filters char* filter_name, char* filter_value (terminated by a NULL)
+  * \return error code
+  */
 d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** container_list,
 	int all, int limit, int size, ...) {
 	docker_call* call;
@@ -43,7 +43,7 @@ d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** container_l
 
 	if (limit > 0) {
 		char* lim_val = (char*)calloc(128, sizeof(char));
-		if(lim_val == NULL) {
+		if (lim_val == NULL) {
 			return E_ALLOC_FAILED;
 		}
 		sprintf(lim_val, "%d", limit);
@@ -130,7 +130,7 @@ docker_ctr* docker_inspect_container(docker_context* ctx, char* id, int size) {
  * \return the process details as docker_container_ps list.
  */
 d_err_t docker_process_list_container(docker_context* ctx,
-	docker_container_ps** ps, char* id,	char* process_args) {
+	docker_container_ps** ps, char* id, char* process_args) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, id, "top") != 0) {
 		return E_ALLOC_FAILED;
@@ -179,21 +179,7 @@ d_err_t docker_process_list_container(docker_context* ctx,
 	return err;
 }
 
-/**
- * Get the logs for the docker container.
- *
- * \param ctx docker context
- * \param log pointer to string to be returned.
- * \param follow - this param has no effect for now, as socket support is not implemented.
- * \param stdout whether to get stdout (>0 means yes)
- * \param stderr whether to get stdin (>0 means yes)
- * \param since time since which the logs are to be fetched (unix timestamp)
- * \param until time till which the logs are to be fetched (unix timestamp)
- * \param timestamps add timestamps to log lines (>0 means yes)
- * \param tail 0 means all, any positive number indicates the number of lines to fetch.
- * \return error code
- */
-d_err_t docker_container_logs(docker_context* ctx, char** log, char* id, int follow, 
+d_err_t docker_container_logs(docker_context* ctx, char** log, size_t* log_length, char* id, int follow,
 	int std_out, int std_err, long since, long until, int timestamps, int tail) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, id, "logs") != 0) {
@@ -246,14 +232,47 @@ d_err_t docker_container_logs(docker_context* ctx, char** log, char* id, int fol
 	d_err_t ret = docker_call_exec(ctx, call, &response_obj);
 	json_object_put(response_obj);
 
-	if(docker_call_response_data_get(call) != NULL) {
-		(*log) = str_clone(docker_call_response_data_get(call) + 8);
-	}
+	*log_length = docker_call_response_data_length(call);
+	*log = (char*)calloc(*log_length, sizeof(char));
+	memcpy(*log, docker_call_response_data_get(call), *log_length);
 
 	free_docker_call(call);
 	return ret;
 }
 
+d_err_t docker_container_logs_foreach(void* handler_args, char* log, size_t log_length,
+	docker_log_line_handler* line_handler) {
+	size_t current_loc = 0;
+	int line_num = 0;
+	if (log != NULL && log_length > 0) {
+		while (current_loc < log_length) {
+			if (log[current_loc] < 3) {
+				int stream_type = log[current_loc];
+				byte* size_arr = log + current_loc + 4;
+				uint32_t size = size_arr[0] << 24 |
+					size_arr[1] << 16 |
+					size_arr[2] << 8 |
+					size_arr[3];
+				current_loc += 8;
+
+				char* current_line = (char*)calloc(size + 1, sizeof(char));
+				if (current_line == NULL) {
+					return E_ALLOC_FAILED;
+				}
+				current_line[0] = '\0';
+				strncat(current_line, log + current_loc, size);
+				current_line[size] = '\0';
+				(*line_handler)(handler_args, stream_type, line_num, current_line);
+				current_loc += size;
+				free(current_line);
+			}
+			else {
+				(*line_handler)(handler_args, 0, line_num, log);
+			}
+		}
+	}
+	return E_SUCCESS;
+}
 ///////////// Get Container FS Changes
 
 /**
@@ -362,7 +381,7 @@ d_err_t docker_container_changes(docker_context* ctx, docker_changes_list** chan
  * \param id container id
  * \return error code
  */
-d_err_t docker_container_get_stats(docker_context* ctx,	docker_container_stats** stats, 
+d_err_t docker_container_get_stats(docker_context* ctx, docker_container_stats** stats,
 	char* id) {
 	if (id == NULL || strlen(id) == 0) {
 		return E_INVALID_INPUT;

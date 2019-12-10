@@ -128,7 +128,8 @@ d_err_t docker_process_list_container(docker_context* ctx,
 *
 * \param ctx docker context
 * \param result pointer to docker_result
-* \param log pointer to string to be returned.
+* \param log pointer to buffer of chars to be returned. (Not null terminated string).
+* \param log_length pointer to log_length to be returned.
 * \param id container id
 * \param follow - this param has no effect for now, as socket support is not implemented.
 * \param stdout whether to get stdout (>0 means yes)
@@ -139,8 +140,12 @@ d_err_t docker_process_list_container(docker_context* ctx,
 * \param tail 0 means all, any positive number indicates the number of lines to fetch.
 * \return error code
 */
-d_err_t docker_container_logs(docker_context* ctx, char** log, char* id, int follow, 
+d_err_t docker_container_logs(docker_context* ctx, char** log, size_t* log_length, char* id, int follow, 
 	int std_out, int std_err, long since, long until, int timestamps, int tail);
+
+typedef void (docker_log_line_handler)(void* handler_args, int stream_id, int line_num, char* line);
+
+d_err_t docker_container_logs_foreach(void* handler_args, char* log, size_t log_length, docker_log_line_handler* line_handler);
 
 ///////////// Get Container FS Changes
 

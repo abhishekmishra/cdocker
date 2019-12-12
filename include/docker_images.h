@@ -76,7 +76,7 @@ typedef json_object											docker_image_list;
  * \param filter_since <image-name>[:<tag>], <image id> or <image@digest>
  * \return error code
  */
-d_err_t docker_images_list(docker_context* ctx,
+MODULE_API d_err_t docker_images_list(docker_context* ctx,
 		docker_image_list** images, int all, int digests, char* filter_before,
 		int filter_dangling, char* filter_label, char* filter_reference,
 		char* filter_since);
@@ -110,7 +110,7 @@ typedef struct docker_build_status_t {
  * 			default is ""
  * \return error code.
  */
-d_err_t docker_image_create_from_image(docker_context* ctx,
+MODULE_API d_err_t docker_image_create_from_image(docker_context* ctx,
 		char* from_image, char* tag, char* platform);
 
 /**
@@ -126,7 +126,7 @@ d_err_t docker_image_create_from_image(docker_context* ctx,
  * 			default is ""
  * \return error code.
  */
-d_err_t docker_image_create_from_image_cb(docker_context* ctx,
+MODULE_API d_err_t docker_image_create_from_image_cb(docker_context* ctx,
 		void (*status_cb)(docker_image_create_status*, void* cbargs),
 		void* cbargs, char* from_image, char* tag, char* platform);
 
@@ -144,7 +144,7 @@ d_err_t docker_image_create_from_image_cb(docker_context* ctx,
  * \param rest options to the build command
  * \return error code.
  */
-d_err_t docker_image_build_cb(docker_context* ctx, 
+MODULE_API d_err_t docker_image_build_cb(docker_context* ctx, 
 		char* folder, char* dockerfile,
 		void (*status_cb)(docker_build_status*, void* cbargs),
 		void* cbargs, ...);

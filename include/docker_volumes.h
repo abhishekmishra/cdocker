@@ -71,7 +71,7 @@ typedef json_object										docker_volume_warnings;
  * \param filter_name
  * \return error code.
  */
-d_err_t docker_volumes_list(docker_context* ctx, 
+MODULE_API d_err_t docker_volumes_list(docker_context* ctx, 
 		docker_volume_list** volumes, docker_volume_warnings** warnings,
 		int filter_dangling, char* filter_driver, char* filter_label,
 		char* filter_name);
@@ -87,7 +87,7 @@ d_err_t docker_volumes_list(docker_context* ctx,
  * \param key/values char* key, char* value args pair for each label
  * \return error code
  */
-d_err_t docker_volume_create(docker_context* ctx, 
+MODULE_API d_err_t docker_volume_create(docker_context* ctx, 
 		docker_volume** volume, char* name, char* driver, int num_labels,
 		...);
 
@@ -99,7 +99,7 @@ d_err_t docker_volume_create(docker_context* ctx,
  * \param name name of the volume to inspect (cannot be NULL)
  * \return error code
  */
-d_err_t docker_volume_inspect(docker_context* ctx, 
+MODULE_API d_err_t docker_volume_inspect(docker_context* ctx, 
 		docker_volume** volume, char* name);
 
 /**
@@ -110,7 +110,7 @@ d_err_t docker_volume_inspect(docker_context* ctx,
  * \param force force delete if this value is 1
  * \return error code
  */
-d_err_t docker_volume_delete(docker_context* ctx, 
+MODULE_API d_err_t docker_volume_delete(docker_context* ctx, 
 		const char* name, int force);
 
 /**
@@ -123,7 +123,7 @@ d_err_t docker_volume_delete(docker_context* ctx,
  * \param varargs triples (int filter_not, char* label_name, char* label_value)
  * \return error code
  */
-d_err_t docker_volumes_delete_unused(docker_context* ctx,
+MODULE_API d_err_t docker_volumes_delete_unused(docker_context* ctx,
 		arraylist** volumes_deleted,
 		unsigned long* space_reclaimed, int num_label_filters, ...);
 

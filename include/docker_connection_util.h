@@ -144,54 +144,54 @@ typedef struct docker_call_t {
 	void* client_cb_args;
 } docker_call;
 
-d_err_t make_docker_call(docker_call** dcall, char* site_url, docker_object_type object, 
+MODULE_API d_err_t make_docker_call(docker_call** dcall, char* site_url, docker_object_type object, 
 	const char* id,	const char* method);
 
-void docker_call_request_method_set(docker_call* dcall, char* method);
+MODULE_API void docker_call_request_method_set(docker_call* dcall, char* method);
 
-char* docker_call_request_method_get(docker_call* dcall);
+MODULE_API char* docker_call_request_method_get(docker_call* dcall);
 
-void docker_call_content_type_header_set(docker_call* dcall, char* content_type_header);
+MODULE_API void docker_call_content_type_header_set(docker_call* dcall, char* content_type_header);
 
-char* docker_call_content_type_header_get(docker_call* dcall);
+MODULE_API char* docker_call_content_type_header_get(docker_call* dcall);
 
-void docker_call_request_data_set(docker_call* dcall, char* request_data);
+MODULE_API void docker_call_request_data_set(docker_call* dcall, char* request_data);
 
-char* docker_call_request_data_get(docker_call* dcall);
+MODULE_API char* docker_call_request_data_get(docker_call* dcall);
 
-void docker_call_request_data_len_set(docker_call* dcall, size_t request_data_len);
+MODULE_API void docker_call_request_data_len_set(docker_call* dcall, size_t request_data_len);
 
-size_t docker_call_request_data_len_get(docker_call* dcall);
+MODULE_API size_t docker_call_request_data_len_get(docker_call* dcall);
 
 //void docker_call_response_data_set(docker_call* dcall, char* response_data);
 
-char* docker_call_response_data_get(docker_call* dcall);
+MODULE_API char* docker_call_response_data_get(docker_call* dcall);
 
-size_t docker_call_response_data_length(docker_call* dcall);
+MODULE_API size_t docker_call_response_data_length(docker_call* dcall);
 
-int docker_call_http_code_get(docker_call* dcall);
+MODULE_API int docker_call_http_code_get(docker_call* dcall);
 
-void docker_call_http_code_set(docker_call* dcall, int http_code);
+MODULE_API void docker_call_http_code_set(docker_call* dcall, int http_code);
 
-void docker_call_status_cb_set(docker_call* dcall, status_callback* status_callback);
+MODULE_API void docker_call_status_cb_set(docker_call* dcall, status_callback* status_callback);
 
-status_callback* docker_call_status_cb_get(docker_call* dcall);
+MODULE_API status_callback* docker_call_status_cb_get(docker_call* dcall);
 
-void docker_call_cb_args_set(docker_call* dcall, void* cb_args);
+MODULE_API void docker_call_cb_args_set(docker_call* dcall, void* cb_args);
 
-char* docker_call_cb_args_get(docker_call* dcall);
+MODULE_API char* docker_call_cb_args_get(docker_call* dcall);
 
-void docker_call_client_cb_args_set(docker_call* dcall, void* client_cb_args);
+MODULE_API void docker_call_client_cb_args_set(docker_call* dcall, void* client_cb_args);
 
-char* docker_call_client_cb_args_get(docker_call* dcall);
+MODULE_API char* docker_call_client_cb_args_get(docker_call* dcall);
 
-void free_docker_call(docker_call* dcall);
+MODULE_API void free_docker_call(docker_call* dcall);
 
-int docker_call_params_add(docker_call* dcall, char* param, char* value);
+MODULE_API int docker_call_params_add(docker_call* dcall, char* param, char* value);
 
-char* docker_call_get_url(docker_call* dcall);
+MODULE_API char* docker_call_get_url(docker_call* dcall);
 
-d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** response);
+MODULE_API d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** response);
 
 // END: Docker API Calls HTTP Utils V2 
 

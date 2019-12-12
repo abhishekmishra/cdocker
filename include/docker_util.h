@@ -61,27 +61,27 @@ typedef struct pair_t {
  * \param value
  * \return error code
  */
-d_err_t make_pair(pair** p, char* key, char* value);
+MODULE_API d_err_t make_pair(pair** p, char* key, char* value);
 
 /**
  * Get the value part of the pair
  * \param p pair
  * \return string value
  */
-char* get_value(pair*p);
+MODULE_API char* get_value(pair*p);
 
 /**
  * Get the key part of the pair
  * \param p pair
  * \return string key
  */
-char* get_key(pair*p);
+MODULE_API char* get_key(pair*p);
 
 /**
  * Free the pair object
  * \param p pair
  */
-void free_pair(pair*p);
+MODULE_API void free_pair(pair*p);
 
 // Filter utility functions for use in Docker API calls.
 
@@ -92,7 +92,7 @@ void free_pair(pair*p);
  * \return new json_object* which should be passed to all calls to
  * 		filter methods.
  */
-json_object* make_filters();
+MODULE_API json_object* make_filters();
 
 /**
  * Add a string value to the filter if it exits, or create a new one.
@@ -101,7 +101,7 @@ json_object* make_filters();
  * \param name name of the filter
  * \param value value of the filter
  */
-void add_filter_str(json_object* filters, char* name, char* value);
+MODULE_API void add_filter_str(json_object* filters, char* name, char* value);
 
 /**
  * Add an int value to the filter if it exits, or create a new one.
@@ -110,7 +110,7 @@ void add_filter_str(json_object* filters, char* name, char* value);
  * \param name name of the filter
  * \param value value of the filter
  */
-void add_filter_int(json_object* filters, char* name, int value);
+MODULE_API void add_filter_int(json_object* filters, char* name, int value);
 
 /**
  * Convert the filters object to a json string.
@@ -119,7 +119,7 @@ void add_filter_int(json_object* filters, char* name, int value);
  * \param filters
  * \return json string
  */
-const char* filters_to_str(json_object* filters);
+MODULE_API const char* filters_to_str(json_object* filters);
 
 /**
  * Clone a string for usage in internal apis.
@@ -129,7 +129,7 @@ const char* filters_to_str(json_object* filters);
  * \param from string to clone from
  * \return cloned string, NULL if there is an error.
  */
-char* str_clone(const char* from);
+MODULE_API char* str_clone(const char* from);
 
 /**
  * Get a string object with the given key from a json_object
@@ -139,7 +139,7 @@ char* str_clone(const char* from);
  * \param name of the string attribute
  * \return string value of attribute
  */
-char* get_attr_str(json_object* obj, char* name);
+MODULE_API char* get_attr_str(json_object* obj, char* name);
 
 /**
  * Set a string object with the given key in a json_object
@@ -149,7 +149,7 @@ char* get_attr_str(json_object* obj, char* name);
  * \param val string value of the attribute
  * \return string value of attribute
  */
-d_err_t set_attr_str(json_object* obj, char* name, char* val);
+MODULE_API d_err_t set_attr_str(json_object* obj, char* name, char* val);
 
 /**
  * Get a int object with the given key from a json_object
@@ -158,7 +158,7 @@ d_err_t set_attr_str(json_object* obj, char* name, char* val);
  * \param name of the string attribute
  * \return int value of attribute
  */
-int get_attr_int(json_object* obj, char* name);
+MODULE_API int get_attr_int(json_object* obj, char* name);
 
 /**
  * Set an integer object with the given key in a json_object
@@ -168,7 +168,7 @@ int get_attr_int(json_object* obj, char* name);
  * \param val string value of the attribute
  * \return string value of attribute
  */
-d_err_t set_attr_int(json_object* obj, char* name, int val);
+MODULE_API d_err_t set_attr_int(json_object* obj, char* name, int val);
 
 /**
  * Get a boolean object with the given key from a json_object
@@ -177,7 +177,7 @@ d_err_t set_attr_int(json_object* obj, char* name, int val);
  * \param name of the string attribute
  * \return boolean value of attribute
  */
-int get_attr_boolean(json_object* obj, char* name);
+MODULE_API int get_attr_boolean(json_object* obj, char* name);
 
 /**
  * Set a boolean object with the given key in a json_object
@@ -187,7 +187,7 @@ int get_attr_boolean(json_object* obj, char* name);
  * \param val string value of the attribute
  * \return string value of attribute
  */
-d_err_t set_attr_boolean(json_object* obj, char* name, int val);
+MODULE_API d_err_t set_attr_boolean(json_object* obj, char* name, int val);
 
 /**
  * Get a long object with the given key from a json_object
@@ -196,7 +196,7 @@ d_err_t set_attr_boolean(json_object* obj, char* name, int val);
  * \param name of the string attribute
  * \return long value of attribute
  */
-long get_attr_long(json_object* obj, char* name);
+MODULE_API long get_attr_long(json_object* obj, char* name);
 
 /**
  * Set a long integer object with the given key in a json_object
@@ -206,7 +206,7 @@ long get_attr_long(json_object* obj, char* name);
  * \param val string value of the attribute
  * \return string value of attribute
  */
-d_err_t set_attr_long(json_object* obj, char* name, long val);
+MODULE_API d_err_t set_attr_long(json_object* obj, char* name, long val);
 
 /**
  * Get a unsigned long object with the given key from a json_object
@@ -215,7 +215,7 @@ d_err_t set_attr_long(json_object* obj, char* name, long val);
  * \param name of the string attribute
  * \return unsigned long value of attribute
  */
-unsigned long get_attr_unsigned_long(json_object* obj, char* name);
+MODULE_API unsigned long get_attr_unsigned_long(json_object* obj, char* name);
 
 /**
  * Set an unsigned long integer object with the given key in a json_object
@@ -225,7 +225,7 @@ unsigned long get_attr_unsigned_long(json_object* obj, char* name);
  * \param val string value of the attribute
  * \return string value of attribute
  */
-d_err_t set_attr_unsigned_long(json_object* obj, char* name, unsigned long val);
+MODULE_API d_err_t set_attr_unsigned_long(json_object* obj, char* name, unsigned long val);
 
 /**
  * Get a long long object with the given key from a json_object
@@ -234,7 +234,7 @@ d_err_t set_attr_unsigned_long(json_object* obj, char* name, unsigned long val);
  * \param name of the string attribute
  * \return long long value of attribute
  */
-long long get_attr_long_long(json_object* obj, char* name);
+MODULE_API long long get_attr_long_long(json_object* obj, char* name);
 
 /**
  * Set a long long int object with the given key in a json_object
@@ -244,7 +244,7 @@ long long get_attr_long_long(json_object* obj, char* name);
  * \param val string value of the attribute
  * \return string value of attribute
  */
-d_err_t set_attr_long_long(json_object* obj, char* name, long long val);
+MODULE_API d_err_t set_attr_long_long(json_object* obj, char* name, long long val);
 
 /**
  * Get the time_t object with the given key from a json_object
@@ -253,7 +253,7 @@ d_err_t set_attr_long_long(json_object* obj, char* name, long long val);
  * \param name of the string attribute
  * \return time_t value of the attribute
  */
-time_t get_attr_time(json_object* obj, char* name);
+MODULE_API time_t get_attr_time(json_object* obj, char* name);
 
 /**
  * Set a time object with the given key in a json_object
@@ -263,7 +263,7 @@ time_t get_attr_time(json_object* obj, char* name);
  * \param val string value of the attribute
  * \return string value of attribute
  */
-d_err_t set_attr_time(json_object* obj, char* name, time_t val);
+MODULE_API d_err_t set_attr_time(json_object* obj, char* name, time_t val);
 
 /**
  * Get a long long object with the given key from a json_object
@@ -272,7 +272,7 @@ d_err_t set_attr_time(json_object* obj, char* name, time_t val);
  * \param name of the object attribute
  * \return long long value of attribute
  */
-json_object* get_attr_json_object(json_object* obj, char* name);
+MODULE_API json_object* get_attr_json_object(json_object* obj, char* name);
 
 /**
  * Set a json object with the given key in a json_object
@@ -282,7 +282,7 @@ json_object* get_attr_json_object(json_object* obj, char* name);
  * \param val string value of the attribute
  * \return string value of attribute
  */
-d_err_t set_attr_json_object(json_object* obj, char* name, json_object* val);
+MODULE_API d_err_t set_attr_json_object(json_object* obj, char* name, json_object* val);
 
 /**
  * Get the json type of the attribute identified by "name" of 
@@ -293,7 +293,7 @@ d_err_t set_attr_json_object(json_object* obj, char* name, json_object* val);
  * \param name of the attribute
  * \return json_type
  */
-json_type get_attr_type(json_object* obj, char* name);
+MODULE_API json_type get_attr_type(json_object* obj, char* name);
 
 /**
  * Get prettified json string.
@@ -305,7 +305,7 @@ json_type get_attr_type(json_object* obj, char* name);
  * \param obj the json object.
  * \return the json string.
  */
-const char* get_json_string(json_object* obj);
+MODULE_API const char* get_json_string(json_object* obj);
 
 /**
  * Add a string value to the array if it exits, or create a new one.
@@ -314,7 +314,7 @@ const char* get_json_string(json_object* obj);
  * \param name name of the array
  * \param value value of the array
  */
-void add_array_str(json_object* obj, char* name, char* value);
+MODULE_API void add_array_str(json_object* obj, char* name, char* value);
 
 /**
  * Add an int value to the array if it exits, or create a new one.
@@ -323,12 +323,12 @@ void add_array_str(json_object* obj, char* name, char* value);
  * \param name name of the array
  * \param value value of the array
  */
-void add_array_int(json_object* obj, char* name, int value);
+MODULE_API void add_array_int(json_object* obj, char* name, int value);
 
 
-void parse_iso_datetime(char* date_str, struct tm* tm);
+MODULE_API void parse_iso_datetime(char* date_str, struct tm* tm);
 
-void parse_docker_stats_readtime(char* date_str, struct tm* tm);
+MODULE_API void parse_docker_stats_readtime(char* date_str, struct tm* tm);
 
 /**
  * Get the size in bytes, kb, mb, gb, tb etc.
@@ -337,7 +337,7 @@ void parse_docker_stats_readtime(char* date_str, struct tm* tm);
  * \param size
  * \return string with the description of the size
  */
-char* calculate_size(uint64_t size);
+MODULE_API char* calculate_size(uint64_t size);
 
 
 #ifdef __cplusplus 

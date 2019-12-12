@@ -6,12 +6,14 @@
                 "${workspaceFolder}/**",
                 "${vcpkgRoot}/x64-windows/include",
                 "${vcpkgRoot}/x86-windows/include",
-                "C:\\cygwin64\\usr\\include"
+                "C:\\cygwin64\\usr\\include",
+                "${workspaceFolder}/../coll/src"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "LUA_ENABLED"
             ],
             "windowsSdkVersion": "10.0.17763.0",
             "compilerPath": "\"E:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64/cl.exe\"",
@@ -24,7 +26,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${vcpkgRoot}/x64-osx/include",
-                "/Users/abhishekmishra/programs/coll/src"
+                "${workspaceFolder}/../coll/src"
             ],
             "defines": [],
             "macFrameworkPath": [

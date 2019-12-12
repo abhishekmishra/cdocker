@@ -86,7 +86,7 @@ typedef json_object											docker_network_list;
  * \param filter_type
  * \return error code
  */
-d_err_t docker_networks_list(docker_context* ctx, docker_network_list** networks, 
+MODULE_API d_err_t docker_networks_list(docker_context* ctx, docker_network_list** networks, 
 		char* filter_driver, char* filter_id,
 		char* filter_label, char* filter_name, char* filter_scope,
 		char* filter_type);
@@ -101,7 +101,7 @@ d_err_t docker_networks_list(docker_context* ctx, docker_network_list** networks
  * \param scope filter by one of swarm, global, or local
  * \return error code
  */
-d_err_t docker_network_inspect(docker_context* ctx, docker_network** net, 
+MODULE_API d_err_t docker_network_inspect(docker_context* ctx, docker_network** net, 
 	char* id_or_name, int verbose, char* scope);
 
 #ifdef __cplusplus 

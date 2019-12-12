@@ -64,7 +64,7 @@ typedef json_object										docker_ctr_list;
 * \param varargs pairs of filters char* filter_name, char* filter_value (terminated by a NULL)
 * \return error code
 */
-d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** container_list, 
+MODULE_API d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** container_list, 
 	int all, int limit, int size, ...);
 
 typedef json_object													docker_ctr_create_params;
@@ -75,7 +75,7 @@ typedef json_object													docker_ctr_create_params;
 #define docker_ctr_create_params_cmd_add(ctr_create, cmd)			add_array_str(ctr_create, "Cmd", cmd)
 #define docker_ctr_create_params_env_add(ctr_create, env)			add_array_str(ctr_create, "Env", env)
 
-d_err_t docker_create_container(docker_context* ctx,
+MODULE_API d_err_t docker_create_container(docker_context* ctx,
 	char** id, docker_ctr_create_params* params);
 
 typedef json_object									docker_ctr;
@@ -95,7 +95,7 @@ typedef json_object									docker_ctr;
 #define docker_ctr_ports_labels_get(vol)			get_attr_json_object((json_object*)vol, "Labels")
 #define docker_ctr_ports_labels_foreach(vol)		json_object_object_foreach(docker_ctr_ports_labels_get(vol), key, val)
 
-docker_ctr* docker_inspect_container(docker_context* ctx, char* id, int size);
+MODULE_API docker_ctr* docker_inspect_container(docker_context* ctx, char* id, int size);
 
 /**
 * Struct which holds the titles of the process line, and the details of all processes.
@@ -118,7 +118,7 @@ typedef struct docker_container_ps_t {
 * \return the process details as docker_container_ps list.
 * \return error code of the result
 */
-d_err_t docker_process_list_container(docker_context* ctx,
+MODULE_API d_err_t docker_process_list_container(docker_context* ctx,
 	docker_container_ps** ps, char* id,	char* process_args);
 
 ///////////// Get Container Logs
@@ -140,12 +140,12 @@ d_err_t docker_process_list_container(docker_context* ctx,
 * \param tail 0 means all, any positive number indicates the number of lines to fetch.
 * \return error code
 */
-d_err_t docker_container_logs(docker_context* ctx, char** log, size_t* log_length, char* id, int follow, 
+MODULE_API d_err_t docker_container_logs(docker_context* ctx, char** log, size_t* log_length, char* id, int follow, 
 	int std_out, int std_err, long since, long until, int timestamps, int tail);
 
 typedef void (docker_log_line_handler)(void* handler_args, int stream_id, int line_num, char* line);
 
-d_err_t docker_container_logs_foreach(void* handler_args, char* log, size_t log_length, docker_log_line_handler* line_handler);
+MODULE_API d_err_t docker_container_logs_foreach(void* handler_args, char* log, size_t log_length, docker_log_line_handler* line_handler);
 
 ///////////// Get Container FS Changes
 
@@ -161,19 +161,19 @@ typedef struct docker_container_change_t {
 /**
 	* Create a new container change item.
 	*/
-d_err_t make_docker_container_change(docker_container_change** item,
+MODULE_API d_err_t make_docker_container_change(docker_container_change** item,
 	const char* path, const char* kind);
 
-void free_docker_container_change(docker_container_change* item);
+MODULE_API void free_docker_container_change(docker_container_change* item);
 
 typedef arraylist docker_changes_list;
 
-d_err_t make_docker_changes_list(docker_changes_list** changes_list);
-int docker_changes_list_add(docker_changes_list* list,
+MODULE_API d_err_t make_docker_changes_list(docker_changes_list** changes_list);
+MODULE_API int docker_changes_list_add(docker_changes_list* list,
 	docker_container_change* item);
-docker_container_change* docker_changes_list_get_idx(docker_changes_list* list,
+MODULE_API docker_container_change* docker_changes_list_get_idx(docker_changes_list* list,
 	int i);
-size_t docker_changes_list_length(docker_changes_list* list);
+MODULE_API size_t docker_changes_list_length(docker_changes_list* list);
 
 /**
 * Get the file system changes for the docker container.
@@ -183,7 +183,7 @@ size_t docker_changes_list_length(docker_changes_list* list);
 * \param id container id
 * \return error code
 */
-d_err_t docker_container_changes(docker_context* ctx, docker_changes_list** changes, char* id);
+MODULE_API d_err_t docker_container_changes(docker_context* ctx, docker_changes_list** changes, char* id);
 
 /////// Docker container stats
 
@@ -246,7 +246,7 @@ typedef json_object													docker_container_stats;
 * \param id container id
 * \return error code
 */
-d_err_t docker_container_get_stats(docker_context* ctx,
+MODULE_API d_err_t docker_container_get_stats(docker_context* ctx,
 	docker_container_stats** stats, char* id);
 
 /**
@@ -259,11 +259,11 @@ d_err_t docker_container_get_stats(docker_context* ctx,
 * \param id container id
 * \return error code
 */
-d_err_t docker_container_get_stats_cb(docker_context* ctx,
+MODULE_API d_err_t docker_container_get_stats_cb(docker_context* ctx,
 	void (*docker_container_stats_cb)(docker_container_stats* stats,
 		void* cbargs), void* cbargs, char* id);
 
-float docker_container_stats_get_cpu_usage_percent(
+MODULE_API float docker_container_stats_get_cpu_usage_percent(
 		docker_container_stats* stats);
 
 ///////////// Get Container Start, Stop, Restart, Kill, Rename, Pause, Unpause, Wait
@@ -276,7 +276,7 @@ float docker_container_stats_get_cpu_usage_percent(
 * \param detachKeys (optional) key combination for detaching a container.
 * \return error code
 */
-d_err_t docker_start_container(docker_context* ctx,
+MODULE_API d_err_t docker_start_container(docker_context* ctx,
 	char* id, char* detachKeys);
 
 /**
@@ -287,7 +287,7 @@ d_err_t docker_start_container(docker_context* ctx,
 * \param t number of seconds to wait before killing the container
 * \return error code
 */
-d_err_t docker_stop_container(docker_context* ctx,
+MODULE_API d_err_t docker_stop_container(docker_context* ctx,
 	char* id, int t);
 
 /**
@@ -298,7 +298,7 @@ d_err_t docker_stop_container(docker_context* ctx,
 * \param t number of seconds to wait before killing the container
 * \return error code
 */
-d_err_t docker_restart_container(docker_context* ctx,
+MODULE_API d_err_t docker_restart_container(docker_context* ctx,
 	char* id, int t);
 
 /**
@@ -309,7 +309,7 @@ d_err_t docker_restart_container(docker_context* ctx,
 * \param signal (optional - NULL for default i.e. SIGKILL) signal name to send
 * \return error code
 */
-d_err_t docker_kill_container(docker_context* ctx,
+MODULE_API d_err_t docker_kill_container(docker_context* ctx,
 	char* id, char* signal);
 
 /**
@@ -321,7 +321,7 @@ d_err_t docker_kill_container(docker_context* ctx,
 * \param name new name for the container
 * \return error code
 */
-d_err_t docker_rename_container(docker_context* ctx,
+MODULE_API d_err_t docker_rename_container(docker_context* ctx,
 	char* id, char* name);
 
 /**
@@ -331,7 +331,7 @@ d_err_t docker_rename_container(docker_context* ctx,
 * \param id container id
 * \return error code
 */
-d_err_t docker_pause_container(docker_context* ctx,
+MODULE_API d_err_t docker_pause_container(docker_context* ctx,
 	char* id);
 
 /**
@@ -341,7 +341,7 @@ d_err_t docker_pause_container(docker_context* ctx,
 * \param id container id
 * \return error code
 */
-d_err_t docker_unpause_container(docker_context* ctx, 
+MODULE_API d_err_t docker_unpause_container(docker_context* ctx, 
 	char* id);
 
 //TODO: implement wait status code in API.
@@ -353,7 +353,7 @@ d_err_t docker_unpause_container(docker_context* ctx,
 * \param condition (optional - NULL for default "not-running") condition to wait for
 * \return error code
 */
-d_err_t docker_wait_container(docker_context* ctx, 
+MODULE_API d_err_t docker_wait_container(docker_context* ctx, 
 	char* id, char* condition);
 
 
@@ -367,7 +367,7 @@ d_err_t docker_wait_container(docker_context* ctx,
 * \param link remove specified link
 * \return error code
 */
-d_err_t docker_remove_container(docker_context* ctx, 
+MODULE_API d_err_t docker_remove_container(docker_context* ctx, 
 	char* id, int v, int force, int link);
 
 #ifdef __cplusplus 

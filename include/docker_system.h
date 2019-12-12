@@ -50,7 +50,7 @@ extern "C" {
 * \param ctx docker context
 * \return error code
 */
-d_err_t docker_ping(docker_context* ctx);
+MODULE_API d_err_t docker_ping(docker_context* ctx);
 
 typedef json_object									docker_version;
 #define free_docker_version(version)				json_object_put((json_object*) version)
@@ -72,7 +72,7 @@ typedef json_object									docker_version;
  * \param version docker version object to return
  * \return error code.
  */
-d_err_t docker_system_version(docker_context* ctx,
+MODULE_API d_err_t docker_system_version(docker_context* ctx,
 		docker_version** version);
 
 typedef json_object									docker_info;
@@ -93,7 +93,7 @@ typedef json_object									docker_info;
  * \param info object to return
  * \return error code.
  */
-d_err_t docker_system_info(docker_context* ctx,
+MODULE_API d_err_t docker_system_info(docker_context* ctx,
 		docker_info** info);
 
 // Docker System Events API
@@ -121,7 +121,7 @@ typedef json_object									docker_event;
  * \param end_time
  * \return error code
  */
-d_err_t docker_system_events(docker_context* ctx,
+MODULE_API d_err_t docker_system_events(docker_context* ctx,
 		arraylist** events, time_t start_time, time_t end_time);
 
 /**
@@ -135,7 +135,7 @@ d_err_t docker_system_events(docker_context* ctx,
  * \param end_time
  * \return error code
  */
-d_err_t docker_system_events_cb(docker_context* ctx,
+MODULE_API d_err_t docker_system_events_cb(docker_context* ctx,
 		void (*docker_events_cb)(docker_event* evt, void* cbargs), void* cbargs,
 		arraylist** events, time_t start_time, time_t end_time);
 

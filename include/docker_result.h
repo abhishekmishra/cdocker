@@ -119,15 +119,15 @@ MODULE_API void free_docker_result(docker_result* result);
 
 MODULE_API docker_result* docker_result_clone(docker_result* result);
 
-d_err_t docker_result_get_error_code(docker_result* result);
-time_t docker_result_get_start_time(docker_result* result);
-time_t docker_result_get_end_time(docker_result* result);
-char* docker_result_get_url(docker_result* result);
-char* docker_result_get_method(docker_result* result);
-char* docker_result_get_request_json_str(docker_result* result);
-char* docker_result_get_response_json_str(docker_result* result);
-long docker_result_get_http_error_code(docker_result* result);
-char* docker_result_get_message(docker_result* result);
+MODULE_API d_err_t docker_result_get_error_code(docker_result* result);
+MODULE_API time_t docker_result_get_start_time(docker_result* result);
+MODULE_API time_t docker_result_get_end_time(docker_result* result);
+MODULE_API char* docker_result_get_url(docker_result* result);
+MODULE_API char* docker_result_get_method(docker_result* result);
+MODULE_API char* docker_result_get_request_json_str(docker_result* result);
+MODULE_API char* docker_result_get_response_json_str(docker_result* result);
+MODULE_API long docker_result_get_http_error_code(docker_result* result);
+MODULE_API char* docker_result_get_message(docker_result* result);
 
 /**
  * Check if the error_code is E_SUCCESS

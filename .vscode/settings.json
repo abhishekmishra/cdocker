@@ -17,6 +17,7 @@
         "linkhash.h": "c",
         "json_tokener.h": "c",
         "json_object.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "lua_docker.h": "c"
     }
 }

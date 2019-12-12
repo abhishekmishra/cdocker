@@ -58,34 +58,31 @@ set( CLIBDOCKER_TEST_SOURCES
   test/test_util.c
   test/test_util.h
 )
-option (ENABLE_LUA "Enable LUA bindings for collections" OFF)
+option (ENABLE_LUA "Enable LUA bindings for clibdocker" OFF)
 if (ENABLE_LUA)
   include(FindLua)
   if (LUA_FOUND)
     message("-- lua found at ${LUA_LIBRARIES} ${LUA_INCLUDE_DIR}")
     message("-- lua version is ${LUA_VERSION_STRING}")
     add_compile_definitions(LUA_ENABLED)
+    set( CLIBDOCKER_SOURCES ${CLIBDOCKER_SOURCES}
+      include/lua_docker.h
+      src/lua_docker.c
+    )
   endif (LUA_FOUND)
 endif (ENABLE_LUA)
 
-#if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-#	message(STATUS ">>> Linux, using pkg-config since vcpkg is broken")
-#	find_package(PkgConfig REQUIRED)
-#	pkg_check_modules(json-c REQUIRED IMPORTED_TARGET json-c)
-#	pkg_check_modules(curl REQUIRED IMPORTED_TARGET libcurl)
-#	pkg_check_modules(archive REQUIRED IMPORTED_TARGET libarchive)
-#endif()
-
-add_library ( ${PROJECT_NAME} ${CLIBDOCKER_SOURCES} )
+add_library ( ${PROJECT_NAME} SHARED ${CLIBDOCKER_SOURCES} )
+set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 11)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 11)
+if (ENABLE_LUA)
+  if (LUA_FOUND)
+  target_include_directories(${PROJECT_NAME} PUBLIC ${LUA_INCLUDE_DIR})
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${LUA_LIBRARIES})    
+  endif (LUA_FOUND)
+endif (ENABLE_LUA)
 
-#if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-#	target_link_libraries(${PROJECT_NAME} PUBLIC json-c)
-#	target_link_libraries(${PROJECT_NAME} PUBLIC curl)
-#	target_link_libraries(${PROJECT_NAME} PUBLIC archive)
-#else()
 find_package(json-c CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC json-c::json-c)
 
@@ -100,12 +97,11 @@ find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
 find_library(LIBARCHIVE_LIBRARY archive)
 include_directories(${LIBARCHIVE_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBARCHIVE_LIBRARY} ZLIB::ZLIB)
-#endif()
+
 set(CMAKE_FIND_USE_PACKAGE_REGISTRY ON)
 
 find_package(coll CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC coll::coll)
-
 
 option(ENABLE_TESTS "Perform unit tests after build" OFF)
 set ( CLIBDOCKER_TEST_PROGRAM_NAME clibdocker_test )
@@ -114,17 +110,12 @@ if (ENABLE_TESTS)
   set_property(TARGET ${CLIBDOCKER_TEST_PROGRAM_NAME} PROPERTY C_STANDARD 11)
   include_directories( test )
 
-#  	if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-#		pkg_check_modules(cmocka REQUIRED IMPORTED_TARGET cmocka)
-#		target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC cmocka)
-#	else()
-		# cmocka
-		find_package(cmocka CONFIG REQUIRED)
-		target_include_directories(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_INCLUDE_DIR})
-		target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_LIBRARIES})
-#	endif()
+	# cmocka
+	find_package(cmocka CONFIG REQUIRED)
+	target_include_directories(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_INCLUDE_DIR})
+	target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_LIBRARIES})
 
-  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PUBLIC ${PROJECT_NAME})
+  target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${PROJECT_NAME})
   add_test( all_docker_tests ${CLIBDOCKER_TEST_PROGRAM_NAME} )
   enable_testing()
 endif(ENABLE_TESTS)

@@ -10,5 +10,5 @@ ctr_ls = json.decode(ctr_ls_str)
 print(ctr_ls_str)
 
 for k, v in ipairs(ctr_ls) do
-    print("Container #" .. k .. " is " .. v["Names"][1])
+    print("Container #" .. k .. " is " .. v.Names[1])
 end

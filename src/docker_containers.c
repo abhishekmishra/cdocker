@@ -248,7 +248,7 @@ d_err_t docker_container_logs_foreach(void* handler_args, char* log, size_t log_
 		while (current_loc < log_length) {
 			if (log[current_loc] < 3) {
 				int stream_type = log[current_loc];
-				byte* size_arr = log + current_loc + 4;
+				char* size_arr = log + current_loc + 4;
 				uint32_t size = size_arr[0] << 24 |
 					size_arr[1] << 16 |
 					size_arr[2] << 8 |

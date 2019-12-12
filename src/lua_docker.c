@@ -1,7 +1,11 @@
 #include "lua_docker.h"
 
-void check_DockerClient(lua_State *L, int i){
-	luaL_checkudata(L, i, DockerClient_metatable);
+void* check_JsonObject(lua_State *L, int i){
+	return luaL_checkudata(L, i, JsonObject_metatable);
+}
+
+void* check_DockerClient(lua_State *L, int i){
+	return luaL_checkudata(L, i, DockerClient_metatable);
 }
 
 int DockerClient_connect_url(lua_State* L) {
@@ -39,8 +43,44 @@ int DockerClient_new(lua_State* L) {
 	return 1;
 }
 
+int JsonObject__gc(lua_State *L){
+	printf("In JsonObject__gc\n");
+	JsonObject* jo = check_JsonObject(L, 1);
+	json_object_put(jo->obj);
+	return 0;
+}
+
+LUALIB_API int JsonObject_json_create(lua_State* L) {
+	const char* json_str = lua_tostring(L, 1);
+	lua_pop(L, 1);
+
+	// Create a JsonObject instance and set its metatable.
+	JsonObject* jo = (JsonObject*)lua_newuserdata(L, sizeof(JsonObject));
+	// stack = [jo]
+	luaL_getmetatable(L, JsonObject_metatable);
+	// stack = [jo, mt]
+	lua_setmetatable(L, 1);
+	// stack = [jo]
+
+	jo->obj = json_tokener_parse(json_str);
+	
+	if (jo->obj == NULL) {
+		luaL_error(L, "Error parsing json object.");
+	}
+	return 1;
+}
+
+LUALIB_API int JsonObject_json_string(lua_State* L) {
+	JsonObject* jo = check_JsonObject(L, 1);
+	const char* jo_str = get_json_string(jo->obj);
+	lua_pushstring(L, jo_str);
+	return 1;
+}
+
 int DockerClient__gc(lua_State *L){
 	printf("In DockerClient__gc\n");
+	DockerClient* dc = check_DockerClient(L, 1);
+	free_docker_context(&(dc->ctx));
 	return 0;
 }
 
@@ -61,6 +101,11 @@ int DockerClient_container_list(lua_State* L) {
 int luaopen_luaclibdocker(lua_State *L){
 	docker_log_set_level(LOG_INFO);
 
+	static const luaL_Reg JsonObject_lib[] = {
+		{ "to_string", &JsonObject_json_string },
+		{ NULL, NULL }
+	};
+
 	static const luaL_Reg DockerClient_lib[] = {
 		{ "container_ls", &DockerClient_container_list },
 		{ NULL, NULL }
@@ -69,11 +114,22 @@ int luaopen_luaclibdocker(lua_State *L){
 	static const luaL_Reg clibdocker_lib[] = {
 		{ "connect", &DockerClient_new },
 		{ "connect_url", &DockerClient_connect_url },
+		{ "json_create", &JsonObject_json_create },
 		{ NULL, NULL }
 	};
 	
 	luaL_newlib(L, clibdocker_lib);
 
+	// Stack: clibdocker
+	luaL_newmetatable(L, JsonObject_metatable); // Stack: clibdocker meta
+	luaL_newlib(L, JsonObject_lib);
+	lua_setfield(L, -2, "__index"); // Stack: clibdocker meta
+
+	lua_pushstring(L, "__gc");
+	lua_pushcfunction(L, JsonObject__gc); // Stack: clibdocker meta "__gc" fptr
+	lua_settable(L, -3); // Stack: clibdocker meta
+	lua_pop(L, 1); // Stack: clibdocker
+	
 	// Stack: clibdocker
 	luaL_newmetatable(L, DockerClient_metatable); // Stack: clibdocker meta
 	luaL_newlib(L, DockerClient_lib);

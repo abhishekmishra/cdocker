@@ -12,17 +12,27 @@ extern "C" {
 #include "lauxlib.h"
 
 #include "docker_all.h"
+#include <json-c/json_object.h>
 
 #define DockerClient_metatable "DOCKER_CLIENT"
+#define JsonObject_metatable "JSON_OBJECT"
 
 typedef struct {
 	docker_context* ctx;
 } DockerClient;
 
+typedef struct {
+	json_object* obj;
+} JsonObject;
+
 LUALIB_API int DockerClient_connect_url(lua_State* L);
 
 // DockerClient:new()
 LUALIB_API int DockerClient_new(lua_State* L);
+
+// json utils
+LUALIB_API int JsonObject_json_create(lua_State* L);
+LUALIB_API int JsonObject_json_string(lua_State* L);
 
 // container APIs
 LUALIB_API int DockerClient_container_list(lua_State* L);

@@ -98,6 +98,35 @@ int DockerClient_container_list(lua_State* L) {
 	return 1;
 }
 
+LUALIB_API int DockerClient_create_container(lua_State* L) {
+	// Expected: stack = [self, json_object]
+	DockerClient* dc = check_DockerClient(L, 1);
+	JsonObject* jo = check_JsonObject(L, 2);
+
+	char* id;
+	d_err_t err = docker_create_container(dc->ctx, &id, jo->obj);
+
+	//TODO: error handling
+	lua_pushstring(L, id);
+	return 1;
+}
+
+int DockerClient_start_container(lua_State* L) {
+	// Expected: stack = [self, id]
+	DockerClient* dc = check_DockerClient(L, 1);
+	char* id = lua_tostring(L, 2);
+
+	printf("Starting container id %s\n", id);
+
+	d_err_t err = docker_start_container(dc->ctx, id, NULL);
+
+	if(err != E_SUCCESS) {
+		luaL_error(L, "Unable to start container id %s", id);
+	}
+
+	return 0;
+}
+
 int luaopen_luaclibdocker(lua_State *L){
 	docker_log_set_level(LOG_INFO);
 
@@ -108,6 +137,8 @@ int luaopen_luaclibdocker(lua_State *L){
 
 	static const luaL_Reg DockerClient_lib[] = {
 		{ "container_ls", &DockerClient_container_list },
+		{ "container_create", &DockerClient_create_container },
+		{ "container_start", &DockerClient_start_container },
 		{ NULL, NULL }
 	};
 	

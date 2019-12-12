@@ -60,6 +60,8 @@ int DockerClient_container_list(lua_State* L) {
 }
 
 int luaopen_luaclibdocker(lua_State *L){
+	docker_log_set_level(LOG_INFO);
+	
 	static const luaL_Reg DockerClient_lib[] = {
 		{ "container_ls", &DockerClient_container_list },
 		{ NULL, NULL }

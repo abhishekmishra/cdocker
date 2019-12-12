@@ -12,10 +12,9 @@ set ( CLIBDOCKER_VERSION_MAJOR 1 )
 set ( CLIBDOCKER_VERSION_MINOR 0 )
 set ( CLIBDOCKER_VERSION_PATCH 0 )
 
+# TODO: remove shared lib for lua when all builds move to shared lib builds
 # Set the lualib name
 set ( LUA_CLIBDOCKER lua${PROJECT_NAME} )
-
-message( ${LUA_CLIBDOCKER} )
 
 # Include Directories
 # In GCC, this will invoke the "-I" command

@@ -7,13 +7,19 @@
             "label": "make-all",
             "type": "shell",
             "osx": {
-                "command": "make all"
+                "command": "cd build; make all; cd .."
             },
             "linux": {
-                "command": "make all"
+                "command": "cd build; make all; cd .."
+            },
+            "windows": {
+                "command": "./rebuild_win64.ps1",
+                "problemMatcher": [
+                    "$msCompile"
+                ]
             },
             "options": {
-                "cwd": "./build"
+                "cwd": "."
             },
             "group": {
                 "kind": "build",
@@ -27,13 +33,19 @@
             "label": "make-clean-all",
             "type": "shell",
             "osx": {
-                "command": "make clean all"
+                "command": "cd build; make clean all; cd .."
             },
             "linux": {
-                "command": "make clean all"
+                "command": "cd build; make clean all; cd .."
+            },
+            "windows": {
+                "command": "./build_win64.ps1",
+                "problemMatcher": [
+                    "$msCompile"
+                ]
             },
             "options": {
-                "cwd": "./build"
+                "cwd": "."
             },
             "group": "build",
             "problemMatcher": [

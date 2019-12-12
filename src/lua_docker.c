@@ -47,7 +47,6 @@ int DockerClient__gc(lua_State *L){
 int DockerClient_container_list(lua_State* L) {
 	// Expected: stack = [self]
 	DockerClient* dc = (DockerClient*)luaL_checkudata(L, 1, DockerClient_metatable);
-	printf("%s\n", dc->ctx->url);
 
 	docker_ctr_list* ctrls;
 	d_err_t err = docker_container_list(dc->ctx, &ctrls, 0, 0, 1, NULL);
@@ -61,7 +60,7 @@ int DockerClient_container_list(lua_State* L) {
 
 int luaopen_luaclibdocker(lua_State *L){
 	docker_log_set_level(LOG_INFO);
-	
+
 	static const luaL_Reg DockerClient_lib[] = {
 		{ "container_ls", &DockerClient_container_list },
 		{ NULL, NULL }

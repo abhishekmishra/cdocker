@@ -134,6 +134,8 @@ if (ENABLE_TESTS)
   enable_testing()
 endif(ENABLE_TESTS)
 
+configure_file("lua/json.lua" "json.lua" COPYONLY)
+
 # Package Configuration
 export(TARGETS clibdocker NAMESPACE clibdocker:: FILE clibdockerConfig.cmake)
 set(CMAKE_EXPORT_PACKAGE_REGISTRY ON)

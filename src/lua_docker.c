@@ -57,7 +57,7 @@ int JsonObject__gc(lua_State *L)
 	return 0;
 }
 
-LUALIB_API int JsonObject_json_create(lua_State *L)
+int JsonObject_json_create(lua_State *L)
 {
 	const char *json_str = lua_tostring(L, 1);
 	lua_pop(L, 1);
@@ -79,7 +79,7 @@ LUALIB_API int JsonObject_json_create(lua_State *L)
 	return 1;
 }
 
-LUALIB_API int JsonObject_json_string(lua_State *L)
+int JsonObject_json_string(lua_State *L)
 {
 	JsonObject *jo = check_JsonObject(L, 1);
 	const char *jo_str = get_json_string(jo->obj);
@@ -111,7 +111,7 @@ int DockerClient_container_list(lua_State *L)
 	return 1;
 }
 
-LUALIB_API int DockerClient_create_container(lua_State *L)
+int DockerClient_create_container(lua_State *L)
 {
 	// Expected: stack = [self, json_object]
 	DockerClient *dc = check_DockerClient(L, 1);
@@ -124,6 +124,26 @@ LUALIB_API int DockerClient_create_container(lua_State *L)
 	lua_pushstring(L, id);
 	return 1;
 }
+
+int DockerClient_inspect_container(lua_State* L)
+{
+	// Expected: stack = [self, id]
+	DockerClient *dc = check_DockerClient(L, 1);
+	const char *id = lua_tostring(L, 2);
+
+	docker_log_info("Getting container details for %s\n", id);
+
+	docker_ctr* ctr = docker_inspect_container(dc->ctx, (char *)id, 1);
+
+	if (ctr == NULL)
+	{
+		luaL_error(L, "Unable to inspect container id %s", id);
+	}
+	const char *ctr_json = get_json_string(ctr);
+	lua_pushstring(L, ctr_json);
+	return 1;
+}
+
 
 int DockerClient_start_container(lua_State *L)
 {
@@ -139,12 +159,12 @@ int DockerClient_start_container(lua_State *L)
 	{
 		luaL_error(L, "Unable to start container id %s", id);
 	}
-
 	return 0;
 }
 
-LUALIB_API int DockerClient_remove_container(lua_State* L) {
-		// Expected: stack = [self, id]
+int DockerClient_remove_container(lua_State* L) 
+{
+	// Expected: stack = [self, id]
 	DockerClient *dc = check_DockerClient(L, 1);
 	const char *id = lua_tostring(L, 2);
 
@@ -156,7 +176,6 @@ LUALIB_API int DockerClient_remove_container(lua_State* L) {
 	{
 		luaL_error(L, "Unable to remove container id %s", id);
 	}
-
 	return 0;
 }
 
@@ -171,6 +190,7 @@ int luaopen_luaclibdocker(lua_State *L)
 	static const luaL_Reg DockerClient_lib[] = {
 		{"container_ls", &DockerClient_container_list},
 		{"container_create", &DockerClient_create_container},
+		{"container_inspect", &DockerClient_inspect_container},
 		{"container_start", &DockerClient_start_container},
 		{"container_remove", &DockerClient_remove_container},
 		{NULL, NULL}};

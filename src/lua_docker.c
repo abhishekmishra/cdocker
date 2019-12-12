@@ -144,6 +144,46 @@ int DockerClient_inspect_container(lua_State* L)
 	return 1;
 }
 
+int DockerClient_process_list_container(lua_State* L)
+{
+	// Expected: stack = [self, id]
+	DockerClient *dc = check_DockerClient(L, 1);
+	const char *id = lua_tostring(L, 2);
+
+	docker_log_info("Getting process details for %s\n", id);
+
+	docker_container_ps *ps;
+	d_err_t err = docker_process_list_container(dc->ctx, &ps, (char *)id, NULL);
+
+	if (err != E_SUCCESS)
+	{
+		luaL_error(L, "Unable to get process details container id %s", id);
+	}
+	const char *ps_json = get_json_string(ps);
+	lua_pushstring(L, ps_json);
+	return 1;
+}
+
+int DockerClient_container_logs(lua_State* L)
+{
+	// Expected: stack = [self, id]
+	DockerClient *dc = check_DockerClient(L, 1);
+	const char *id = lua_tostring(L, 2);
+
+	docker_log_info("Getting logs for %s\n", id);
+
+	char* log;
+	size_t* log_length;
+	d_err_t err = docker_container_logs(dc->ctx, &log, &log_length, (char*)id, 0,
+		1, 1, -1, -1, 1, 0);
+
+	if (err != E_SUCCESS)
+	{
+		luaL_error(L, "Unable to get logs for container id %s", id);
+	}
+	lua_pushlstring(L, log, log_length);
+	return 1;
+}
 
 int DockerClient_start_container(lua_State *L)
 {
@@ -191,6 +231,8 @@ int luaopen_luaclibdocker(lua_State *L)
 		{"container_ls", &DockerClient_container_list},
 		{"container_create", &DockerClient_create_container},
 		{"container_inspect", &DockerClient_inspect_container},
+		{"container_top", &DockerClient_process_list_container},
+		{"container_logs_raw", &DockerClient_container_logs},
 		{"container_start", &DockerClient_start_container},
 		{"container_remove", &DockerClient_remove_container},
 		{NULL, NULL}};

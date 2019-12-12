@@ -1,11 +1,14 @@
--- export LUA_CPATH="$LUA_CPATH;/home/abhishek/code/clibdocker/build/lib?.so"
-
+json = require("json")
 docker = require("luaclibdocker")
-d = docker.connect_url("http://l3:2376/")
 
--- for k,v in ipairs(getmetatable(d)) do
---     print (k .. "=" .. v)
--- end
+d = docker.connect()
+-- d = docker.connect_url("http://l3:2376/")
 
-x = d:container_ls()
-print(x)
+ctr_ls_str = d:container_ls()
+ctr_ls = json.decode(ctr_ls_str)
+
+print(ctr_ls_str)
+
+for k, v in ipairs(ctr_ls) do
+    print("Container #" .. k .. " is " .. v["Names"][1])
+end

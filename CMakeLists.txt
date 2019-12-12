@@ -12,6 +12,11 @@ set ( CLIBDOCKER_VERSION_MAJOR 1 )
 set ( CLIBDOCKER_VERSION_MINOR 0 )
 set ( CLIBDOCKER_VERSION_PATCH 0 )
 
+# Set the lualib name
+set ( LUA_CLIBDOCKER lua${PROJECT_NAME} )
+
+message( ${LUA_CLIBDOCKER} )
+
 # Include Directories
 # In GCC, this will invoke the "-I" command
 include_directories( include )
@@ -72,22 +77,30 @@ if (ENABLE_LUA)
   endif (LUA_FOUND)
 endif (ENABLE_LUA)
 
-add_library ( ${PROJECT_NAME} SHARED ${CLIBDOCKER_SOURCES} )
+add_library ( ${PROJECT_NAME} ${CLIBDOCKER_SOURCES} )
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 11)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
+
+add_library ( ${LUA_CLIBDOCKER} SHARED ${CLIBDOCKER_SOURCES} )
+set_property(TARGET ${LUA_CLIBDOCKER} PROPERTY C_STANDARD 11)
+target_include_directories(${LUA_CLIBDOCKER} PUBLIC include)
 
 if (ENABLE_LUA)
   if (LUA_FOUND)
   target_include_directories(${PROJECT_NAME} PUBLIC ${LUA_INCLUDE_DIR})
   target_link_libraries(${PROJECT_NAME} PUBLIC ${LUA_LIBRARIES})    
+  target_include_directories(${LUA_CLIBDOCKER} PUBLIC ${LUA_INCLUDE_DIR})
+  target_link_libraries(${LUA_CLIBDOCKER} PUBLIC ${LUA_LIBRARIES})    
   endif (LUA_FOUND)
 endif (ENABLE_LUA)
 
 find_package(json-c CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC json-c::json-c)
+target_link_libraries(${LUA_CLIBDOCKER} PUBLIC json-c::json-c)
 
 find_package(CURL CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
+target_link_libraries(${LUA_CLIBDOCKER} PUBLIC CURL::libcurl)
 
 # To find and use libarchive, as the vcpkg build does not have cmake config
 # See https://github.com/microsoft/vcpkg/issues/8839#issuecomment-558066466
@@ -97,11 +110,13 @@ find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
 find_library(LIBARCHIVE_LIBRARY archive)
 include_directories(${LIBARCHIVE_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBARCHIVE_LIBRARY} ZLIB::ZLIB)
+target_link_libraries(${LUA_CLIBDOCKER} PUBLIC ${LIBARCHIVE_LIBRARY} ZLIB::ZLIB)
 
 set(CMAKE_FIND_USE_PACKAGE_REGISTRY ON)
 
 find_package(coll CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC coll::coll)
+target_link_libraries(${LUA_CLIBDOCKER} PUBLIC coll::coll)
 
 option(ENABLE_TESTS "Perform unit tests after build" OFF)
 set ( CLIBDOCKER_TEST_PROGRAM_NAME clibdocker_test )

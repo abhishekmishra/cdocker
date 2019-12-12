@@ -13,18 +13,20 @@ extern "C" {
 
 #include "docker_all.h"
 
-#define DockerClient_metatable "DockerClient"
+#define DockerClient_metatable "DOCKER_CLIENT"
 
 typedef struct {
 	docker_context* ctx;
 } DockerClient;
+
+LUALIB_API int DockerClient_connect_url(lua_State* L);
 
 // DockerClient:new()
 LUALIB_API int DockerClient_new(lua_State* L);
 
 LUALIB_API int DockerClient_container_list(lua_State* L);
 
-LUALIB_API int luaopen_clibdocker(lua_State* L);
+LUALIB_API int luaopen_luaclibdocker(lua_State* L);
 
 #ifdef __cplusplus 
 }

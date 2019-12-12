@@ -20,6 +20,7 @@ d = docker.connect()
 created_id = d:container_create(test_create_params_js)
 print("Created container id " .. created_id)
 d:container_start(created_id)
+d:container_remove(created_id)
 
 ctr_ls_str = d:container_ls()
 ctr_ls = json.decode(ctr_ls_str)

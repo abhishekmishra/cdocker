@@ -370,6 +370,16 @@ MODULE_API d_err_t docker_wait_container(docker_context* ctx,
 MODULE_API d_err_t docker_remove_container(docker_context* ctx, 
 	char* id, int v, int force, int link);
 
+/**
+* Attach to a container
+*
+* \param ctx docker context
+* \param id container id
+* \return error code
+*/
+MODULE_API d_err_t docker_container_attach_default(docker_context* ctx,	char* id,
+	char* detach_keys, int logs, int stream, int attach_stdin, int attach_stdout, int attach_stderr);
+
 #ifdef __cplusplus 
 }
 #endif

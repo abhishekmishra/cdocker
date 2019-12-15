@@ -752,3 +752,307 @@ d_err_t docker_remove_container(docker_context* ctx, char* id, int v, int force,
 	free_docker_call(call);
 	return ret;
 }
+
+#define MULTI_PERFORM_HANG_TIMEOUT 60 * 1000
+
+static struct timeval tvnow(void)
+{
+	struct timeval now;
+
+	/* time() returns the value of time in seconds since the epoch */
+	now.tv_sec = (long)time(NULL);
+	now.tv_usec = 0;
+
+	return now;
+}
+
+static long tvdiff(struct timeval newer, struct timeval older)
+{
+	return (newer.tv_sec - older.tv_sec) * 1000 +
+		(newer.tv_usec - older.tv_usec) / 1000;
+}
+
+static
+void dump(const char* text,
+	FILE* stream, unsigned char* ptr, size_t size,
+	bool nohex)
+{
+	size_t i;
+	size_t c;
+
+	unsigned int width = 0x10;
+
+	if (nohex)
+		/* without the hex output, we can fit more on screen */
+		width = 0x40;
+
+	fprintf(stream, "%s, %10.10lu bytes (0x%8.8lx)\n",
+		text, (unsigned long)size, (unsigned long)size);
+
+	for (i = 0; i < size; i += width) {
+
+		fprintf(stream, "%4.4lx: ", (unsigned long)i);
+
+		if (!nohex) {
+			/* hex not disabled, show it */
+			for (c = 0; c < width; c++)
+				if (i + c < size)
+					fprintf(stream, "%02x ", ptr[i + c]);
+				else
+					fputs("   ", stream);
+		}
+
+		for (c = 0; (c < width) && (i + c < size); c++) {
+			/* check for 0D0A; if found, skip past and start a new line of output */
+			if (nohex && (i + c + 1 < size) && ptr[i + c] == 0x0D &&
+				ptr[i + c + 1] == 0x0A) {
+				i += (c + 2 - width);
+				break;
+			}
+			fprintf(stream, "%c",
+				(ptr[i + c] >= 0x20) && (ptr[i + c] < 0x80) ? ptr[i + c] : '.');
+			/* check again for 0D0A, to avoid an extra \n if it's at width */
+			if (nohex && (i + c + 2 < size) && ptr[i + c + 1] == 0x0D &&
+				ptr[i + c + 2] == 0x0A) {
+				i += (c + 3 - width);
+				break;
+			}
+		}
+		fputc('\n', stream); /* newline */
+	}
+	fflush(stream);
+}
+
+static
+int my_trace(CURL* handle, curl_infotype type,
+	unsigned char* data, size_t size,
+	void* userp)
+{
+	const char* text;
+
+	(void)userp;
+	(void)handle; /* prevent compiler warning */
+
+	switch (type) {
+	case CURLINFO_TEXT:
+		fprintf(stderr, "== Info: %s", data);
+		/* FALLTHROUGH */
+	default: /* in case a new one is introduced to shock us */
+		return 0;
+
+	case CURLINFO_HEADER_OUT:
+		text = "=> Send header";
+		break;
+	case CURLINFO_DATA_OUT:
+		text = "=> Send data";
+		break;
+	case CURLINFO_HEADER_IN:
+		text = "<= Recv header";
+		break;
+	case CURLINFO_DATA_IN:
+		text = "<= Recv data";
+		break;
+	}
+
+	dump(text, stderr, data, size, TRUE);
+	return 0;
+}
+
+static size_t write_callback_for_attach(void* contents, size_t size, size_t nmemb,
+	void* userp)
+{
+	size_t realsize = size * nmemb;
+
+	return realsize;
+}
+
+d_err_t docker_container_attach_default(docker_context* ctx, char* id,
+	char* detach_keys, int logs, int stream, int attach_stdin, int attach_stdout, int attach_stderr) {
+	docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, id, "attach") != 0) {
+		return E_ALLOC_FAILED;
+	}
+
+	if (detach_keys != NULL) {
+		docker_call_params_add(call, "detachKeys", detach_keys);
+	}
+	docker_call_params_add_boolean(call, "logs", logs);
+	docker_call_params_add_boolean(call, "stream", stream);
+	docker_call_params_add_boolean(call, "stdin", attach_stdin);
+	docker_call_params_add_boolean(call, "stdout", attach_stdout);
+	docker_call_params_add_boolean(call, "stderr", attach_stderr);
+
+	docker_call_request_data_set(call, "");
+	docker_call_request_method_set(call, HTTP_POST_STR);
+
+	// Execute the HTTP Request for Attach
+	time_t start, end;
+	d_err_t err = E_SUCCESS;
+	docker_result* result;
+
+	// set the start time
+	start = time(NULL);
+
+	// allocate the docker result object
+	err = new_docker_result(&result);
+	if (err != E_SUCCESS) {
+		return err;
+	}
+
+	char* docker_site_url = call->site_url;
+
+	//call->site_url = "/";
+	//char* service_url = docker_call_get_url(call);
+	//if (service_url == NULL) {
+	//	return E_ALLOC_FAILED;
+	//}
+
+	CURL* curl;
+	CURLcode res;
+	struct curl_slist* headers = NULL;
+	CURLM* mcurl;
+	int still_running = 1;
+	struct timeval mp_start;
+
+	/* get a curl handle */
+	curl = curl_easy_init();
+	mcurl = curl_multi_init();
+	if (!mcurl)
+		return 2;
+
+	if (curl)
+	{
+		curl_socket_t sockfd;
+		size_t nsent_total = 0;
+
+		// Set the URL
+		char* docker_url = docker_call_get_url(call);
+		if (is_unix_socket(ctx->url))
+		{
+			curl_easy_setopt(curl, CURLOPT_UNIX_SOCKET_PATH, ctx->url);
+		}
+		curl_easy_setopt(curl, CURLOPT_URL, docker_url);
+
+		// Set content type headers if any
+		if (docker_call_content_type_header_get(call) != NULL) {
+			headers = curl_slist_append(headers, "Expect:");
+			headers = curl_slist_append(headers, docker_call_content_type_header_get(call));
+			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+		}
+
+		// Now specify the POST data if request type is POST
+		// and request_data is not NULL.
+		if (docker_call_request_data_get(call) != NULL &&
+			strcmp(docker_call_request_method_get(call), "POST") == 0) {
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, docker_call_request_data_get(call));
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, docker_call_request_data_len_get(call));
+		}
+
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, stdout);
+		/* please be verbose */
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+		curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, my_trace);
+
+		/* send all data to this function  */
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback_for_attach);
+
+		//long response_code;
+		//char* effective_url;
+		//curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+		//curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effective_url);
+
+		/* Tell the multi stack about our easy handle */
+		curl_multi_add_handle(mcurl, curl);
+
+		/* Record the start time which we can use later */
+		mp_start = tvnow();
+
+		/* We start some action by calling perform right away */
+		curl_multi_perform(mcurl, &still_running);
+
+		while (still_running) {
+			struct timeval timeout;
+			fd_set fdread;
+			fd_set fdwrite;
+			fd_set fdexcep;
+			int maxfd = -1;
+			int rc;
+			CURLMcode mc; /* curl_multi_fdset() return code */
+
+			long curl_timeo = -1;
+
+			/* Initialise the file descriptors */
+			FD_ZERO(&fdread);
+			FD_ZERO(&fdwrite);
+			FD_ZERO(&fdexcep);
+
+			/* Set a suitable timeout to play around with */
+			timeout.tv_sec = 1;
+			timeout.tv_usec = 0;
+
+			curl_multi_timeout(mcurl, &curl_timeo);
+			if (curl_timeo >= 0) {
+				timeout.tv_sec = curl_timeo / 1000;
+				if (timeout.tv_sec > 1)
+					timeout.tv_sec = 1;
+				else
+					timeout.tv_usec = (curl_timeo % 1000) * 1000;
+			}
+
+			/* get file descriptors from the transfers */
+			mc = curl_multi_fdset(mcurl, &fdread, &fdwrite, &fdexcep, &maxfd);
+
+			if (mc != CURLM_OK) {
+				fprintf(stderr, "curl_multi_fdset() failed, code %d.\n", mc);
+				break;
+			}
+
+			/* On success the value of maxfd is guaranteed to be >= -1. We call
+			   select(maxfd + 1, ...); specially in case of (maxfd == -1) there are
+			   no fds ready yet so we call select(0, ...) --or Sleep() on Windows--
+			   to sleep 100ms, which is the minimum suggested value in the
+			   curl_multi_fdset() doc. */
+
+			if (maxfd == -1) {
+#ifdef _WIN32
+				Sleep(100);
+				rc = 0;
+#else
+				/* Portable sleep for platforms other than Windows. */
+				struct timeval wait = { 0, 100 * 1000 }; /* 100ms */
+				rc = select(0, NULL, NULL, NULL, &wait);
+#endif
+			}
+			else {
+				/* Note that on some platforms 'timeout' may be modified by select().
+				   If you need access to the original value save a copy beforehand. */
+				rc = select(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout);
+			}
+
+			if (tvdiff(tvnow(), mp_start) > MULTI_PERFORM_HANG_TIMEOUT) {
+				fprintf(stderr,
+					"ABORTING: Since it seems that we would have run forever.\n");
+				break;
+			}
+
+			switch (rc) {
+			case -1:  /* select error */
+				break;
+			case 0:   /* timeout */
+			default:  /* action */
+				curl_multi_perform(mcurl, &still_running);
+				break;
+			}
+		}
+
+		/* Always cleanup */
+		curl_multi_remove_handle(mcurl, curl);
+		curl_multi_cleanup(mcurl);
+		curl_easy_cleanup(curl);
+	}
+	// cleanup docker_result
+	free_docker_result(result);
+
+	free_docker_call(call);
+	return E_SUCCESS;
+}

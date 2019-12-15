@@ -64,11 +64,18 @@ static int group_setup(void **state) {
 	assert_int_equal(e, E_SUCCESS);
 	assert_non_null(id);
 	*state = id;
-	printf("id in state = %s\n", id);
+	docker_log_info("id in state = %s", id);
 	free_docker_ctr_create_params(p);
 	return 0;
 }
 static int group_teardown(void **state) {
+	char* id = *state;
+
+	d_err_t e = docker_stop_container(ctx, id, 0);
+
+	e = docker_remove_container(ctx, id, 0, 0, 0);
+
+	docker_log_info("Removed container id = %s", id);
 	curl_global_cleanup();
 	free(*state);
 	free_docker_context(&ctx);
@@ -204,19 +211,49 @@ static void test_stats_container(void **state) {
 	assert_int_equal(e, E_SUCCESS);
 }
 
+static void test_attach_container(void **state) {
+	d_err_t e;
+	
+	//TODO: uncomment post debugging
+	//e = docker_image_create_from_image(ctx, "nginx", "latest", NULL);
+	//assert_int_equal(e, E_SUCCESS);
+
+	char* id;
+	docker_ctr_create_params* p = make_docker_ctr_create_params();
+	docker_ctr_create_params_image_set(p, "bash");
+	e = docker_create_container(ctx, &id, p);
+	assert_int_equal(e, E_SUCCESS);
+	free_docker_ctr_create_params(p);
+
+	e = docker_start_container(ctx, id, NULL);
+	assert_int_equal(e, E_SUCCESS);
+
+	docker_log_info("Started docker container id is %s\n", id);
+
+	e = docker_container_attach_default(ctx, id, NULL, 1, 1, 1, 1, 1);
+	assert_int_equal(e, E_SUCCESS);
+
+	e = docker_stop_container(ctx, id, 0);
+	assert_int_equal(e, E_SUCCESS);
+
+	e = docker_remove_container(ctx, id, 0, 0, 0);
+	assert_int_equal(e, E_SUCCESS);
+}
+
 int docker_container_tests() {
 	const struct CMUnitTest tests[] = {
 	//	cmocka_unit_test(test_rename_stopped_container),
 			cmocka_unit_test(test_start),
-			//cmocka_unit_test(test_inspect),
-			//cmocka_unit_test(test_list),
-			//cmocka_unit_test(test_changes),
-			//cmocka_unit_test(test_stopping_stopped_container),
-			//cmocka_unit_test(test_killing_stopped_container),
-			//cmocka_unit_test(test_pause_stopped_container),
-			//cmocka_unit_test(test_unpause_stopped_container),
-			//cmocka_unit_test(test_restart_container),
-			//cmocka_unit_test(test_stats_container)
+			//cmocka_unit_test(test_attach_container),
+			cmocka_unit_test(test_inspect),
+			cmocka_unit_test(test_list),
+			cmocka_unit_test(test_changes),
+			cmocka_unit_test(test_stopping_stopped_container),
+			cmocka_unit_test(test_killing_stopped_container),
+			cmocka_unit_test(test_pause_stopped_container),
+			cmocka_unit_test(test_unpause_stopped_container),
+			cmocka_unit_test(test_restart_container),
+			cmocka_unit_test(test_stats_container)
 		};
 	return cmocka_run_group_tests_name("docker container tests", tests,
 			group_setup, group_teardown);

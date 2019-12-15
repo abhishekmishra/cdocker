@@ -189,6 +189,8 @@ MODULE_API void free_docker_call(docker_call* dcall);
 
 MODULE_API int docker_call_params_add(docker_call* dcall, char* param, char* value);
 
+MODULE_API int docker_call_params_add_boolean(docker_call* dcall, char* param, int value);
+
 MODULE_API char* docker_call_get_url(docker_call* dcall);
 
 MODULE_API d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** response);

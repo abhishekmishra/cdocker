@@ -414,6 +414,15 @@ int docker_call_params_add(docker_call* dcall, char* param, char* value)
 	return E_UNKNOWN_ERROR;
 }
 
+int docker_call_params_add_boolean(docker_call* dcall, char* param, int value) {
+	if (value == 0) {
+		docker_call_params_add(dcall, param, "false");
+	}
+	else {
+		docker_call_params_add(dcall, param, "true");
+	}
+}
+
 char* docker_call_get_url(docker_call* dcall) {
 	CURL* curl = curl_easy_init();
 

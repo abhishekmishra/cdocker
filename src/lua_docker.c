@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2020 Abhishek Mishra
+ * 
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
+
 #include "lua_docker.h"
 
 void *check_JsonObject(lua_State *L, int i)

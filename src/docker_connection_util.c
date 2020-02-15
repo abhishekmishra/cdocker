@@ -21,12 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- /*
-  * docker_connection_util.c
-  *
-  *  Created on: 11-Dec-2018
-  *      Author: abhishek
-  */
+
 #include "docker_util.h"
 #include <stdlib.h>
 #include <stdio.h>

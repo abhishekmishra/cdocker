@@ -1,8 +1,8 @@
-/*
- * docker_containers.c
- *
- *  Created on: 11-Dec-2018
- *      Author: abhishek
+/**
+ * Copyright (c) 2020 Abhishek Mishra
+ * 
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
  */
 
 #include "docker_util.h"

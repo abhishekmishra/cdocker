@@ -1,8 +1,8 @@
-/*
- * test_docker_containers.h
- *
- *  Created on: 16-Dec-2018
- *      Author: abhishek
+/**
+ * Copyright (c) 2020 Abhishek Mishra
+ * 
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
  */
 
 #ifndef TEST_TEST_DOCKER_CONTAINERS_H_

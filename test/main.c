@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2020 Abhishek Mishra
+ * 
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

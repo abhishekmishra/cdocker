@@ -1,10 +1,9 @@
-/*
- * test_docker_containers.c
- *
- *  Created on: 16-Dec-2018
- *      Author: abhishek
+/**
+ * Copyright (c) 2020 Abhishek Mishra
+ * 
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
  */
-/* file minunit_example.c */
 
 #include <stdarg.h>
 #include <stddef.h>

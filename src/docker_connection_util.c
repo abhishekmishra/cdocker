@@ -95,6 +95,10 @@ d_err_t make_docker_context_url(docker_context** ctx, const char* url)
 }
 
 d_err_t make_docker_context_default_local(docker_context** ctx) {
+	char* docker_host_env = getenv("DOCKER_HOST");
+	if (docker_host_env != NULL) {
+		return make_docker_context_url(ctx, docker_host_env);
+	}
 #if defined(_WIN32)
 	return make_docker_context_url(ctx, DOCKER_DEFAULT_LOCALHOST_URL);
 #endif
@@ -569,7 +573,8 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 
 #ifdef _WIN32
 	if (docker_call_status_cb_get(dcall) == NULL &&
-		(docker_http_method == NULL || strcmp(docker_http_method, HTTP_GET_STR) == 0)) {
+		(docker_http_method == NULL || strcmp(docker_http_method, HTTP_GET_STR) == 0) &&
+		(dcall->site_url == NULL || strncmp(dcall->site_url, "http://localhost", 16) == 0)) {
 		//TODO free at the end
 		dcall->site_url = "/";
 		char* service_url = docker_call_get_url(dcall);

@@ -219,9 +219,11 @@ static void test_attach_container(void **state) {
 
 	char* id;
 	docker_ctr_create_params* p = make_docker_ctr_create_params();
-	docker_ctr_create_params_image_set(p, "bash");
-	docker_ctr_create_params_entrypoint_set(p, "bash");
-	//docker_ctr_create_params_tty_set(p, 1);
+	docker_ctr_create_params_image_set(p, "bfirsh/reticulate-splines");
+//	docker_ctr_create_params_image_set(p, "bash");
+//	docker_ctr_create_params_entrypoint_set(p, "bash");
+	docker_ctr_create_params_attachstdin_set(p, 1);
+	docker_ctr_create_params_tty_set(p, 1);
 	docker_ctr_create_params_openstdin_set(p, 1);
 	e = docker_create_container(ctx, &id, p);
 	assert_int_equal(e, E_SUCCESS);

@@ -67,13 +67,18 @@ typedef json_object										docker_ctr_list;
 MODULE_API d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** container_list, 
 	int all, int limit, int size, ...);
 
-typedef json_object													docker_ctr_create_params;
-#define make_docker_ctr_create_params								(docker_ctr_create_params*)json_object_new_object
-#define free_docker_ctr_create_params(ctr_create)					json_object_put(ctr_create)
-#define docker_ctr_create_params_image_set(ctr_create, img)			set_attr_str(ctr_create, "Image", img)
-#define docker_ctr_create_params_entrypoint_set(ctr_create, entry)	set_attr_str(ctr_create, "Entrypoint", entry)
-#define docker_ctr_create_params_cmd_add(ctr_create, cmd)			add_array_str(ctr_create, "Cmd", cmd)
-#define docker_ctr_create_params_env_add(ctr_create, env)			add_array_str(ctr_create, "Env", env)
+typedef json_object																docker_ctr_create_params;
+#define make_docker_ctr_create_params											(docker_ctr_create_params*)json_object_new_object
+#define free_docker_ctr_create_params(ctr_create)								json_object_put(ctr_create)
+#define docker_ctr_create_params_image_set(ctr_create, img)						set_attr_str(ctr_create, "Image", img)
+#define docker_ctr_create_params_entrypoint_set(ctr_create, entry)				set_attr_str(ctr_create, "Entrypoint", entry)
+#define docker_ctr_create_params_cmd_add(ctr_create, cmd)						add_array_str(ctr_create, "Cmd", cmd)
+#define docker_ctr_create_params_env_add(ctr_create, env)						add_array_str(ctr_create, "Env", env)
+#define docker_ctr_create_params_tty_set(ctr_create, tty)						set_attr_boolean(ctr_create, "Tty", tty)
+#define docker_ctr_create_params_openstdin_set(ctr_create, openstdin)			set_attr_boolean(ctr_create, "OpenStdin", openstdin)
+#define docker_ctr_create_params_attachstdin_set(ctr_create, attachstdin)		set_attr_boolean(ctr_create, "AttachStdin", attachstdin)
+#define docker_ctr_create_params_attachstdout_set(ctr_create, attachstdout)		set_attr_boolean(ctr_create, "AttachStdout", attachstdout)
+#define docker_ctr_create_params_attachstderr_set(ctr_create, attachstderr)		set_attr_boolean(ctr_create, "AttachStderr", attachstderr)
 
 MODULE_API d_err_t docker_create_container(docker_context* ctx,
 	char** id, docker_ctr_create_params* params);

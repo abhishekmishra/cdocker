@@ -62,7 +62,7 @@ d_err_t set_attr_boolean(json_object* obj, char* name, int val) {
 	json_object* value_obj;
 	json_object_object_get_ex(obj, name, &value_obj);
 	if (!value_obj) {
-		value_obj = json_object_new_int(val);
+		value_obj = json_object_new_boolean(val);
 		return json_object_object_add(obj, name, value_obj);
 	}
 	else {

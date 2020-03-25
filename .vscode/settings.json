@@ -22,5 +22,6 @@
     },
     "licenser.author": "Abhishek Mishra",
     "licenser.license": "MIT",
-    "licenser.projectName": "clibdocker"
+    "licenser.projectName": "clibdocker",
+    "cmake.configureOnOpen": false
 }

@@ -949,10 +949,9 @@ d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 		}
 
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, stdout);
-		curl_easy_setopt(curl, CURLOPT_READDATA, stdin);
 		/* please be verbose */
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-		//curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, my_trace);
+		curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, my_trace);
 
 		/* send all data to this function  */
 		//curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback_for_attach);

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2020 Abhishek Mishra
- * 
+ *
  * This software is released under the MIT License.
  * https://opensource.org/licenses/MIT
  */
@@ -753,25 +753,6 @@ d_err_t docker_remove_container(docker_context* ctx, char* id, int v, int force,
 	return ret;
 }
 
-#define MULTI_PERFORM_HANG_TIMEOUT 60 * 1000
-
-static struct timeval tvnow(void)
-{
-	struct timeval now;
-
-	/* time() returns the value of time in seconds since the epoch */
-	now.tv_sec = (long)time(NULL);
-	now.tv_usec = 0;
-
-	return now;
-}
-
-static long tvdiff(struct timeval newer, struct timeval older)
-{
-	return (newer.tv_sec - older.tv_sec) * 1000 +
-		(newer.tv_usec - older.tv_usec) / 1000;
-}
-
 static
 void dump(const char* text,
 	FILE* stream, unsigned char* ptr, size_t size,
@@ -858,12 +839,32 @@ int my_trace(CURL* handle, curl_infotype type,
 	return 0;
 }
 
-static size_t write_callback_for_attach(void* contents, size_t size, size_t nmemb,
-	void* userp)
+/* Auxiliary function that waits on the socket. */
+static int wait_on_socket(curl_socket_t sockfd, int for_recv, long timeout_ms)
 {
-	size_t realsize = size * nmemb;
+	struct timeval tv;
+	fd_set infd, outfd, errfd;
+	int res;
 
-	return realsize;
+	tv.tv_sec = timeout_ms / 1000;
+	tv.tv_usec = (timeout_ms % 1000) * 1000;
+
+	FD_ZERO(&infd);
+	FD_ZERO(&outfd);
+	FD_ZERO(&errfd);
+
+	FD_SET(sockfd, &errfd); /* always check for error */
+
+	if (for_recv) {
+		FD_SET(sockfd, &infd);
+	}
+	else {
+		FD_SET(sockfd, &outfd);
+	}
+
+	/* select() returns the number of signalled sockets or -1 */
+	res = select((int)sockfd + 1, &infd, &outfd, &errfd, &tv);
+	return res;
 }
 
 d_err_t docker_container_attach_default(docker_context* ctx, char* id,
@@ -916,9 +917,11 @@ d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 
 	/* get a curl handle */
 	curl = curl_easy_init();
-	mcurl = curl_multi_init();
-	if (!mcurl)
-		return 2;
+
+	char* svc_url = docker_call_get_svc_url(call);
+	char* request = (char*)calloc(2048 + strlen(svc_url), sizeof(char));
+	sprintf(request, "POST /%s HTTP/1.0\r\nHost: %s\r\nUpgrade: tcp\r\nConnection: Upgrade\r\n\r\n", svc_url, "localhost");
+	size_t request_len = strlen(request);
 
 	if (curl)
 	{
@@ -940,114 +943,151 @@ d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 		}
 
-		// Now specify the POST data if request type is POST
-		// and request_data is not NULL.
-		if (docker_call_request_data_get(call) != NULL &&
-			strcmp(docker_call_request_method_get(call), "POST") == 0) {
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, docker_call_request_data_get(call));
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, docker_call_request_data_len_get(call));
+		/* Do not do the transfer - only connect to host */
+		curl_easy_setopt(curl, CURLOPT_CONNECT_ONLY, 1L);
+		res = curl_easy_perform(curl);
+
+		if (res != CURLE_OK) {
+			printf("Error: %s\n", curl_easy_strerror(res));
+			return 1;
 		}
 
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, stdout);
-		/* please be verbose */
-		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-		curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, my_trace);
+		/* Extract the socket from the curl handle - we'll need it for waiting. */
+		res = curl_easy_getinfo(curl, CURLINFO_ACTIVESOCKET, &sockfd);
 
-		/* send all data to this function  */
-		//curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback_for_attach);
-
-		//long response_code;
-		//char* effective_url;
-		//curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-		//curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effective_url);
-
-		/* Tell the multi stack about our easy handle */
-		curl_multi_add_handle(mcurl, curl);
-
-		/* Record the start time which we can use later */
-		mp_start = tvnow();
-
-		/* We start some action by calling perform right away */
-		curl_multi_perform(mcurl, &still_running);
-
-		while (still_running) {
-			struct timeval timeout;
-			fd_set fdread;
-			fd_set fdwrite;
-			fd_set fdexcep;
-			int maxfd = -1;
-			int rc;
-			CURLMcode mc; /* curl_multi_fdset() return code */
-
-			long curl_timeo = -1;
-
-			/* Initialise the file descriptors */
-			FD_ZERO(&fdread);
-			FD_ZERO(&fdwrite);
-			FD_ZERO(&fdexcep);
-
-			/* Set a suitable timeout to play around with */
-			timeout.tv_sec = 1;
-			timeout.tv_usec = 0;
-
-			curl_multi_timeout(mcurl, &curl_timeo);
-			if (curl_timeo >= 0) {
-				timeout.tv_sec = curl_timeo / 1000;
-				if (timeout.tv_sec > 1)
-					timeout.tv_sec = 1;
-				else
-					timeout.tv_usec = (curl_timeo % 1000) * 1000;
-			}
-
-			/* get file descriptors from the transfers */
-			mc = curl_multi_fdset(mcurl, &fdread, &fdwrite, &fdexcep, &maxfd);
-
-			if (mc != CURLM_OK) {
-				fprintf(stderr, "curl_multi_fdset() failed, code %d.\n", mc);
-				break;
-			}
-
-			/* On success the value of maxfd is guaranteed to be >= -1. We call
-			   select(maxfd + 1, ...); specially in case of (maxfd == -1) there are
-			   no fds ready yet so we call select(0, ...) --or Sleep() on Windows--
-			   to sleep 100ms, which is the minimum suggested value in the
-			   curl_multi_fdset() doc. */
-
-			if (maxfd == -1) {
-#ifdef _WIN32
-				Sleep(100);
-				rc = 0;
-#else
-				/* Portable sleep for platforms other than Windows. */
-				struct timeval wait = { 0, 100 * 1000 }; /* 100ms */
-				rc = select(0, NULL, NULL, NULL, &wait);
-#endif
-			}
-			else {
-				/* Note that on some platforms 'timeout' may be modified by select().
-				   If you need access to the original value save a copy beforehand. */
-				rc = select(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout);
-			}
-
-			if (tvdiff(tvnow(), mp_start) > MULTI_PERFORM_HANG_TIMEOUT) {
-				fprintf(stderr,
-					"ABORTING: Since it seems that we would have run forever.\n");
-				break;
-			}
-
-			switch (rc) {
-			case -1:  /* select error */
-				break;
-			case 0:   /* timeout */
-			default:  /* action */
-				curl_multi_perform(mcurl, &still_running);
-				break;
-			}
+		if (res != CURLE_OK) {
+			printf("Error: %s\n", curl_easy_strerror(res));
+			return 1;
 		}
 
-		/* Always cleanup */
-		curl_multi_remove_handle(mcurl, curl);
-		curl_multi_cleanup(mcurl);
+		printf("Sending request.\n");
+
+		do {
+			/* Warning: This example program may loop indefinitely.
+			 * A production-quality program must define a timeout and exit this loop
+			 * as soon as the timeout has expired. */
+			size_t nsent;
+			do {
+				nsent = 0;
+				res = curl_easy_send(curl, request + nsent_total,
+					request_len - nsent_total, &nsent);
+				nsent_total += nsent;
+
+				if (res == CURLE_AGAIN && !wait_on_socket(sockfd, 0, 60000L)) {
+					printf("Error: timeout.\n");
+					return 1;
+				}
+			} while (res == CURLE_AGAIN);
+
+			if (res != CURLE_OK) {
+				printf("Error: %s\n", curl_easy_strerror(res));
+				return 1;
+			}
+
+			printf("Sent %" CURL_FORMAT_CURL_OFF_T " bytes.\n",
+				(curl_off_t)nsent);
+			printf("Request: %s\n", request);
+
+		} while (nsent_total < request_len);
+
+		printf("Reading response.\n");
+
+		for (;;) {
+			/* Warning: This example program may loop indefinitely (see above). */
+			char buf[1025];
+			size_t nread;
+			do {
+				nread = 0;
+				res = curl_easy_recv(curl, buf, sizeof(buf) - 1, &nread);
+
+				if (res == CURLE_AGAIN && !wait_on_socket(sockfd, 1, 60000L)) {
+					printf("Error: timeout.\n");
+					return 1;
+				}
+			} while (res == CURLE_AGAIN);
+
+			if (res != CURLE_OK) {
+				printf("Error: %s\n", curl_easy_strerror(res));
+				break;
+			}
+
+			if (nread == 0) {
+				/* end of the response */
+				break;
+			}
+
+			buf[nread] = NULL;
+			printf("Received %" CURL_FORMAT_CURL_OFF_T " bytes.\n",
+				(curl_off_t)nread);
+			printf("Response: %s\n", buf);
+		}
+
+		printf("Sending request.\n");
+
+		const char* newline_request = "\n\n";
+		int newline_request_len = strlen(newline_request);
+
+		do {
+			/* Warning: This example program may loop indefinitely.
+			 * A production-quality program must define a timeout and exit this loop
+			 * as soon as the timeout has expired. */
+			size_t nsent;
+			do {
+				nsent = 0;
+				res = curl_easy_send(curl, newline_request + nsent_total,
+					newline_request_len - nsent_total, &nsent);
+				nsent_total += nsent;
+
+				if (res == CURLE_AGAIN && !wait_on_socket(sockfd, 0, 60000L)) {
+					printf("Error: timeout.\n");
+					return 1;
+				}
+			} while (res == CURLE_AGAIN);
+
+			if (res != CURLE_OK) {
+				printf("Error: %s\n", curl_easy_strerror(res));
+				return 1;
+			}
+
+			printf("Sent %" CURL_FORMAT_CURL_OFF_T " bytes.\n",
+				(curl_off_t)nsent);
+			printf("Request: %s\n", newline_request);
+
+		} while (nsent_total < newline_request_len);
+
+		printf("Reading response.\n");
+
+		for (;;) {
+			/* Warning: This example program may loop indefinitely (see above). */
+			char buf[1025];
+			size_t nread;
+			do {
+				nread = 0;
+				res = curl_easy_recv(curl, buf, sizeof(buf) - 1, &nread);
+
+				if (res == CURLE_AGAIN && !wait_on_socket(sockfd, 1, 60000L)) {
+					printf("Error: timeout.\n");
+					return 1;
+				}
+			} while (res == CURLE_AGAIN);
+
+			if (res != CURLE_OK) {
+				printf("Error: %s\n", curl_easy_strerror(res));
+				break;
+			}
+
+			if (nread == 0) {
+				/* end of the response */
+				break;
+			}
+
+			buf[nread] = NULL;
+			printf("Received %" CURL_FORMAT_CURL_OFF_T " bytes.\n",
+				(curl_off_t)nread);
+			printf("Response: %s\n", buf);
+		}
+
+		/* always cleanup */
 		curl_easy_cleanup(curl);
 	}
 	// cleanup docker_result

@@ -192,6 +192,8 @@ MODULE_API int docker_call_params_add_boolean(docker_call* dcall, char* param, i
 
 MODULE_API char* docker_call_get_url(docker_call* dcall);
 
+MODULE_API char* docker_call_get_svc_url(docker_call* dcall);
+
 MODULE_API d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** response);
 
 // END: Docker API Calls HTTP Utils V2 

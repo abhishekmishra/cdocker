@@ -470,6 +470,52 @@ char* docker_call_get_url(docker_call* dcall) {
 	return final_url;
 }
 
+char* docker_call_get_svc_url(docker_call* dcall) {
+	CURL* curl = curl_easy_init();
+
+	char* service_url = create_service_url_id_method(dcall->object, dcall->id, dcall->method);
+	coll_al_map* esc_params = make_coll_al_map((coll_al_map_compare_fn*)&strcmp);
+
+	char* final_url = NULL;
+	size_t final_url_len = 2; //for question mark and null terminator
+
+	final_url_len += strlen(service_url);
+
+	for (size_t i = 0; i < coll_al_map_keys_length(dcall->params); i++) {
+		char* key_esc = str_clone(curl_easy_escape(curl, coll_al_map_keys_get_idx(dcall->params, i), 0));
+		char* val_esc = str_clone(curl_easy_escape(curl, coll_al_map_values_get_idx(dcall->params, i), 0));
+
+		coll_al_map_put(esc_params, key_esc, val_esc);
+
+		final_url_len += strlen(key_esc);
+		final_url_len += strlen(val_esc);
+		final_url_len += 2; //for equals and ampersand
+	}
+
+	final_url = (char*)calloc(final_url_len, sizeof(char));
+	if (final_url != NULL) {
+		final_url[0] = 0;
+		strcat(final_url, service_url);
+		size_t num_params = coll_al_map_keys_length(esc_params);
+		if (num_params > 0) {
+			strcat(final_url, "?");
+			for (size_t i = 0; i < num_params; i++) {
+				if (i > 0)
+				{
+					strcat(final_url, "&");
+				}
+				strcat(final_url, coll_al_map_keys_get_idx(esc_params, i));
+				strcat(final_url, "=");
+				strcat(final_url, coll_al_map_values_get_idx(esc_params, i));
+			}
+		}
+	}
+	curl_easy_cleanup(curl);
+	coll_al_map_foreach_fn(esc_params, (coll_al_map_iter_fn*)&free_param_value);
+	free_coll_al_map(esc_params);
+	return final_url;
+}
+
 static size_t write_memory_callback_v2(void* contents, size_t size, size_t nmemb,
 	void* userp)
 {

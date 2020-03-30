@@ -220,7 +220,7 @@ static void test_attach_container(void **state) {
 	char* id;
 	docker_ctr_create_params* p = make_docker_ctr_create_params();
 //	docker_ctr_create_params_image_set(p, "bfirsh/reticulate-splines");
-	docker_ctr_create_params_image_set(p, "bash");
+	docker_ctr_create_params_image_set(p, "ubuntu");
 	docker_ctr_create_params_entrypoint_set(p, "bash");
 	docker_ctr_create_params_attachstdin_set(p, 1);
 	docker_ctr_create_params_tty_set(p, 1);
@@ -234,7 +234,9 @@ static void test_attach_container(void **state) {
 
 	docker_log_info("Started docker container id is %s\n", id);
 
-	e = docker_container_attach_default(ctx, id, NULL, 1, 1, 1, 1, 1);
+	docker_wait_container(ctx, id, "next-exit");
+
+	e = docker_container_attach_default(ctx, id, NULL, 0, 1, 1, 1, 1);
 	assert_int_equal(e, E_SUCCESS);
 
 	e = docker_stop_container(ctx, id, 0);

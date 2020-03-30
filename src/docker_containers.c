@@ -877,7 +877,9 @@ d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 	if (detach_keys != NULL) {
 		docker_call_params_add(call, "detachKeys", detach_keys);
 	}
-	docker_call_params_add_boolean(call, "logs", logs);
+	if (logs > 0) {
+		docker_call_params_add_boolean(call, "logs", logs);
+	}
 	docker_call_params_add_boolean(call, "stream", stream);
 	docker_call_params_add_boolean(call, "stdin", attach_stdin);
 	docker_call_params_add_boolean(call, "stdout", attach_stdout);
@@ -920,7 +922,7 @@ d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 
 	char* svc_url = docker_call_get_svc_url(call);
 	char* request = (char*)calloc(2048 + strlen(svc_url), sizeof(char));
-	sprintf(request, "POST /%s HTTP/1.0\r\nHost: %s\r\nUpgrade: tcp\r\nConnection: Upgrade\r\n\r\n", svc_url, "localhost");
+	sprintf(request, "POST /v1.40/%s HTTP/1.1\r\nHost: %s\r\nContent-Length: 0\r\nContent-Type: text/plain\r\nUpgrade: tcp\r\nConnection: Upgrade\r\n\r\n", svc_url, "localhost");
 	size_t request_len = strlen(request);
 
 	if (curl)
@@ -989,71 +991,6 @@ d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 			printf("Request: %s\n", request);
 
 		} while (nsent_total < request_len);
-
-		printf("Reading response.\n");
-
-		for (;;) {
-			/* Warning: This example program may loop indefinitely (see above). */
-			char buf[1025];
-			size_t nread;
-			do {
-				nread = 0;
-				res = curl_easy_recv(curl, buf, sizeof(buf) - 1, &nread);
-
-				if (res == CURLE_AGAIN && !wait_on_socket(sockfd, 1, 60000L)) {
-					printf("Error: timeout.\n");
-					return 1;
-				}
-			} while (res == CURLE_AGAIN);
-
-			if (res != CURLE_OK) {
-				printf("Error: %s\n", curl_easy_strerror(res));
-				break;
-			}
-
-			if (nread == 0) {
-				/* end of the response */
-				break;
-			}
-
-			buf[nread] = NULL;
-			printf("Received %" CURL_FORMAT_CURL_OFF_T " bytes.\n",
-				(curl_off_t)nread);
-			printf("Response: %s\n", buf);
-		}
-
-		printf("Sending request.\n");
-
-		const char* newline_request = "\n\n";
-		int newline_request_len = strlen(newline_request);
-
-		do {
-			/* Warning: This example program may loop indefinitely.
-			 * A production-quality program must define a timeout and exit this loop
-			 * as soon as the timeout has expired. */
-			size_t nsent;
-			do {
-				nsent = 0;
-				res = curl_easy_send(curl, newline_request + nsent_total,
-					newline_request_len - nsent_total, &nsent);
-				nsent_total += nsent;
-
-				if (res == CURLE_AGAIN && !wait_on_socket(sockfd, 0, 60000L)) {
-					printf("Error: timeout.\n");
-					return 1;
-				}
-			} while (res == CURLE_AGAIN);
-
-			if (res != CURLE_OK) {
-				printf("Error: %s\n", curl_easy_strerror(res));
-				return 1;
-			}
-
-			printf("Sent %" CURL_FORMAT_CURL_OFF_T " bytes.\n",
-				(curl_off_t)nsent);
-			printf("Request: %s\n", newline_request);
-
-		} while (nsent_total < newline_request_len);
 
 		printf("Reading response.\n");
 

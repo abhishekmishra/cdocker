@@ -415,10 +415,10 @@ int docker_call_params_add(docker_call* dcall, char* param, char* value)
 
 int docker_call_params_add_boolean(docker_call* dcall, char* param, int value) {
 	if (value == 0) {
-		docker_call_params_add(dcall, param, "false");
+		docker_call_params_add(dcall, param, "0");
 	}
 	else {
-		docker_call_params_add(dcall, param, "true");
+		docker_call_params_add(dcall, param, "1");
 	}
 }
 

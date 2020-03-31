@@ -949,7 +949,7 @@ static DWORD WINAPI select_ws_wait_thread(LPVOID lpParameter)
 				}
 			}
 			/* there is some data available, stop waiting */
-			docker_log_info("[select_ws_wait_thread] data available on DISK: %p", handle);
+			docker_log_debug("[select_ws_wait_thread] data available on DISK: %p", handle);
 			break;
 		}
 		break;
@@ -979,7 +979,7 @@ static DWORD WINAPI select_ws_wait_thread(LPVOID lpParameter)
 				}
 			}
 			/* there is some data available, stop waiting */
-			docker_log_info("[select_ws_wait_thread] data available on CHAR: %p", handle);
+			docker_log_debug("[select_ws_wait_thread] data available on CHAR: %p", handle);
 			break;
 		}
 		break;
@@ -1003,20 +1003,20 @@ static DWORD WINAPI select_ws_wait_thread(LPVOID lpParameter)
 					continue;
 				}
 				else {
-					docker_log_info("[select_ws_wait_thread] PeekNamedPipe len: %d", length);
+					docker_log_debug("[select_ws_wait_thread] PeekNamedPipe len: %d", length);
 				}
 			}
 			else {
 				/* if the pipe has been closed, sleep and continue waiting */
 				length = GetLastError();
-				docker_log_info("[select_ws_wait_thread] PeekNamedPipe error: %d", length);
+				docker_log_debug("[select_ws_wait_thread] PeekNamedPipe error: %d", length);
 				if (length == ERROR_BROKEN_PIPE) {
 					SleepEx(0, FALSE);
 					continue;
 				}
 			}
 			/* there is some data available, stop waiting */
-			docker_log_info("[select_ws_wait_thread] data available on PIPE: %p", handle);
+			docker_log_debug("[select_ws_wait_thread] data available on PIPE: %p", handle);
 			break;
 		}
 		break;
@@ -1024,7 +1024,7 @@ static DWORD WINAPI select_ws_wait_thread(LPVOID lpParameter)
 	default:
 		/* The handle has an unknown type, try to wait on it */
 		WaitForMultipleObjectsEx(2, handles, FALSE, INFINITE, FALSE);
-		docker_log_info("[select_ws_wait_thread] data available on HANDLE: %p", handle);
+		docker_log_debug("[select_ws_wait_thread] data available on HANDLE: %p", handle);
 		break;
 	}
 
@@ -1243,13 +1243,13 @@ static int select_ws(int nfds, fd_set* readfds, fd_set* writefds,
 
 	for (fds = 0; fds < nfds; fds++) {
 		if (FD_ISSET(fds, readfds))
-			docker_log_info("select_ws: %d is readable", fds);
+			docker_log_debug("select_ws: %d is readable", fds);
 
 		if (FD_ISSET(fds, writefds))
-			docker_log_info("select_ws: %d is writable", fds);
+			docker_log_debug("select_ws: %d is writable", fds);
 
 		if (FD_ISSET(fds, exceptfds))
-			docker_log_info("select_ws: %d is excepted", fds);
+			docker_log_debug("select_ws: %d is excepted", fds);
 	}
 
 	for (idx = 0; idx < wsa; idx++) {
@@ -1297,11 +1297,20 @@ static int wait_on_socket(curl_socket_t sockfd, int for_recv, long timeout_ms)
 
 	/* select() returns the number of signalled sockets or -1 */
 	res = select((int)sockfd + 1, &infd, &outfd, &errfd, &tv);
+	if (FD_ISSET(sockfd, &errfd)) {
+		return -1;
+	}
 	return res;
 }
 
 d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 	char* detach_keys, int logs, int stream, int attach_stdin, int attach_stdout, int attach_stderr) {
+#ifdef USE_WINSOCK
+	HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+	DWORD mode = 0;
+	GetConsoleMode(hStdin, &mode);
+	SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
+#endif
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, id, "attach") != 0) {
 		return E_ALLOC_FAILED;
@@ -1469,9 +1478,10 @@ d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 			res = curl_easy_recv(curl, buf, sizeof(buf) - 1, &nread);
 			if (nread > 0) {
 				buf[nread] = NULL;
-				printf("Received %" CURL_FORMAT_CURL_OFF_T " bytes.\n",
-					(curl_off_t)nread);
-				printf("Response: %s\n", buf);
+				//printf("Received %" CURL_FORMAT_CURL_OFF_T " bytes.\n",
+				//	(curl_off_t)nread);
+				//printf("Response: %s\n", buf);
+				printf("%s", buf);
 			}
 
 			if (res == CURLE_AGAIN) {
@@ -1504,21 +1514,21 @@ d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 
 				if (res > 0)
 				{
-					printf("select on reads returned true.\n");
+					//printf("select on reads returned true.\n");
 					//check if error in read socket
 					if (FD_ISSET(sockfd, &errfd)) {
-						printf("We don't have inbound socket anymore\n");
+						//printf("We don't have inbound socket anymore\n");
 						res = -1;
 					}
 					// is stdin available for read?
 					else if (FD_ISSET(fileno(stdin), &infd)) {
-						printf("stdin has text to read\n");
+						//printf("stdin has text to read\n");
 						fgets(buf, 1024, stdin);
 						//scanf("%1024s", buf);
 						//buf[0] = getchar();
 						//buf[1] = NULL;
-						printf("Read from stdin %s\n", buf);
-						printf("Done reading stdin.\n");
+						//printf("Read from stdin %s\n", buf);
+						//printf("Done reading stdin.\n");
 						request = buf;
 						request_len = strlen(buf);
 
@@ -1530,12 +1540,12 @@ d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 							size_t nsent;
 							do {
 								nsent = 0;
-								printf("trying send\n");
+								//printf("trying send\n");
 								res = curl_easy_send(curl, request + nsent_total,
 									request_len - nsent_total, &nsent);
 								nsent_total += nsent;
 
-								if (res == CURLE_AGAIN && !wait_on_socket(sockfd, 0, 60000L)) {
+								if (res == CURLE_AGAIN && !wait_on_socket(sockfd, 0, 10000L)) {
 									printf("Error: timeout.\n");
 									return 1;
 								}
@@ -1546,11 +1556,12 @@ d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 								return 1;
 							}
 
-							printf("Sent %" CURL_FORMAT_CURL_OFF_T " bytes.\n",
-								(curl_off_t)nsent);
-							printf("Request: %s\n", request);
+							//printf("Sent %" CURL_FORMAT_CURL_OFF_T " bytes.\n",
+							//	(curl_off_t)nsent);
+							//printf("Request: %s\n", request);
 
 						} while (nsent_total < request_len);
+						res = wait_on_socket(sockfd, 1, 60000L);
 					}
 					else {
 						printf("All done.");

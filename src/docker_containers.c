@@ -1514,6 +1514,9 @@ d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 					else if (FD_ISSET(fileno(stdin), &infd)) {
 						printf("stdin has text to read\n");
 						fgets(buf, 1024, stdin);
+						//scanf("%1024s", buf);
+						//buf[0] = getchar();
+						//buf[1] = NULL;
 						printf("Read from stdin %s\n", buf);
 						printf("Done reading stdin.\n");
 						request = buf;

@@ -229,18 +229,18 @@ static void test_attach_container(void **state) {
 	assert_int_equal(e, E_SUCCESS);
 	free_docker_ctr_create_params(p);
 
-	e = docker_start_container(ctx, id, NULL);
-	assert_int_equal(e, E_SUCCESS);
+	//e = docker_start_container(ctx, id, NULL);
+	//assert_int_equal(e, E_SUCCESS);
 
-	docker_log_info("Started docker container id is %s\n", id);
+	//docker_log_info("Started docker container id is %s\n", id);
 
-	docker_wait_container(ctx, id, "next-exit");
+	//docker_wait_container(ctx, id, "next-exit");
 
 	e = docker_container_attach_default(ctx, id, NULL, 0, 1, 1, 1, 1);
 	assert_int_equal(e, E_SUCCESS);
 
 	e = docker_stop_container(ctx, id, 0);
-	assert_int_equal(e, E_SUCCESS);
+	//assert_int_equal(e, E_SUCCESS);
 
 	e = docker_remove_container(ctx, id, 0, 0, 0);
 	assert_int_equal(e, E_SUCCESS);

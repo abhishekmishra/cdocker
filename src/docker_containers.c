@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "docker_connection_util.h"
 
  /**
@@ -839,6 +840,438 @@ int my_trace(CURL* handle, curl_infotype type,
 	return 0;
 }
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#define USE_WINSOCK
+#endif
+
+#ifdef USE_WINSOCK
+#undef  EINTR
+#define EINTR    4 /* errno.h value */
+#undef  EAGAIN
+#define EAGAIN  11 /* errno.h value */
+#undef  ENOMEM
+#define ENOMEM  12 /* errno.h value */
+#undef  EINVAL
+#define EINVAL  22 /* errno.h value */
+#endif
+
+#ifdef USE_WINSOCK
+typedef SSIZE_T ssize_t;
+/*
+** curl_socket_t to signed int
+*/
+
+int curlx_sktosi(curl_socket_t s)
+{
+	return (int)((ssize_t)s);
+}
+
+/*
+** signed int to curl_socket_t
+*/
+
+curl_socket_t curlx_sitosk(int i)
+{
+	return (curl_socket_t)((ssize_t)i);
+}
+
+#endif /* USE_WINSOCK */
+
+#ifdef USE_WINSOCK
+/*
+ * WinSock select() does not support standard file descriptors,
+ * it can only check SOCKETs. The following function is an attempt
+ * to re-create a select() function with support for other handle types.
+ *
+ * select() function with support for WINSOCK2 sockets and all
+ * other handle types supported by WaitForMultipleObjectsEx() as
+ * well as disk files, anonymous and names pipes, and character input.
+ *
+ * https://msdn.microsoft.com/en-us/library/windows/desktop/ms687028.aspx
+ * https://msdn.microsoft.com/en-us/library/windows/desktop/ms741572.aspx
+ */
+struct select_ws_wait_data {
+	HANDLE handle; /* actual handle to wait for during select */
+	HANDLE event;  /* internal event to abort waiting thread */
+};
+static DWORD WINAPI select_ws_wait_thread(LPVOID lpParameter)
+{
+	struct select_ws_wait_data* data;
+	HANDLE handle, handles[2];
+	INPUT_RECORD inputrecord;
+	LARGE_INTEGER size, pos;
+	DWORD type, length;
+
+	/* retrieve handles from internal structure */
+	data = (struct select_ws_wait_data*) lpParameter;
+	if (data) {
+		handle = data->handle;
+		handles[0] = data->event;
+		handles[1] = handle;
+		free(data);
+	}
+	else
+		return (DWORD)-1;
+
+	/* retrieve the type of file to wait on */
+	type = GetFileType(handle);
+	switch (type) {
+	case FILE_TYPE_DISK:
+		/* The handle represents a file on disk, this means:
+		 * - WaitForMultipleObjectsEx will always be signalled for it.
+		 * - comparison of current position in file and total size of
+		 *   the file can be used to check if we reached the end yet.
+		 *
+		 * Approach: Loop till either the internal event is signalled
+		 *           or if the end of the file has already been reached.
+		 */
+		while (WaitForMultipleObjectsEx(1, handles, FALSE, 0, FALSE)
+			== WAIT_TIMEOUT) {
+			/* get total size of file */
+			length = 0;
+			size.QuadPart = 0;
+			size.LowPart = GetFileSize(handle, &length);
+			if ((size.LowPart != INVALID_FILE_SIZE) ||
+				(GetLastError() == NO_ERROR)) {
+				size.HighPart = length;
+				/* get the current position within the file */
+				pos.QuadPart = 0;
+				pos.LowPart = SetFilePointer(handle, 0, &pos.HighPart,
+					FILE_CURRENT);
+				if ((pos.LowPart != INVALID_SET_FILE_POINTER) ||
+					(GetLastError() == NO_ERROR)) {
+					/* compare position with size, abort if not equal */
+					if (size.QuadPart == pos.QuadPart) {
+						/* sleep and continue waiting */
+						SleepEx(0, FALSE);
+						continue;
+					}
+				}
+			}
+			/* there is some data available, stop waiting */
+			docker_log_info("[select_ws_wait_thread] data available on DISK: %p", handle);
+			break;
+		}
+		break;
+
+	case FILE_TYPE_CHAR:
+		/* The handle represents a character input, this means:
+		 * - WaitForMultipleObjectsEx will be signalled on any kind of input,
+		 *   including mouse and window size events we do not care about.
+		 *
+		 * Approach: Loop till either the internal event is signalled
+		 *           or we get signalled for an actual key-event.
+		 */
+		while (WaitForMultipleObjectsEx(2, handles, FALSE, INFINITE, FALSE)
+			== WAIT_OBJECT_0 + 1) {
+			/* check if this is an actual console handle */
+			length = 0;
+			if (GetConsoleMode(handle, &length)) {
+				/* retrieve an event from the console buffer */
+				length = 0;
+				if (PeekConsoleInput(handle, &inputrecord, 1, &length)) {
+					/* check if the event is not an actual key-event */
+					if (length == 1 && inputrecord.EventType != KEY_EVENT) {
+						/* purge the non-key-event and continue waiting */
+						ReadConsoleInput(handle, &inputrecord, 1, &length);
+						continue;
+					}
+				}
+			}
+			/* there is some data available, stop waiting */
+			docker_log_info("[select_ws_wait_thread] data available on CHAR: %p", handle);
+			break;
+		}
+		break;
+
+	case FILE_TYPE_PIPE:
+		/* The handle represents an anonymous or named pipe, this means:
+		 * - WaitForMultipleObjectsEx will always be signalled for it.
+		 * - peek into the pipe and retrieve the amount of data available.
+		 *
+		 * Approach: Loop till either the internal event is signalled
+		 *           or there is data in the pipe available for reading.
+		 */
+		while (WaitForMultipleObjectsEx(1, handles, FALSE, 0, FALSE)
+			== WAIT_TIMEOUT) {
+			/* peek into the pipe and retrieve the amount of data available */
+			length = 0;
+			if (PeekNamedPipe(handle, NULL, 0, NULL, &length, NULL)) {
+				/* if there is no data available, sleep and continue waiting */
+				if (length == 0) {
+					SleepEx(0, FALSE);
+					continue;
+				}
+				else {
+					docker_log_info("[select_ws_wait_thread] PeekNamedPipe len: %d", length);
+				}
+			}
+			else {
+				/* if the pipe has been closed, sleep and continue waiting */
+				length = GetLastError();
+				docker_log_info("[select_ws_wait_thread] PeekNamedPipe error: %d", length);
+				if (length == ERROR_BROKEN_PIPE) {
+					SleepEx(0, FALSE);
+					continue;
+				}
+			}
+			/* there is some data available, stop waiting */
+			docker_log_info("[select_ws_wait_thread] data available on PIPE: %p", handle);
+			break;
+		}
+		break;
+
+	default:
+		/* The handle has an unknown type, try to wait on it */
+		WaitForMultipleObjectsEx(2, handles, FALSE, INFINITE, FALSE);
+		docker_log_info("[select_ws_wait_thread] data available on HANDLE: %p", handle);
+		break;
+	}
+
+	return 0;
+}
+static HANDLE select_ws_wait(HANDLE handle, HANDLE event)
+{
+	struct select_ws_wait_data* data;
+	HANDLE thread = NULL;
+
+	/* allocate internal waiting data structure */
+	data = malloc(sizeof(struct select_ws_wait_data));
+	if (data) {
+		data->handle = handle;
+		data->event = event;
+
+		/* launch waiting thread */
+		thread = CreateThread(NULL, 0,
+			&select_ws_wait_thread,
+			data, 0, NULL);
+
+		/* free data if thread failed to launch */
+		if (!thread) {
+			free(data);
+		}
+	}
+
+	return thread;
+}
+struct select_ws_data {
+	curl_socket_t fd;      /* the original input handle   (indexed by fds) */
+	curl_socket_t wsasock; /* the internal socket handle  (indexed by wsa) */
+	WSAEVENT wsaevent;     /* the internal WINSOCK2 event (indexed by wsa) */
+	HANDLE thread;         /* the internal threads handle (indexed by thd) */
+};
+static int select_ws(int nfds, fd_set* readfds, fd_set* writefds,
+	fd_set* exceptfds, struct timeval* timeout)
+{
+	DWORD milliseconds, wait, idx;
+	WSANETWORKEVENTS wsanetevents;
+	struct select_ws_data* data;
+	HANDLE handle, * handles;
+	WSAEVENT wsaevent;
+	int error, fds;
+	HANDLE waitevent = NULL;
+	DWORD nfd = 0, thd = 0, wsa = 0;
+	int ret = 0;
+
+	/* check if the input value is valid */
+	if (nfds < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	/* check if we got descriptors, sleep in case we got none */
+	if (!nfds) {
+		Sleep((timeout->tv_sec * 1000) + (DWORD)(((double)timeout->tv_usec) / 1000.0));
+		return 0;
+	}
+
+	/* create internal event to signal waiting threads */
+	waitevent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	if (!waitevent) {
+		errno = ENOMEM;
+		return -1;
+	}
+
+	/* allocate internal array for the internal data */
+	data = calloc(nfds, sizeof(struct select_ws_data));
+	if (data == NULL) {
+		CloseHandle(waitevent);
+		errno = ENOMEM;
+		return -1;
+	}
+
+	/* allocate internal array for the internal event handles */
+	handles = calloc(nfds, sizeof(HANDLE));
+	if (handles == NULL) {
+		CloseHandle(waitevent);
+		free(data);
+		errno = ENOMEM;
+		return -1;
+	}
+
+	/* loop over the handles in the input descriptor sets */
+	for (fds = 0; fds < nfds; fds++) {
+		long networkevents = 0;
+		handles[nfd] = 0;
+
+		if (FD_ISSET(fds, readfds))
+			networkevents |= FD_READ | FD_ACCEPT | FD_CLOSE;
+
+		if (FD_ISSET(fds, writefds))
+			networkevents |= FD_WRITE | FD_CONNECT;
+
+		if (FD_ISSET(fds, exceptfds))
+			networkevents |= FD_OOB | FD_CLOSE;
+
+		/* only wait for events for which we actually care */
+		if (networkevents) {
+			data[nfd].fd = curlx_sitosk(fds);
+			if (fds == fileno(stdin)) {
+				handle = GetStdHandle(STD_INPUT_HANDLE);
+				handle = select_ws_wait(handle, waitevent);
+				handles[nfd] = handle;
+				data[thd].thread = handle;
+				thd++;
+			}
+			else if (fds == fileno(stdout)) {
+				handles[nfd] = GetStdHandle(STD_OUTPUT_HANDLE);
+			}
+			else if (fds == fileno(stderr)) {
+				handles[nfd] = GetStdHandle(STD_ERROR_HANDLE);
+			}
+			else {
+				wsaevent = WSACreateEvent();
+				if (wsaevent != WSA_INVALID_EVENT) {
+					error = WSAEventSelect(fds, wsaevent, networkevents);
+					if (error != SOCKET_ERROR) {
+						handle = (HANDLE)wsaevent;
+						handles[nfd] = handle;
+						data[wsa].wsasock = curlx_sitosk(fds);
+						data[wsa].wsaevent = wsaevent;
+						wsa++;
+					}
+					else {
+						curl_socket_t socket = curlx_sitosk(fds);
+						WSACloseEvent(wsaevent);
+						handle = (HANDLE)socket;
+						handle = select_ws_wait(handle, waitevent);
+						handles[nfd] = handle;
+						data[thd].thread = handle;
+						thd++;
+					}
+				}
+			}
+			nfd++;
+		}
+	}
+
+	/* convert struct timeval to milliseconds */
+	if (timeout) {
+		milliseconds = ((timeout->tv_sec * 1000) + (timeout->tv_usec / 1000));
+	}
+	else {
+		milliseconds = INFINITE;
+	}
+
+	/* wait for one of the internal handles to trigger */
+	wait = WaitForMultipleObjectsEx(nfd, handles, FALSE, milliseconds, FALSE);
+
+	/* signal the event handle for the waiting threads */
+	SetEvent(waitevent);
+
+	/* loop over the internal handles returned in the descriptors */
+	for (idx = 0; idx < nfd; idx++) {
+		curl_socket_t sock = data[idx].fd;
+		handle = handles[idx];
+		fds = curlx_sktosi(sock);
+
+		/* check if the current internal handle was triggered */
+		if (wait != WAIT_FAILED && (wait - WAIT_OBJECT_0) <= idx &&
+			WaitForSingleObjectEx(handle, 0, FALSE) == WAIT_OBJECT_0) {
+			/* first handle stdin, stdout and stderr */
+			if (fds == fileno(stdin)) {
+				/* stdin is never ready for write or exceptional */
+				FD_CLR(sock, writefds);
+				FD_CLR(sock, exceptfds);
+			}
+			else if (fds == fileno(stdout) || fds == fileno(stderr)) {
+				/* stdout and stderr are never ready for read or exceptional */
+				FD_CLR(sock, readfds);
+				FD_CLR(sock, exceptfds);
+			}
+			else {
+				/* try to handle the event with the WINSOCK2 functions */
+				wsanetevents.lNetworkEvents = 0;
+				error = WSAEnumNetworkEvents(fds, handle, &wsanetevents);
+				if (error != SOCKET_ERROR) {
+					/* remove from descriptor set if not ready for read/accept/close */
+					if (!(wsanetevents.lNetworkEvents & (FD_READ | FD_ACCEPT | FD_CLOSE)))
+						FD_CLR(sock, readfds);
+
+					/* remove from descriptor set if not ready for write/connect */
+					if (!(wsanetevents.lNetworkEvents & (FD_WRITE | FD_CONNECT)))
+						FD_CLR(sock, writefds);
+
+					/* HACK:
+					 * use exceptfds together with readfds to signal
+					 * that the connection was closed by the client.
+					 *
+					 * Reason: FD_CLOSE is only signaled once, sometimes
+					 * at the same time as FD_READ with data being available.
+					 * This means that recv/sread is not reliable to detect
+					 * that the connection is closed.
+					 */
+					 /* remove from descriptor set if not exceptional */
+					if (!(wsanetevents.lNetworkEvents & (FD_OOB | FD_CLOSE)))
+						FD_CLR(sock, exceptfds);
+				}
+			}
+
+			/* check if the event has not been filtered using specific tests */
+			if (FD_ISSET(sock, readfds) || FD_ISSET(sock, writefds) ||
+				FD_ISSET(sock, exceptfds)) {
+				ret++;
+			}
+		}
+		else {
+			/* remove from all descriptor sets since this handle did not trigger */
+			FD_CLR(sock, readfds);
+			FD_CLR(sock, writefds);
+			FD_CLR(sock, exceptfds);
+		}
+	}
+
+	for (fds = 0; fds < nfds; fds++) {
+		if (FD_ISSET(fds, readfds))
+			docker_log_info("select_ws: %d is readable", fds);
+
+		if (FD_ISSET(fds, writefds))
+			docker_log_info("select_ws: %d is writable", fds);
+
+		if (FD_ISSET(fds, exceptfds))
+			docker_log_info("select_ws: %d is excepted", fds);
+	}
+
+	for (idx = 0; idx < wsa; idx++) {
+		WSAEventSelect(data[idx].wsasock, NULL, 0);
+		WSACloseEvent(data[idx].wsaevent);
+	}
+
+	for (idx = 0; idx < thd; idx++) {
+		WaitForSingleObject(data[idx].thread, INFINITE);
+		CloseHandle(data[idx].thread);
+	}
+
+	CloseHandle(waitevent);
+
+	free(handles);
+	free(data);
+
+	return ret;
+}
+#define select(a,b,c,d,e) select_ws(a,b,c,d,e)
+#endif  /* USE_WINSOCK */
+
 /* Auxiliary function that waits on the socket. */
 static int wait_on_socket(curl_socket_t sockfd, int for_recv, long timeout_ms)
 {
@@ -994,8 +1427,8 @@ d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 
 		printf("Reading response.\n");
 
-		for (;;) {
-			/* Warning: This example program may loop indefinitely (see above). */
+		//read once
+		do {
 			char buf[1025];
 			size_t nread;
 			do {
@@ -1022,7 +1455,106 @@ d_err_t docker_container_attach_default(docker_context* ctx, char* id,
 			printf("Received %" CURL_FORMAT_CURL_OFF_T " bytes.\n",
 				(curl_off_t)nread);
 			printf("Response: %s\n", buf);
-		}
+		} while (false);
+
+		docker_start_container(ctx, id, NULL);
+
+		/* Warning: This example program may loop indefinitely (see above). */
+		char buf[1025];
+		size_t nread;
+		int timeout_ms = 10000L;
+		res = 0;
+		do {
+			nread = 0;
+			res = curl_easy_recv(curl, buf, sizeof(buf) - 1, &nread);
+			if (nread > 0) {
+				buf[nread] = NULL;
+				printf("Received %" CURL_FORMAT_CURL_OFF_T " bytes.\n",
+					(curl_off_t)nread);
+				printf("Response: %s\n", buf);
+			}
+
+			if (res == CURLE_AGAIN) {
+				struct timeval tv;
+				fd_set infd, outfd, errfd;
+				int maxfd = fileno(stdin);
+
+				tv.tv_sec = timeout_ms / 1000;
+				tv.tv_usec = (timeout_ms % 1000) * 1000;
+
+				FD_ZERO(&infd);
+				FD_ZERO(&outfd);
+				FD_ZERO(&errfd);
+
+				FD_SET(sockfd, &errfd);
+				FD_SET(sockfd, &infd);
+				FD_SET(fileno(stdin), &infd);
+				if (sockfd > maxfd) {
+					maxfd = sockfd;
+				}
+
+				/* select() returns the number of signalled sockets or -1 */
+				res = select((int)maxfd + 1, &infd, &outfd, &errfd, &tv);
+
+				if ((res < 0) && (errno > 0))
+				{
+					printf("select error\n");
+					perror(strerror(errno));
+				}
+
+				if (res > 0)
+				{
+					printf("select on reads returned true.\n");
+					//check if error in read socket
+					if (FD_ISSET(sockfd, &errfd)) {
+						printf("We don't have inbound socket anymore\n");
+						res = -1;
+					}
+					// is stdin available for read?
+					else if (FD_ISSET(fileno(stdin), &infd)) {
+						printf("stdin has text to read\n");
+						fgets(buf, 1024, stdin);
+						printf("Read from stdin %s\n", buf);
+						printf("Done reading stdin.\n");
+						request = buf;
+						request_len = strlen(buf);
+
+						nsent_total = 0;
+						do {
+							/* Warning: This example program may loop indefinitely.
+							 * A production-quality program must define a timeout and exit this loop
+							 * as soon as the timeout has expired. */
+							size_t nsent;
+							do {
+								nsent = 0;
+								printf("trying send\n");
+								res = curl_easy_send(curl, request + nsent_total,
+									request_len - nsent_total, &nsent);
+								nsent_total += nsent;
+
+								if (res == CURLE_AGAIN && !wait_on_socket(sockfd, 0, 60000L)) {
+									printf("Error: timeout.\n");
+									return 1;
+								}
+							} while (res == CURLE_AGAIN);
+
+							if (res != CURLE_OK) {
+								printf("Error: %s\n", curl_easy_strerror(res));
+								return 1;
+							}
+
+							printf("Sent %" CURL_FORMAT_CURL_OFF_T " bytes.\n",
+								(curl_off_t)nsent);
+							printf("Request: %s\n", request);
+
+						} while (nsent_total < request_len);
+					}
+					else {
+						printf("All done.");
+					}
+				}
+			}
+		} while (res >= 0);
 
 		/* always cleanup */
 		curl_easy_cleanup(curl);

@@ -104,11 +104,15 @@ int DockerClient__gc(lua_State *L)
 
 int DockerClient_container_list(lua_State *L)
 {
-	// Expected: stack = [self]
+	// Expected: stack = [self, boolean all, boolean limit, boolean size, table filters]
 	DockerClient *dc = (DockerClient *)luaL_checkudata(L, 1, DockerClient_metatable);
+	int all = lua_toboolean(L, 2);
+	int limit = (int)luaL_checkinteger(L, 3);
+	int size = lua_toboolean(L, 4);
+	//TODO: read filters
 
 	docker_ctr_list *ctrls;
-	d_err_t err = docker_container_list(dc->ctx, &ctrls, 0, 0, 1, NULL);
+	d_err_t err = docker_container_list(dc->ctx, &ctrls, all, limit, size, NULL);
 	if (err != E_SUCCESS)
 	{
 		luaL_error(L, "Error listing containers");

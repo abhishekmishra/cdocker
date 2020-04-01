@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <errno.h>
 #include "docker_connection_util.h"
 
  /**

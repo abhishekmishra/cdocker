@@ -248,18 +248,18 @@ static void test_attach_container(void **state) {
 
 int docker_container_tests() {
 	const struct CMUnitTest tests[] = {
-	//	cmocka_unit_test(test_rename_stopped_container),
-			//cmocka_unit_test(test_start),
-			cmocka_unit_test(test_attach_container),
-			//cmocka_unit_test(test_inspect),
-			//cmocka_unit_test(test_list),
-			//cmocka_unit_test(test_changes),
-			//cmocka_unit_test(test_stopping_stopped_container),
-			//cmocka_unit_test(test_killing_stopped_container),
-			//cmocka_unit_test(test_pause_stopped_container),
-			//cmocka_unit_test(test_unpause_stopped_container),
-			//cmocka_unit_test(test_restart_container),
-			//cmocka_unit_test(test_stats_container)
+			// cmocka_unit_test(test_rename_stopped_container),
+			cmocka_unit_test(test_start),
+			// cmocka_unit_test(test_attach_container),
+			cmocka_unit_test(test_inspect),
+			cmocka_unit_test(test_list),
+			cmocka_unit_test(test_changes),
+			cmocka_unit_test(test_stopping_stopped_container),
+			cmocka_unit_test(test_killing_stopped_container),
+			cmocka_unit_test(test_pause_stopped_container),
+			cmocka_unit_test(test_unpause_stopped_container),
+			cmocka_unit_test(test_restart_container),
+			cmocka_unit_test(test_stats_container)
 		};
 	return cmocka_run_group_tests_name("docker container tests", tests,
 			group_setup, group_teardown);

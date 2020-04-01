@@ -40,6 +40,18 @@ bool prefix(const char* pre, const char* str)
 	return strncmp(pre, str, strlen(pre)) == 0;
 }
 
+bool is_tcp_url(char* url)
+{
+	if (url)
+	{
+		if (strlen(url) > 0)
+		{
+			return prefix("tcp", url);
+		}
+	}
+	return false;
+}
+
 bool is_http_url(char* url)
 {
 	if (url)
@@ -83,12 +95,34 @@ d_err_t make_docker_context_url(docker_context** ctx, const char* url)
 	{
 		return E_ALLOC_FAILED;
 	}
-	char* u = (char*)calloc((strlen(url) + 1), sizeof(char));
+	// create new string with enough memory
+	// so that protocol of the existing url can be replaced
+	char* u = (char*)calloc((strlen(url) + 10), sizeof(char));
 	if (!u)
 	{
 		return E_ALLOC_FAILED;
 	}
-	strcpy(u, url);
+
+	// if this is url which starts with tcp://
+	// change it to http://
+	if (is_tcp_url(url)) {
+		u[0] = '\0';
+		strcat(u, "http");
+		strcat(u, url + 3);
+	}
+	else {
+		strcpy(u, url);
+	}
+
+	// if the url does not have a slash at the end
+	// add it.
+
+	int len = strlen(u);
+	if (u[len - 1] != '/') {
+		u[len] = '/';
+		u[len + 1] = '\0';
+	}
+
 	(*ctx)->url = u;
 	(*ctx)->api_version = DOCKER_API_VERSION_1_39;
 	return E_SUCCESS;

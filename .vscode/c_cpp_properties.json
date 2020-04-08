@@ -29,7 +29,12 @@
                 "${vcpkgRoot}/x64-osx/include",
                 "${workspaceFolder}/../coll/src"
             ],
-            "defines": [],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "LUA_ENABLED"
+            ],
             "macFrameworkPath": [
                 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
             ],

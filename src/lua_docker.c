@@ -56,6 +56,20 @@ int DockerClient_new(lua_State *L)
 	return 1;
 }
 
+LUALIB_API int DockerClient_from_context(lua_State* L, docker_context* ctx) {
+	// Create a DockerClient instance and set its metatable.
+	DockerClient *dc = (DockerClient *)lua_newuserdata(L, sizeof(DockerClient));
+	// stack = [dc]
+	luaL_getmetatable(L, DockerClient_metatable);
+	// stack = [dc, mt]
+	lua_setmetatable(L, 1);
+	// stack = [dc]
+
+	dc->ctx = ctx;
+	
+	return 1;
+}
+
 int JsonObject__gc(lua_State *L)
 {
 	printf("In JsonObject__gc\n");

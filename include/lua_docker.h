@@ -38,7 +38,7 @@ LUALIB_API int DockerClient_connect_url(lua_State* L);
 LUALIB_API int DockerClient_new(lua_State* L);
 
 // DockerClient:from_context
-LUALIB_API int DockerClient_from_context(lua_State* L, docker_context* ctx);
+int DockerClient_from_context(lua_State* L, docker_context* ctx);
 
 // json utils
 LUALIB_API int JsonObject_json_create(lua_State* L);

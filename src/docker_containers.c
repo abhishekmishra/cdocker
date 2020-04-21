@@ -80,6 +80,50 @@ d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** container_l
 
 }
 
+/**
+* List docker containers
+*
+* \param ctx the docker context
+* \param container_list array_list of containers to be returned
+* \param all all or running only
+* \param limit max containers to return
+* \param size return the size of containers in response
+* \param filters filters json object as string
+* \return error code
+*/
+MODULE_API d_err_t docker_container_list_filter_str(docker_context* ctx, docker_ctr_list** container_list, 
+	int all, int limit, int size, const char* filters) {
+			docker_call* call;
+	if (make_docker_call(&call, ctx->url, CONTAINER, NULL, "json") != 0) {
+		return E_ALLOC_FAILED;
+	}
+
+	if (all > 0) {
+		docker_call_params_add(call, "all", "true");
+	}
+
+	if (limit > 0) {
+		char* lim_val = (char*)calloc(128, sizeof(char));
+		if (lim_val == NULL) {
+			return E_ALLOC_FAILED;
+		}
+		sprintf(lim_val, "%d", limit);
+		docker_call_params_add(call, "limit", lim_val);
+		free(lim_val);
+	}
+
+	if (size > 0) {
+		docker_call_params_add(call, "size", "true");
+	}
+
+	docker_call_params_add(call, "filters", filters);
+
+	d_err_t err = docker_call_exec(ctx, call, container_list);
+
+	free_docker_call(call);
+	return err;
+}
+
 d_err_t docker_create_container(docker_context* ctx,
 	char** id, docker_ctr_create_params* params) {
 	docker_call* call;

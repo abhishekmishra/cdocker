@@ -67,6 +67,20 @@ typedef json_object										docker_ctr_list;
 MODULE_API d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** container_list, 
 	int all, int limit, int size, ...);
 
+/**
+* List docker containers
+*
+* \param ctx the docker context
+* \param container_list array_list of containers to be returned
+* \param all all or running only
+* \param limit max containers to return
+* \param size return the size of containers in response
+* \param filters filters json object as string
+* \return error code
+*/
+MODULE_API d_err_t docker_container_list_filter_str(docker_context* ctx, docker_ctr_list** container_list, 
+	int all, int limit, int size, const char* filters);
+
 typedef json_object																docker_ctr_create_params;
 #define make_docker_ctr_create_params											(docker_ctr_create_params*)json_object_new_object
 #define free_docker_ctr_create_params(ctr_create)								json_object_put(ctr_create)

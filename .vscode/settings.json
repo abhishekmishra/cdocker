@@ -18,7 +18,8 @@
         "json_tokener.h": "c",
         "json_object.h": "c",
         "string.h": "c",
-        "lua_docker.h": "c"
+        "lua_docker.h": "c",
+        "**/src/*.c": "c"
     },
     "licenser.author": "Abhishek Mishra",
     "licenser.license": "MIT",

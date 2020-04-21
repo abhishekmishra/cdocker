@@ -6,6 +6,7 @@
  */
 
 #include "lua_docker.h"
+#include "docker_log.h"
 
 void *check_JsonObject(lua_State *L, int i)
 {
@@ -110,7 +111,6 @@ int JsonObject_json_string(lua_State *L)
 
 int DockerClient__gc(lua_State *L)
 {
-	printf("In DockerClient__gc\n");
 	DockerClient *dc = check_DockerClient(L, 1);
 	free_docker_context(&(dc->ctx));
 	return 0;
@@ -118,6 +118,7 @@ int DockerClient__gc(lua_State *L)
 
 int DockerClient_container_list(lua_State *L)
 {
+	docker_log_debug("%d parameters received", lua_gettop(L));
 	// Expected: stack = [self, boolean all, boolean limit, boolean size, table filters]
 	DockerClient *dc = (DockerClient *)luaL_checkudata(L, 1, DockerClient_metatable);
 	int all = lua_toboolean(L, 2);
@@ -366,8 +367,6 @@ int DockerClient_remove_container(lua_State* L)
 
 int luaopen_luaclibdocker(lua_State *L)
 {
-	docker_log_set_level(LOG_INFO);
-
 	static const luaL_Reg JsonObject_lib[] = {
 		{"to_string", &JsonObject_json_string},
 		{NULL, NULL}};

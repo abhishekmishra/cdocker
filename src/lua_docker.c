@@ -116,6 +116,16 @@ int DockerClient__gc(lua_State *L)
 	return 0;
 }
 
+int DockerClient_loglevel(lua_State *L)
+{
+	// Expected: stack = [self, int loglevel]
+	DockerClient *dc = (DockerClient *)luaL_checkudata(L, 1, DockerClient_metatable);
+	int loglevel = (int)luaL_checkinteger(L, 2);
+
+	docker_log_set_level(loglevel);
+	return 0;
+}
+
 //this method does not pass the container list
 //filters, for using filters use 
 //DockerClient_container_list_filter
@@ -395,6 +405,7 @@ int luaopen_luaclibdocker(lua_State *L)
 		{NULL, NULL}};
 
 	static const luaL_Reg DockerClient_lib[] = {
+		{"set_loglevel", &DockerClient_loglevel},
 		{"container_ls", &DockerClient_container_list},
 		{"container_ls_filter", &DockerClient_container_list_filter},
 		{"container_create", &DockerClient_create_container},

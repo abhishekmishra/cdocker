@@ -116,7 +116,30 @@ int DockerClient__gc(lua_State *L)
 	return 0;
 }
 
+//this method does not pass the container list
+//filters, for using filters use 
+//DockerClient_container_list_filter
 int DockerClient_container_list(lua_State *L)
+{
+	docker_log_debug("%d parameters received", lua_gettop(L));
+	// Expected: stack = [self, boolean all, boolean limit, boolean size]
+	DockerClient *dc = (DockerClient *)luaL_checkudata(L, 1, DockerClient_metatable);
+	int all = lua_toboolean(L, 2);
+	int limit = (int)luaL_checkinteger(L, 3);
+	int size = lua_toboolean(L, 4);
+
+	docker_ctr_list *ctrls;
+	d_err_t err = docker_container_list(dc->ctx, &ctrls, all, limit, size, NULL);
+	if (err != E_SUCCESS)
+	{
+		luaL_error(L, "Error listing containers");
+	}
+	const char *ctrls_json = get_json_string(ctrls);
+	lua_pushstring(L, ctrls_json);
+	return 1;
+}
+
+int DockerClient_container_list_filter(lua_State *L)
 {
 	docker_log_debug("%d parameters received", lua_gettop(L));
 	// Expected: stack = [self, boolean all, boolean limit, boolean size, table filters]
@@ -124,10 +147,10 @@ int DockerClient_container_list(lua_State *L)
 	int all = lua_toboolean(L, 2);
 	int limit = (int)luaL_checkinteger(L, 3);
 	int size = lua_toboolean(L, 4);
-	//TODO: read filters
+	const char* filter_json_str = lua_tostring(L, 5);
 
 	docker_ctr_list *ctrls;
-	d_err_t err = docker_container_list(dc->ctx, &ctrls, all, limit, size, NULL);
+	d_err_t err = docker_container_list_filter_str(dc->ctx, &ctrls, all, limit, size, filter_json_str);
 	if (err != E_SUCCESS)
 	{
 		luaL_error(L, "Error listing containers");
@@ -373,6 +396,7 @@ int luaopen_luaclibdocker(lua_State *L)
 
 	static const luaL_Reg DockerClient_lib[] = {
 		{"container_ls", &DockerClient_container_list},
+		{"container_ls_filter", &DockerClient_container_list_filter},
 		{"container_create", &DockerClient_create_container},
 		{"container_inspect", &DockerClient_inspect_container},
 		{"container_top", &DockerClient_process_list_container},

@@ -179,7 +179,11 @@ int DockerClient_create_container(lua_State *L)
 	char *id;
 	d_err_t err = docker_create_container(dc->ctx, &id, jo->obj);
 
-	//TODO: error handling
+	if (err != E_SUCCESS)
+	{
+		luaL_error(L, "Error listing containers");
+	}
+	
 	lua_pushstring(L, id);
 	return 1;
 }

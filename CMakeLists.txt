@@ -126,8 +126,9 @@ if (ENABLE_TESTS)
 
 	# cmocka
 	find_package(cmocka CONFIG REQUIRED)
-	target_include_directories(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_INCLUDE_DIR})
-	target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_LIBRARIES})
+	#target_include_directories(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_INCLUDE_DIR})
+	#target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_LIBRARIES})
+	target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE cmocka::cmocka)
 
   target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${PROJECT_NAME})
   add_test( all_docker_tests ${CLIBDOCKER_TEST_PROGRAM_NAME} )

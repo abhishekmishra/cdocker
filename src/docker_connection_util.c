@@ -58,7 +58,7 @@ bool is_http_url(char* url)
 	{
 		if (strlen(url) > 0)
 		{
-			return prefix("http", url);
+			return prefix("http", url) || prefix("tcp", url);
 		}
 	}
 	return false;

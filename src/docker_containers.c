@@ -176,50 +176,13 @@ docker_ctr* docker_inspect_container(docker_context* ctx, char* id, int size) {
  * \return the process details as docker_container_ps list.
  */
 d_err_t docker_process_list_container(docker_context* ctx,
-	docker_container_ps** ps, char* id, char* process_args) {
+	docker_ctr_ps** ps, char* id, char* process_args) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, id, "top") != 0) {
 		return E_ALLOC_FAILED;
 	}
 
-	json_object* response_obj = NULL;
-	d_err_t err = docker_call_exec(ctx, call, &response_obj);
-
-	if (err == E_SUCCESS) {
-		docker_container_ps* p;
-		p = (docker_container_ps*)malloc(sizeof(docker_container_ps));
-		if (!p) {
-			return E_ALLOC_FAILED;
-		}
-		json_object* titles_obj;
-		json_object_object_get_ex(response_obj, "Titles", &titles_obj);
-		size_t num_titles = json_object_array_length(titles_obj);
-		arraylist_new(&p->titles, &free);
-		for (int i = 0; i < num_titles; i++) {
-			arraylist_add(p->titles,
-				(char*)json_object_get_string(
-					json_object_array_get_idx(titles_obj, i)));
-		}
-
-		json_object* processes_obj;
-		json_object_object_get_ex(response_obj, "Processes", &processes_obj);
-		size_t num_processes = json_object_array_length(processes_obj);
-		arraylist_new(&p->processes, (void (*)(void*)) & arraylist_free);
-		for (int i = 0; i < num_processes; i++) {
-			json_object* process_obj = json_object_array_get_idx(processes_obj,
-				i);
-			arraylist* process_arr;
-			arraylist_new(&process_arr, &free);
-			size_t num_vals = json_object_array_length(process_obj);
-			for (int j = 0; j < num_vals; j++) {
-				arraylist_add(process_arr,
-					(char*)json_object_get_string(
-						json_object_array_get_idx(process_obj, j)));
-			}
-			arraylist_add(p->processes, process_arr);
-		}
-		(*ps) = p;
-	}
+	d_err_t err = docker_call_exec(ctx, call, ps);
 
 	free_docker_call(call);
 	return err;

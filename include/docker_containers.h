@@ -116,16 +116,29 @@ typedef json_object									docker_ctr;
 
 MODULE_API docker_ctr* docker_inspect_container(docker_context* ctx, char* id, int size);
 
-/**
-* Struct which holds the titles of the process line, and the details of all processes.
-*/
-typedef struct docker_container_ps_t {
-	arraylist* titles;
+// /**
+// * Struct which holds the titles of the process line, and the details of all processes.
+// */
+// typedef struct docker_container_ps_t {
+// 	arraylist* titles;
 
-	//each item in this list is another list with values for
-	//each process
-	arraylist* processes;
-} docker_container_ps;
+// 	//each item in this list is another list with values for
+// 	//each process
+// 	arraylist* processes;
+// } docker_container_ps;
+
+typedef json_object										docker_ctr_process_details;
+#define docker_ctr_process_details_length(ctr_ls)		json_object_array_length(ctr_ps_ls)
+#define docker_ctr_process_details_get_idx(ctr_ls, i)	(docker_ctr*) json_object_array_get_idx(ctr_ps_ls, i)
+
+typedef json_object										docker_ctr_ps;
+#define free_docker_ctr(ctr_ps)							json_object_put((json_object*) ctr_ps)
+#define docker_ctr_ps_titles_get(ctr)					get_attr_json_object((json_object*)ctr, "Titles")
+#define docker_ctr_ps_titles_length(ctr)				json_object_array_length(docker_ctr_ps_titles_get(ctr))
+#define docker_ctr_ps_titles_get_idx(ctr, i)			(char*) json_object_get_string(json_object_array_get_idx(docker_ctr_ps_titles_get(ctr), i))
+#define docker_ctr_ps_processes_get(ctr)				get_attr_json_object((json_object*)ctr, "Processes")
+#define docker_ctr_ps_processes_length(ctr)				json_object_array_length(docker_ctr_ps_processes_get(ctr))
+#define docker_ctr_ps_titles_get_idx(ctr, i)			(docker_ctr_process_details*) json_object_array_get_idx(docker_ctr_ps_titles_get(ctr), i)
 
 /**
 * List all processes in a container identified by id.
@@ -138,7 +151,7 @@ typedef struct docker_container_ps_t {
 * \return error code of the result
 */
 MODULE_API d_err_t docker_process_list_container(docker_context* ctx,
-	docker_container_ps** ps, char* id,	char* process_args);
+	docker_ctr_ps** ps, char* id,	char* process_args);
 
 ///////////// Get Container Logs
 

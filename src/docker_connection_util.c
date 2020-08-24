@@ -665,11 +665,15 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 	char* post_data = docker_call_request_data_get(dcall);
 
 #ifdef _WIN32
-	if (docker_call_status_cb_get(dcall) == NULL &&
-		(dcall->site_url != NULL 
-			&& strncmp(dcall->site_url, 
-				DOCKER_DEFAULT_WINDOWS_NAMED_PIPE, 
-				strlen(DOCKER_DEFAULT_WINDOWS_NAMED_PIPE)) == 0)) {
+	//if (docker_call_status_cb_get(dcall) == NULL &&
+	//	(dcall->site_url != NULL 
+	//		&& strncmp(dcall->site_url, 
+	//			DOCKER_DEFAULT_WINDOWS_NAMED_PIPE, 
+	//			strlen(DOCKER_DEFAULT_WINDOWS_NAMED_PIPE)) == 0)) {
+	if (dcall->site_url != NULL
+			&& strncmp(dcall->site_url,
+				DOCKER_DEFAULT_WINDOWS_NAMED_PIPE,
+				strlen(DOCKER_DEFAULT_WINDOWS_NAMED_PIPE)) == 0) {
 		//TODO free at the end
 		dcall->site_url = "/";
 		char* service_url = docker_call_get_url(dcall);

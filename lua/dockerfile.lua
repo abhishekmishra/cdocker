@@ -201,7 +201,8 @@ function Dockerfile:shell(args)
     command_str = command_str .. "]"
     return self:command("SHELL", command_str)
 end
-    
+
+return Dockerfile
 
 -- local d = Dockerfile:new()
 --     :from("alpine:latest")

@@ -62,6 +62,12 @@ set( CLIBDOCKER_TEST_SOURCES
   test/test_util.c
   test/test_util.h
 )
+
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND LUA_FROM_PKGCONFIG)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(lua REQUIRED IMPORTED_TARGET lua)
+endif()
+
 option (ENABLE_LUA "Enable LUA bindings for clibdocker" OFF)
 if (ENABLE_LUA)
   include(FindLua)
@@ -126,8 +132,6 @@ if (ENABLE_TESTS)
 
 	# cmocka
 	find_package(cmocka CONFIG REQUIRED)
-	#target_include_directories(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_INCLUDE_DIR})
-	#target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${CMOCKA_LIBRARIES})
 	target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE cmocka::cmocka)
 
   target_link_libraries(${CLIBDOCKER_TEST_PROGRAM_NAME} PRIVATE ${PROJECT_NAME})

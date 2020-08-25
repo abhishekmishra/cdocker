@@ -58,7 +58,7 @@ bool is_http_url(char* url)
 	{
 		if (strlen(url) > 0)
 		{
-			return prefix("http", url);
+			return prefix("http", url) || prefix("tcp", url);
 		}
 	}
 	return false;
@@ -82,10 +82,20 @@ bool is_npipe(char* url)
 	{
 		if (strlen(url) > 0)
 		{
-			return prefix("npipe", url);
+			return prefix(DOCKER_NPIPE_URL_PREFIX, url);
 		}
 	}
 	return false;
+}
+
+char* npipe_url_only(char* url) {
+	char* url_only = (char*)calloc(strlen(url) - strlen(DOCKER_NPIPE_URL_PREFIX) + 1, sizeof(char));
+	if (url_only != NULL) {
+		if (is_npipe(url)) {
+			strcpy(url_only, url + strlen(DOCKER_NPIPE_URL_PREFIX));
+		}
+	}
+	return url_only;
 }
 
 d_err_t make_docker_context_url(docker_context** ctx, const char* url)
@@ -134,7 +144,7 @@ d_err_t make_docker_context_default_local(docker_context** ctx) {
 		return make_docker_context_url(ctx, docker_host_env);
 	}
 #if defined(_WIN32)
-	return make_docker_context_url(ctx, DOCKER_DEFAULT_LOCALHOST_URL);
+	return make_docker_context_url(ctx, DOCKER_DEFAULT_WINDOWS_NAMED_PIPE);
 #endif
 #if defined(unix) || defined(__unix__) || defined(__unix) || defined(__APPLE__) || defined(__MAC__)
 	return make_docker_context_url(ctx, DOCKER_DEFAULT_UNIX_SOCKET);
@@ -282,7 +292,7 @@ d_err_t make_docker_call(docker_call** dcall, char* site_url, docker_object_type
 
 	(*dcall)->request_method = "GET";
 	(*dcall)->request_data = NULL;
-	(*dcall)->request_data_len = -1L;
+	(*dcall)->request_data_len = 0;
 
 	(*dcall)->capacity = 1024 * 1024;
 	(*dcall)->memory = malloc((*dcall)->capacity);
@@ -327,6 +337,7 @@ char* docker_call_content_type_header_get(docker_call* dcall) {
 void docker_call_request_data_set(docker_call* dcall, char* request_data) {
 	if (dcall != NULL && request_data != NULL) {
 		dcall->request_data = str_clone(request_data);
+		docker_call_request_data_len_set(dcall, strlen(dcall->request_data));
 	}
 }
 
@@ -650,11 +661,19 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 	}
 
 	char* docker_http_method = docker_call_request_method_get(dcall);
+	size_t post_data_len = docker_call_request_data_len_get(dcall);
+	char* post_data = docker_call_request_data_get(dcall);
 
 #ifdef _WIN32
-	if (docker_call_status_cb_get(dcall) == NULL &&
-		(docker_http_method == NULL || strcmp(docker_http_method, HTTP_GET_STR) == 0) &&
-		(dcall->site_url == NULL || strncmp(dcall->site_url, "http://localhost", 16) == 0)) {
+	//if (docker_call_status_cb_get(dcall) == NULL &&
+	//	(dcall->site_url != NULL 
+	//		&& strncmp(dcall->site_url, 
+	//			DOCKER_DEFAULT_WINDOWS_NAMED_PIPE, 
+	//			strlen(DOCKER_DEFAULT_WINDOWS_NAMED_PIPE)) == 0)) {
+	if (dcall->site_url != NULL
+			&& strncmp(dcall->site_url,
+				DOCKER_DEFAULT_WINDOWS_NAMED_PIPE,
+				strlen(DOCKER_DEFAULT_WINDOWS_NAMED_PIPE)) == 0) {
 		//TODO free at the end
 		dcall->site_url = "/";
 		char* service_url = docker_call_get_url(dcall);
@@ -662,20 +681,40 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 			return E_ALLOC_FAILED;
 		}
 		HANDLE hPipe;
-		char* lpvMessage = (char*)calloc(strlen(service_url) + 50, sizeof(char));
+		size_t message_len = strlen(service_url) + 200;
+		if (post_data != NULL) {
+			message_len += post_data_len;
+		}
+		char* lpvMessage = (char*)calloc(message_len, sizeof(char));
 		if (lpvMessage == NULL) {
 			return E_ALLOC_FAILED;
 		}
 		lpvMessage[0] = '\0';
-		strcat(lpvMessage, "GET ");
+		strcat(lpvMessage, docker_http_method);
+		strcat(lpvMessage, " ");
 		strcat(lpvMessage, service_url);
-		strcat(lpvMessage, " HTTP/1.0\n\n");
-		//"GET /version HTTP/1.0\n\n";
+		if (post_data != NULL) {
+			strcat(lpvMessage, " HTTP/1.0\n");
+			strcat(lpvMessage, "Content-Type: application/json\n");
+			strcat(lpvMessage, "Content-Length: ");
+
+			char* num = (char*)calloc(100, sizeof(char));
+			if (num) {
+				sprintf(num, "%lu\n\n", post_data_len);
+				strcat(lpvMessage, num);
+			}
+
+			strcat(lpvMessage, post_data);
+			strcat(lpvMessage, "\n\n");
+		}
+		else {
+			strcat(lpvMessage, " HTTP/1.0\n\n");
+		}
 
 		char  chBuf[NPIPE_READ_BUFSIZE + 1]; //one extra for null terminator
 		BOOL   fSuccess = FALSE;
 		DWORD  cbRead, cbToWrite, cbWritten, dwMode;
-		LPCTSTR lpszPipename = TEXT(DOCKER_DEFAULT_WINDOWS_NAMED_PIPE);
+		LPCTSTR lpszPipename = TEXT(npipe_url_only(DOCKER_DEFAULT_WINDOWS_NAMED_PIPE));
 
 		// Try to open a named pipe; wait for it, if necessary. 
 
@@ -750,6 +789,8 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 		int crlf_count = 0;
 		bool start_content = false;
 		int last_error = -1;
+		bool first_line = true;
+		char* first_line_str;
 		do
 		{
 			// Read from the pipe. 
@@ -775,6 +816,14 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 						if (chBuf[i] == '\n') {
 							crlf_count += 1;
 							cr = false;
+							if (first_line) {
+								first_line_str = (char*)calloc(i + 2, sizeof(char));
+								if (first_line_str) {
+									strncpy(first_line_str, chBuf, i + 1);
+									first_line_str[i + 1] = '\0';
+									first_line = false;
+								}
+							}
 						}
 					}
 					else if (chBuf[i] == '\r') {
@@ -795,6 +844,12 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 			}
 		} while (fSuccess || last_error == ERROR_MORE_DATA);  // repeat loop if ERROR_MORE_DATA 
 
+		char status_line_http_ver[10];
+		int status_line_http_code;
+		char status_line_http_reason[1024];
+
+		sscanf(first_line_str, "%s %d %s\r\n", status_line_http_ver, &status_line_http_code, status_line_http_reason);
+
 		//if (!fSuccess)
 		//{
 		//	_tprintf(TEXT("ReadFile from pipe failed. GLE=%d\n"), GetLastError());
@@ -802,7 +857,7 @@ d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** 
 		//}
 		//else {
 		/* Check for errors, and handle response */
-		handle_response_v2(200L, service_url, result, dcall, response);
+		handle_response_v2(status_line_http_code, service_url, result, dcall, response);
 
 		// Mark end time of request
 		end = time(NULL);

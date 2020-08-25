@@ -215,7 +215,7 @@ int DockerClient_process_list_container(lua_State* L)
 
 	docker_log_info("Getting process details for %s\n", id);
 
-	docker_container_ps *ps;
+	docker_ctr_ps *ps;
 	d_err_t err = docker_process_list_container(dc->ctx, &ps, (char *)id, NULL);
 
 	if (err != E_SUCCESS)

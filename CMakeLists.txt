@@ -2,6 +2,10 @@ cmake_minimum_required ( VERSION 3.9 )
 
 project ( clibdocker C )
 
+# Export all symbols for shared linking to work on windows
+# see https://stackoverflow.com/questions/37128555/getting-cmake-to-build-shared-library-for-msvc
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS 1)
+
 # Set the project source dir (just convention)
 set( CLIBDOCKER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
 set( CLIBDOCKER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} )
@@ -117,7 +121,7 @@ include_directories(${LIBARCHIVE_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBARCHIVE_LIBRARY} ZLIB::ZLIB)
 target_link_libraries(${LUA_CLIBDOCKER} PUBLIC ${LIBARCHIVE_LIBRARY} ZLIB::ZLIB)
 
-set(CMAKE_FIND_USE_PACKAGE_REGISTRY ON)
+# set(CMAKE_FIND_USE_PACKAGE_REGISTRY ON)
 
 find_package(coll CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC coll::coll)

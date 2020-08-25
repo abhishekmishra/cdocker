@@ -55,11 +55,15 @@ static int group_setup(void **state) {
 	curl_global_init(CURL_GLOBAL_ALL);
 	make_docker_context_default_local(&ctx);
 	docker_context_result_handler_set(ctx, &handle_result);
+
+	d_err_t e = docker_image_create_from_image(ctx, "alpine:latest", NULL, NULL);
+	assert_int_equal(e, E_SUCCESS);
+
 	p = make_docker_ctr_create_params();
 	docker_ctr_create_params_image_set(p, "alpine");
 	docker_ctr_create_params_cmd_add(p, "echo");
 	docker_ctr_create_params_cmd_add(p, "hello world");
-	d_err_t e = docker_create_container(ctx, &id, p);
+	e = docker_create_container(ctx, &id, p);
 	assert_int_equal(e, E_SUCCESS);
 	assert_non_null(id);
 	*state = id;
@@ -180,8 +184,11 @@ static void test_restart_container(void **state) {
 }
 
 static void test_stats_container(void **state) {
+	d_err_t e = docker_image_create_from_image(ctx, "bfirsh/reticulate-splines:latest", NULL, NULL);
+	assert_int_equal(e, E_SUCCESS);
+
 	char* id = NULL;
-	d_err_t e = docker_image_create_from_image_cb(ctx, &log_pull_message, NULL,
+	e = docker_image_create_from_image_cb(ctx, &log_pull_message, NULL,
 			"bfirsh/reticulate-splines", "latest", NULL);
 	assert_int_equal(e, E_SUCCESS);
 
@@ -248,7 +255,7 @@ static void test_attach_container(void **state) {
 
 int docker_container_tests() {
 	const struct CMUnitTest tests[] = {
-			// cmocka_unit_test(test_rename_stopped_container),
+			 //cmocka_unit_test(test_rename_stopped_container),
 			cmocka_unit_test(test_start),
 			// cmocka_unit_test(test_attach_container),
 			cmocka_unit_test(test_inspect),

@@ -138,7 +138,7 @@ typedef json_object										docker_ctr_ps;
 #define docker_ctr_ps_titles_get_idx(ctr, i)			(char*) json_object_get_string(json_object_array_get_idx(docker_ctr_ps_titles_get(ctr), i))
 #define docker_ctr_ps_processes_get(ctr)				get_attr_json_object((json_object*)ctr, "Processes")
 #define docker_ctr_ps_processes_length(ctr)				json_object_array_length(docker_ctr_ps_processes_get(ctr))
-#define docker_ctr_ps_titles_get_idx(ctr, i)			(docker_ctr_process_details*) json_object_array_get_idx(docker_ctr_ps_titles_get(ctr), i)
+#define docker_ctr_ps_processes_get_idx(ctr, i)			(docker_ctr_process_details*) json_object_array_get_idx(docker_ctr_ps_processes_get(ctr), i)
 
 /**
 * List all processes in a container identified by id.

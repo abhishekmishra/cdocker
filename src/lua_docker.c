@@ -402,6 +402,50 @@ int DockerClient_remove_container(lua_State* L)
 	return 0;
 }
 
+int DockerClient_image_ls(lua_State* L)
+{
+	// Expected: stack = [self, boolean all, boolean digests]
+	DockerClient* dc = check_DockerClient(L, 1);
+	int all = lua_toboolean(L, 2);
+	int digests = lua_toboolean(L, 3);
+
+	docker_log_info("Listing images with params all=%d digests=%d\n", all, digests);
+
+	docker_image_list* images;
+	d_err_t err = docker_images_list(dc->ctx, &images, all, digests, 
+		NULL, 0, NULL, NULL, NULL);
+
+	if (err != E_SUCCESS)
+	{
+		luaL_error(L, "Error listing images");
+	}
+
+	const char* images_json = get_json_string(images);
+	lua_pushstring(L, images_json);
+
+	return 1;
+}
+
+int DockerClient_image_pull(lua_State* L)
+{
+	// Expected: stack = [self, string image, string tag, string platform]
+	DockerClient* dc = check_DockerClient(L, 1);
+	const char *image = luaL_checkstring(L, 2);
+	const char *tag = luaL_optstring(L, 3, "latest");
+	const char *platform = luaL_optstring(L, 4, NULL);
+
+	docker_log_info("Pulling image %s, tag=%s, platform=%s\n", image, tag, platform);
+
+	d_err_t err = docker_image_create_from_image(dc->ctx, image, tag, platform);
+
+	if (err != E_SUCCESS)
+	{
+		luaL_error(L, "Error pulling image %s, tag=%s, platform=%s\n", image, tag, platform);
+	}
+
+	return 0;
+}
+
 int luaopen_luaclibdocker(lua_State *L)
 {
 	static const luaL_Reg JsonObject_lib[] = {
@@ -425,6 +469,8 @@ int luaopen_luaclibdocker(lua_State *L)
 		{"container_unpause", &DockerClient_unpause_container},
 		{"container_wait", &DockerClient_wait_container},
 		{"container_remove", &DockerClient_remove_container},
+		{"image_ls", &DockerClient_image_ls},
+		{"image_pull", &DockerClient_image_pull},
 		{NULL, NULL}};
 
 	static const luaL_Reg clibdocker_lib[] = {

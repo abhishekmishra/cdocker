@@ -7,7 +7,7 @@ function Dockerfile:initialize()
 end
 
 function Dockerfile:command(cmdName, args)
-    self.content = self.content .. '\n' .. cmdName
+    self.content = self.content .. cmdName
     if args ~= nil then
         if type(args) == 'table' then
             for _, v in ipairs(args) do
@@ -17,6 +17,7 @@ function Dockerfile:command(cmdName, args)
             self.content = self.content .. ' ' .. args
         end
     end
+    self.content = self.content .. '\n'
     return self
 end
 
@@ -86,12 +87,142 @@ function Dockerfile:env(envs)
     return self:command('ENV', env_str)
 end
 
-local d = Dockerfile:new()
-    :from("alpine:latest")
-    :run_exec({"ls", "-al"})
-    :label({x='y', t='v'})
-    :maintainer('abhishekmishra')
-    :expose(8080)
-    :env({CPATH="blah:bluh"})
+function Dockerfile:add(src, dest, usr, grp)
+    local paths_str = ""
+    if type(src) == 'table' then
+        for k, v in pairs(src) do
+            paths_str = paths_str .. '"' .. v .. '", '
+        end
+    else
+        paths_str = paths_str .. '"' .. src .. '"'
+    end
+    paths_str = paths_str .. ' "' .. dest .. '"' .. ''
 
-print (d:contents())
+    if usr~=nil then
+        if grp~=nil then
+            paths_str = "--chown=" .. usr .. ':'.. grp .." " .. paths_str
+        else
+            paths_str = "--chown=" .. usr .. " " .. paths_str
+        end
+    end
+    return self:command("ADD", paths_str)
+end
+
+function Dockerfile:copy(src, dest, usr, grp)
+    local paths_str = ""
+    if type(src) == 'table' then
+        for k, v in pairs(src) do
+            paths_str = paths_str .. '"' .. v .. '", '
+        end
+    else
+        paths_str = paths_str .. '"' .. src .. '"'
+    end
+    paths_str = paths_str .. ' "' .. dest .. '"' .. ''
+
+    if usr~=nil then
+        if grp~=nil then
+            paths_str = "--chown=" .. usr .. ':'.. grp .." " .. paths_str
+        else
+            paths_str = "--chown=" .. usr .. " " .. paths_str
+        end
+    end
+    return self:command("COPY", paths_str)
+end
+
+function Dockerfile:entrypoint_exec(cmd, params)
+    local ep_str = '["' .. cmd .. '"'
+    for _, v in ipairs(params) do
+        ep_str = ep_str .. ', "' .. v .. '"'
+    end
+    ep_str = ep_str .. ']'
+    return self:command('ENTRYPOINT', ep_str)
+end
+
+function Dockerfile:entrypoint_shell(cmd, params)
+    local ep_str = '' .. cmd .. ''
+    for _, v in ipairs(params) do
+        ep_str = ep_str .. ' ' .. v .. ''
+    end
+    ep_str = ep_str .. ''
+    return self:command('ENTRYPOINT', ep_str)
+end
+
+function Dockerfile:volume(vols)
+    local vol_str = '['
+    if type(vols) == 'table' then
+        for _, v in ipairs(vols) do
+            vol_str = vol_str .. '"' .. v .. '", '
+        end
+    else
+        vol_str = vol_str .. '"' .. vols .. '"'
+    end
+    vol_str = vol_str .. ']'
+    return self:command('VOLUME', vol_str)
+end
+
+function Dockerfile:user(uid, gid)
+    if gid == nil then
+        return self:command('USER', uid)
+    else
+        return self:command('USER', uid .. ':'.. gid)
+    end
+end
+
+function Dockerfile:workdir(dir)
+    return self:command('WORKDIR', dir)
+end
+
+function Dockerfile:arg(name, default)
+    if default == nil then
+        return self:command('ARG', name)
+    else
+        return self:command('ARG', name .. '='.. default)
+    end
+end
+
+function Dockerfile:onbuild()
+    self.content = self.content .. 'ONBUILD '
+    return self
+end
+
+function Dockerfile:stopsignal(signal)
+    return self:command('STOPSIGNAL', signal)
+end
+
+function Dockerfile:healthcheck(args)
+    return self:command('HEALTHCHECK', args)
+end
+
+function Dockerfile:shell(args)
+    local command_str = "["
+    for _, v in ipairs(args) do
+        command_str = command_str .. '"' .. v .. '", '
+    end
+    command_str = command_str .. "]"
+    return self:command("SHELL", command_str)
+end
+    
+
+-- local d = Dockerfile:new()
+--     :from("alpine:latest")
+--     :run_exec({"ls", "-al"})
+--     :label({x='y', t='v'})
+--     :maintainer('abhishekmishra')
+--     :expose(8080)
+--     :env({CPATH="blah:bluh"})
+--     :add({'some/path', 'other/path'}, 'dest/path', 'root', 'root')
+--     :add('another', 'another')
+--     :copy({'some/path', 'other/path'}, 'dest/path', 'root', 'root')
+--     :entrypoint_exec("start", {"arg1", "arg2"})
+--     :entrypoint_shell("start", {"arg1", "arg2"})
+--     :volume('/data')
+--     :user('root')
+--     :workdir('/some/dir')
+--     :arg('arg1', 'default_val1')
+--     :onbuild()
+--     :run_exec({'blah', 'bluh'})
+--     :healthcheck({"some", "thing"})
+--     :shell({"b", "c", "d"})
+
+-- print (d:contents())
+-- print()

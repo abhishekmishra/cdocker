@@ -67,6 +67,8 @@ set( CLIBDOCKER_TEST_SOURCES
   test/test_docker_volumes.h
   test/test_util.c
   test/test_util.h
+  test/test_docker_ignore.c
+  test/test_docker_ignore.h
 )
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND LUA_FROM_PKGCONFIG)

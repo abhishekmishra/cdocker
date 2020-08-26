@@ -17,6 +17,7 @@
 #include "test_docker_images.h"
 #include "test_docker_networks.h"
 #include "test_docker_volumes.h"
+#include "test_docker_ignore.h"
 #include <docker_result.h>
 #include <docker_containers.h>
 
@@ -25,13 +26,13 @@ int main(int argc, char **argv) {
 	docker_log_set_level(LOG_INFO);
 	docker_log_info("#### Starting clibdocker tests ####");
 
-	docker_log_info("#### Docker container API      ####");
-	res = docker_container_tests();
-	docker_log_info("#### Done                      ####");
+	// docker_log_info("#### Docker container API      ####");
+	// res = docker_container_tests();
+	// docker_log_info("#### Done                      ####");
 
-	if (res > 0) {
-		return res;
-	}
+	// if (res > 0) {
+	// 	return res;
+	// }
 
 	//docker_log_info("#### Docker images API      	####");
 	//res = docker_images_tests();
@@ -60,6 +61,14 @@ int main(int argc, char **argv) {
 	//docker_log_info("#### Docker volumes API      	####");
 	//res = docker_volumes_tests();
 	//docker_log_info("#### Done                      ####");
+
+	docker_log_info("#### Docker ignore files test  ####");
+	res = docker_ignore_tests();
+	docker_log_info("#### Done                      ####");
+
+	if (res > 0) {
+		return res;
+	}
 
 	return res;
 }

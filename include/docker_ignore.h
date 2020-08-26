@@ -29,6 +29,9 @@ extern "C" {
 */
 MODULE_API d_err_t readlines_dockerignore(const char* contents, arraylist* lines);
 
+MODULE_API int dockerignore_check(arraylist* ignore, const char* path);
+
+MODULE_API arraylist* list_dir_w_ignore(const char* folder_path, const char* dockerignore_path);
 
 #ifdef __cplusplus 
 }

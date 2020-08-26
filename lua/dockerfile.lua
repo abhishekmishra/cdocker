@@ -202,6 +202,12 @@ function Dockerfile:shell(args)
     return self:command("SHELL", command_str)
 end
 
+function Dockerfile:write(path)
+    local dfile = io.open(path, 'w')
+    dfile:write(self:contents())
+    dfile:close()
+end
+
 return Dockerfile
 
 -- local d = Dockerfile:new()

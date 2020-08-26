@@ -36,6 +36,7 @@ set( CLIBDOCKER_SOURCES
   src/docker_system.c
   src/docker_util.c
   src/docker_volumes.c
+  src/docker_ignore.c
   src/tinydir.h
 
   include/docker_all.h
@@ -49,6 +50,7 @@ set( CLIBDOCKER_SOURCES
   include/docker_system.h
   include/docker_util.h
   include/docker_volumes.h
+  include/docker_ignore.h
 )
 
 set( CLIBDOCKER_TEST_SOURCES

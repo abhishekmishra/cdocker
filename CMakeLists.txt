@@ -101,9 +101,9 @@ target_include_directories(${LUA_CLIBDOCKER} PUBLIC include)
 if (ENABLE_LUA)
   if (LUA_FOUND)
   target_include_directories(${PROJECT_NAME} PUBLIC ${LUA_INCLUDE_DIR})
-  target_link_libraries(${PROJECT_NAME} PUBLIC ${LUA_LIBRARIES})    
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${LUA_LIBRARIES})
   target_include_directories(${LUA_CLIBDOCKER} PUBLIC ${LUA_INCLUDE_DIR})
-  target_link_libraries(${LUA_CLIBDOCKER} PUBLIC ${LUA_LIBRARIES})    
+  target_link_libraries(${LUA_CLIBDOCKER} PUBLIC ${LUA_LIBRARIES})
   endif (LUA_FOUND)
 endif (ENABLE_LUA)
 
@@ -119,11 +119,15 @@ target_link_libraries(${LUA_CLIBDOCKER} PUBLIC CURL::libcurl)
 # See https://github.com/microsoft/vcpkg/issues/8839#issuecomment-558066466
 # for additional lookup to ZLIB
 find_package(ZLIB REQUIRED)
+find_package(lz4 REQUIRED)
+find_package(BZip2 REQUIRED)
+find_package(LibXml2 REQUIRED)
+
 find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
 find_library(LIBARCHIVE_LIBRARY archive)
 include_directories(${LIBARCHIVE_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBARCHIVE_LIBRARY} ZLIB::ZLIB)
-target_link_libraries(${LUA_CLIBDOCKER} PUBLIC ${LIBARCHIVE_LIBRARY} ZLIB::ZLIB)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBARCHIVE_LIBRARY} lz4::lz4 BZip2::BZip2 LibXml2::LibXml2 m LibLZMA::LibLZMA ZLIB::ZLIB)
+target_link_libraries(${LUA_CLIBDOCKER} PUBLIC ${LIBARCHIVE_LIBRARY} lz4::lz4 BZip2::BZip2 LibXml2::LibXml2 m LibLZMA::LibLZMA ZLIB::ZLIB)
 
 # set(CMAKE_FIND_USE_PACKAGE_REGISTRY ON)
 

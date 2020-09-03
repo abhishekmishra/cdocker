@@ -27,7 +27,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${vcpkgRoot}/x64-osx/include",
-                "${workspaceFolder}/../coll/src"
+                "${workspaceFolder}/../coll/src",
+                "/usr/local/include/lua"
             ],
             "defines": [
                 "_DEBUG",

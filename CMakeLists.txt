@@ -20,6 +20,15 @@ set ( CLIBDOCKER_VERSION_PATCH 0 )
 # Set the lualib name
 set ( LUA_CLIBDOCKER lua${PROJECT_NAME} )
 
+# https://stackoverflow.com/a/63037953
+include(CheckLibraryExists)
+CHECK_LIBRARY_EXISTS(m sin "" HAVE_LIB_M)
+
+if (HAVE_LIB_M)
+  set(EXTRA_LIBS ${EXTRA_LIBS} m)
+endif (HAVE_LIB_M)
+
+
 # Include Directories
 # In GCC, this will invoke the "-I" command
 include_directories( include )
@@ -122,12 +131,15 @@ find_package(ZLIB REQUIRED)
 find_package(lz4 REQUIRED)
 find_package(BZip2 REQUIRED)
 find_package(LibXml2 REQUIRED)
+find_package(LibLZMA REQUIRED)
 
 find_path(LIBARCHIVE_INCLUDE_DIR archive.h)
 find_library(LIBARCHIVE_LIBRARY archive)
 include_directories(${LIBARCHIVE_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBARCHIVE_LIBRARY} lz4::lz4 BZip2::BZip2 LibXml2::LibXml2 m LibLZMA::LibLZMA ZLIB::ZLIB)
-target_link_libraries(${LUA_CLIBDOCKER} PUBLIC ${LIBARCHIVE_LIBRARY} lz4::lz4 BZip2::BZip2 LibXml2::LibXml2 m LibLZMA::LibLZMA ZLIB::ZLIB)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBARCHIVE_LIBRARY} lz4::lz4 BZip2::BZip2 LibXml2::LibXml2 LibLZMA::LibLZMA ZLIB::ZLIB)
+target_link_libraries(${LUA_CLIBDOCKER} PUBLIC ${LIBARCHIVE_LIBRARY} lz4::lz4 BZip2::BZip2 LibXml2::LibXml2 LibLZMA::LibLZMA ZLIB::ZLIB)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${EXTRA_LIBS})
+target_link_libraries(${LUA_CLIBDOCKER} PUBLIC ${EXTRA_LIBS})
 
 # set(CMAKE_FIND_USE_PACKAGE_REGISTRY ON)
 

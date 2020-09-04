@@ -5,9 +5,16 @@
  * https://opensource.org/licenses/MIT
  */
 
+#include "docker_log.h"
 #include "docker_ignore.h"
 #include <string.h>
 #include "tinydir.h"
+#include <stdio.h>
+
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#endif
 
 MODULE_API d_err_t readlines_dockerignore(const char* contents, arraylist* lines) {
 	if (contents != NULL) {
@@ -48,9 +55,22 @@ int dockerignore_check(arraylist* ignore, const char* path) {
 
 arraylist* list_dir_w_ignore(const char* folder_path, const char* dockerignore_path)
 {
+	arraylist* ignore_lines;
+	arraylist_new(&ignore_lines, &free);
+
 	arraylist* paths;
+
+	FILE* ignorefp;
+	ignorefp = fopen(dockerignore_path, "r");
+	fseek(ignorefp, 0, SEEK_END); 
+	size_t size = ftell(ignorefp);
+	fseek(ignorefp, 0, SEEK_SET);
+	char* ignore_contents = (char *)calloc(size, sizeof(char));
+	fread(ignore_contents, size/sizeof(char), sizeof(char), ignorefp);
+	readlines_dockerignore(ignore_contents, ignore_lines);
+
 	arraylist_new(&paths, &free);
-//	printf("To list %s\n", folder_path);
+	docker_log_debug("To list %s\n", folder_path);
 
 	tinydir_dir dir;
 	tinydir_open(&dir, folder_path);
@@ -62,7 +82,8 @@ arraylist* list_dir_w_ignore(const char* folder_path, const char* dockerignore_p
 
 		if (strcmp(file.name, ".") != 0 && strcmp(file.name, "..") != 0)
 		{
-//			printf("%s", file.name);
+			docker_log_debug("%s", file.name);
+			// dockerignore_check(file)
 			char* sub_dir_path = (char*) calloc(
 					strlen(folder_path) + strlen(file.name) + 2, sizeof(char));
 			strcpy(sub_dir_path, folder_path);
@@ -71,7 +92,7 @@ arraylist* list_dir_w_ignore(const char* folder_path, const char* dockerignore_p
 			if (file.is_dir)
 			{
 //				printf("/\n");
-				arraylist* sub_dir_ls = list_dir(sub_dir_path);
+				arraylist* sub_dir_ls = list_dir_w_ignore(sub_dir_path, dockerignore_path);
 				size_t ls_count = arraylist_length(sub_dir_ls);
 				for (size_t i = 0; i < ls_count; i++)
 				{

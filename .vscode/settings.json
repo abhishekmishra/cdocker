@@ -24,5 +24,11 @@
     "licenser.author": "Abhishek Mishra",
     "licenser.license": "MIT",
     "licenser.projectName": "clibdocker",
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "cmake.configureArgs": [
+        "-DCMAKE_TOOLCHAIN_FILE=d:\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake",
+        "-DVCPKG_TARGET_TRIPLET=x64-windows",
+        "-DENABLE_TESTS=On",
+        "-DENABLE_LUA=On"
+    ]
 }

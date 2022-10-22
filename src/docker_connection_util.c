@@ -126,9 +126,12 @@ d_err_t make_docker_context_url(docker_context** ctx, const char* url)
 
 	// if the url does not have a slash at the end
 	// add it.
+    // but only if it is not a unix socket.
+    // unix socket has / at beginning, don't add
+    // at its end
 
 	int len = strlen(u);
-	if (u[len - 1] != '/') {
+	if (u[0] != '/' && u[len - 1] != '/') {
 		u[len] = '/';
 		u[len + 1] = '\0';
 	}

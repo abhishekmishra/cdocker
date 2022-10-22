@@ -107,6 +107,14 @@ add_library ( ${LUA_CLIBDOCKER} SHARED ${CLIBDOCKER_SOURCES} )
 set_property(TARGET ${LUA_CLIBDOCKER} PROPERTY C_STANDARD 11)
 target_include_directories(${LUA_CLIBDOCKER} PUBLIC include)
 
+# set(CMAKE_FIND_USE_PACKAGE_REGISTRY ON)
+# !!!!NOTE/WARNING!!!
+# The coll package is placed ahead of json-c such that arraylist.h from coll is used.
+# TODO: coll package should be fixed to use another header file name.
+find_package(coll CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC coll::coll)
+target_link_libraries(${LUA_CLIBDOCKER} PUBLIC coll::coll)
+
 if (ENABLE_LUA)
   if (LUA_FOUND)
   target_include_directories(${PROJECT_NAME} PUBLIC ${LUA_INCLUDE_DIR})
@@ -140,12 +148,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBARCHIVE_LIBRARY} lz4::lz4 BZip
 target_link_libraries(${LUA_CLIBDOCKER} PUBLIC ${LIBARCHIVE_LIBRARY} lz4::lz4 BZip2::BZip2 LibXml2::LibXml2 LibLZMA::LibLZMA ZLIB::ZLIB)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${EXTRA_LIBS})
 target_link_libraries(${LUA_CLIBDOCKER} PUBLIC ${EXTRA_LIBS})
-
-# set(CMAKE_FIND_USE_PACKAGE_REGISTRY ON)
-
-find_package(coll CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC coll::coll)
-target_link_libraries(${LUA_CLIBDOCKER} PUBLIC coll::coll)
 
 option(ENABLE_TESTS "Perform unit tests after build" OFF)
 set ( CLIBDOCKER_TEST_PROGRAM_NAME clibdocker_test )

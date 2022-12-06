@@ -17,6 +17,9 @@ set ( CLIBDOCKER_VERSION_MINOR 0 )
 set ( CLIBDOCKER_VERSION_PATCH 0 )
 
 # TODO: remove shared lib for lua when all builds move to shared lib builds
+# https://stackoverflow.com/a/47260387/9483968
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 # Set the lualib name
 set ( LUA_CLIBDOCKER lua${PROJECT_NAME} )
 

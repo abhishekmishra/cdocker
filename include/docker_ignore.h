@@ -29,7 +29,7 @@ extern "C" {
 #endif
 
 #include "docker_util.h"
-#include <arraylist.h>
+#include <coll_arraylist.h>
 
 #define DOCKER_IGNORE_NULL	501
 #define DOCKER_IGNORE_EMPTY	502

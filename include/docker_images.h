@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-#include <arraylist.h>
+#include <coll_arraylist.h>
 #include "docker_connection_util.h"
 #include "docker_result.h"
 #include "docker_util.h"

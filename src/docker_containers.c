@@ -22,7 +22,7 @@
  */
 
 #include "docker_util.h"
-#include <arraylist.h>
+#include <coll_arraylist.h>
 #include <docker_log.h>
 #include "docker_containers.h"
 

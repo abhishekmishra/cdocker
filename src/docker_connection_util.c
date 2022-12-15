@@ -100,6 +100,22 @@ char *npipe_url_only(char *url)
 	return url_only;
 }
 
+d_err_t docker_api_init()
+{
+	CURLcode res = curl_global_init(CURL_GLOBAL_ALL);
+	if(res != CURLE_OK)
+	{
+    	fprintf(stderr, "Docker API Initialization failed: curl_global_init() failed: %s\n",
+            curl_easy_strerror(res));
+	}
+	return res;
+}
+
+void docker_api_cleanup()
+{
+	curl_global_cleanup();
+}
+
 d_err_t make_docker_context_url(docker_context **ctx, const char *url)
 {
 	(*ctx) = (docker_context *)calloc(1, sizeof(docker_context));

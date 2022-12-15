@@ -86,6 +86,22 @@ typedef struct docker_context_t {
 } docker_context;
 
 /**
+ * Global initialization of the docker API, should
+ * be called only once in an application
+ * 
+ * @return error code 0 if initialization was ok, non-zero otherwise
+ */
+MODULE_API d_err_t docker_api_init();
+
+
+/**
+ * Global cleanup of the docker API,
+ * should be called once when all api usage is complete.
+ * 
+*/
+MODULE_API void docker_api_cleanup();
+
+/**
  * Create a new docker context with the given url.
  *
  * The method makes a copy of the given string for use, so that it can

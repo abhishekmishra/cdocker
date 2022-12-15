@@ -33,9 +33,7 @@
 extern "C" {
 #endif
 
-#include "docker_common.h"
-#include "docker_result.h"
-#include "docker_connection_util.h"
+#include "docker_all.h"
 
 #include <json-c/json_object.h>
 

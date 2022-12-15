@@ -143,9 +143,9 @@ MODULE_API docker_ctr* docker_inspect_container(docker_context* ctx, char* id, i
 // 	arraylist* processes;
 // } docker_container_ps;
 
-typedef json_object										docker_ctr_process_details;
-#define docker_ctr_process_details_length(ctr_ls)		json_object_array_length(ctr_ps_ls)
-#define docker_ctr_process_details_get_idx(ctr_ls, i)	(docker_ctr*) json_object_array_get_idx(ctr_ps_ls, i)
+typedef json_object											docker_ctr_process_details;
+#define docker_ctr_process_details_length(ctr_ps_ls)		json_object_array_length(ctr_ps_ls)
+#define docker_ctr_process_details_get_idx(ctr_ps_ls, i)	(char*) json_object_array_get_idx(ctr_ps_ls, i)
 
 typedef json_object										docker_ctr_ps;
 #define free_docker_ctr(ctr_ps)							json_object_put((json_object*) ctr_ps)

@@ -30,7 +30,7 @@
 
 #include "test_docker_ignore.h"
 
-#include <arraylist.h>
+#include <coll_arraylist.h>
 #include "docker_util.h"
 #include "docker_log.h"
 #include "docker_ignore.h"

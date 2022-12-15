@@ -27,7 +27,7 @@
 #include <cmocka.h>
 #include <stdlib.h>
 #include <curl/curl.h>
-#include <arraylist.h>
+#include <coll_arraylist.h>
 
 #include "test_docker_system.h"
 

@@ -201,7 +201,7 @@ d_err_t set_attr_json_object(json_object* obj, const char* name, json_object* va
 	return json_object_object_add(obj, name, val);
 }
 
-json_type get_attr_type(json_object* obj, char* name) {
+json_type get_attr_type(json_object* obj, const char* name) {
 	json_object* extractObj = NULL;
 	json_object_object_get_ex(obj, name, &extractObj);
 	if (extractObj == NULL) {
@@ -246,7 +246,7 @@ json_object* make_filters() {
 	return json_object_new_object();
 }
 
-void add_filter_str(json_object* filters, char* name, char* value) {
+void add_filter_str(json_object* filters, const char* name, const char* value) {
 	json_object* value_obj;
 	json_object_object_get_ex(filters, name, &value_obj);
 	if (!value_obj) {
@@ -256,7 +256,7 @@ void add_filter_str(json_object* filters, char* name, char* value) {
 	json_object_array_add(value_obj, json_object_new_string(value));
 }
 
-void add_filter_int(json_object* filters, char* name, int value) {
+void add_filter_int(json_object* filters, const char* name, int value) {
 	json_object* value_obj;
 	json_object_object_get_ex(filters, name, &value_obj);
 	if (!value_obj) {
@@ -270,7 +270,7 @@ const char* filters_to_str(json_object* filters) {
 	return json_object_get_string(filters);
 }
 
-void add_array_str(json_object* obj, char* name, char* value) {
+void add_array_str(json_object* obj, const char* name, const char* value) {
 	json_object* value_obj;
 	json_object_object_get_ex(obj, name, &value_obj);
 	if (!value_obj) {
@@ -280,7 +280,7 @@ void add_array_str(json_object* obj, char* name, char* value) {
 	json_object_array_add(value_obj, json_object_new_string(value));
 }
 
-void add_array_int(json_object* obj, char* name, int value) {
+void add_array_int(json_object* obj, const char* name, int value) {
 	json_object* value_obj;
 	json_object_object_get_ex(obj, name, &value_obj);
 	if (!value_obj) {

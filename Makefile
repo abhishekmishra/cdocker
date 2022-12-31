@@ -1,4 +1,4 @@
-.PHONY: all genbuild delbuild build run clean install help sln
+.PHONY: all genbuild delbuild build run clean install help sln docs
 
 # see https://gist.github.com/sighingnow/deee806603ec9274fd47
 # for details on the following snippet to get the OS
@@ -51,6 +51,9 @@ else
 	echo "No solution file available on this platform"
 endif
 
+docs:
+	doxygen
+
 help:
 		@echo "********************************************************"
 		@echo "  Makefile to build [clibdocker]"
@@ -66,4 +69,5 @@ help:
 		@echo "  install:  Runs the cmake project install target."
 		@echo "  delbuild: Deletes the cmake build directory!"
 		@echo "  genbuild: Generates the cmake build."
+		@echo "  docs:     Generates the doxygen docs."
 		@echo "********************************************************"

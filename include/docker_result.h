@@ -79,15 +79,22 @@ typedef enum _config_error d_err_t;
  * as soon as it is no longer needed.
  */
 typedef struct docker_result_t {
-	d_err_t error_code;
-	time_t start_time;
-	time_t end_time;
-	char* url;
-	char* method;
-	char* request_json_str;
-	char* response_json_str;
-	long http_error_code;
-	char* message;
+	d_err_t error_code;			///< Error code of the operation,
+								///< see enum #d_err_t for values
+	time_t start_time;			///< Start time of the operation
+								///< this is useful for rough 
+								///< calculation of time taken
+	time_t end_time;			///< End time of the operation
+								///< this is useful for rough 
+								///< calculation of time taken
+	char* url;					///< URL for the docker API call.
+	char* method;				///< HTTP method for the docker API
+								///< call.
+	char* request_json_str;		///< Request JSON data
+	char* response_json_str;	///< Response JSON data (might be NULL)
+	long http_error_code;		///< Response HTTP error code
+	char* message;				///< Message from docker API call
+								///< (might be NULL)
 } docker_result;
 
 /**

@@ -30,5 +30,6 @@
         "-DVCPKG_TARGET_TRIPLET=x64-windows",
         "-DENABLE_TESTS=On",
         "-DENABLE_LUA=On"
-    ]
+    ],
+    "editor.formatOnSave": false
 }

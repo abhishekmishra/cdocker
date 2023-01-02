@@ -66,7 +66,9 @@ typedef enum _config_error d_err_t;
 //} errordesc[] = { { E_SUCCESS, "No error" },
 //		{ E_INVALID_INPUT, "Invalid input" }, { E_FILE_NOT_FOUND,
 //				"File not found" }, };
+
 /**
+ * \typedef docker_result
  * The universal result object for docker API calls in this library.
  * This struct and associated methods provide ways to extract
  * success/failure state of the API Call, and messages associated with

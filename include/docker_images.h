@@ -40,6 +40,20 @@ extern "C" {
 
 #define DEFAULT_DOCKER_FILE_NAME "Dockerfile"
 
+/**
+ * @brief The Docker Image object
+ * 
+ * Represents a docker image object returned in the Docker images API
+ * call results. Depending on result, some or all values maybe
+ * unavailable.
+ * 
+ * Use the getters defined in this API to access the members of
+ * the Docker Image object.
+ * 
+ * All getters are of the form \c docker_image_<member>_get
+ * For example,
+ * to get the \b id of the image use \c docker_image_id_get(img)
+ */
 typedef json_object											docker_image;
 #define docker_image_id_get(img)							get_attr_str((json_object*)img, "Id")
 #define docker_image_container_get(img)						get_attr_str((json_object*)img, "Container")

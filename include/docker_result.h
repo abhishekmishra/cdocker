@@ -114,14 +114,80 @@ MODULE_API void free_docker_result(docker_result* result);
 
 MODULE_API docker_result* docker_result_clone(docker_result* result);
 
+/**
+ * @brief Get the result error code. For possible values of
+ * the error code see the enum #d_err_t
+ * 
+ * @param result
+ * @return d_err_t error code
+ */
 MODULE_API d_err_t docker_result_get_error_code(docker_result* result);
+
+/**
+ * @brief Get the start time of the operation which produced this result.
+ * 
+ * @param result 
+ * @return time_t start time
+ */
 MODULE_API time_t docker_result_get_start_time(docker_result* result);
+
+/**
+ * @brief Get the end time of the operation which produces this result.
+ * 
+ * @param result 
+ * @return time_t end time
+ */
 MODULE_API time_t docker_result_get_end_time(docker_result* result);
+
+/**
+ * @brief Get the url for the docker API call performed by this operation.
+ * 
+ * @param result 
+ * @return char* docker API url
+ */
 MODULE_API char* docker_result_get_url(docker_result* result);
+
+/**
+ * @brief Get the HTTP method used for the docker API call performed by
+ * this operation.
+ * 
+ * @param result 
+ * @return char* HTTP method
+ */
 MODULE_API char* docker_result_get_method(docker_result* result);
+
+/**
+ * @brief Get the JSON request string sent to the docker API endpoint.
+ * 
+ * @param result 
+ * @return char* request JSON string
+ */
 MODULE_API char* docker_result_get_request_json_str(docker_result* result);
+
+/**
+ * @brief Get the JSON response string received from the docker API endpoint.
+ * 
+ * @param result 
+ * @return char* response JSON string
+ */
 MODULE_API char* docker_result_get_response_json_str(docker_result* result);
+
+/**
+ * @brief Get the HTTP error code returned by the docker API call.
+ * 
+ * @param result 
+ * @return long HTTP error code
+ */
 MODULE_API long docker_result_get_http_error_code(docker_result* result);
+
+/**
+ * @brief Get the message string received from docker API call.
+ * This is usually part of the JSON response. It is extracted for
+ * convenience.
+ * 
+ * @param result 
+ * @return char* docker API response message
+ */
 MODULE_API char* docker_result_get_message(docker_result* result);
 
 /**

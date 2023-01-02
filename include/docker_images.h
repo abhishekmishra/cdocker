@@ -42,40 +42,200 @@ extern "C" {
 
 /**
  * @brief The Docker Image object
- * 
+ *
  * Represents a docker image object returned in the Docker images API
  * call results. Depending on result, some or all values maybe
  * unavailable.
- * 
+ *
  * Use the getters defined in this API to access the members of
  * the Docker Image object.
- * 
+ *
  * All getters are of the form \c docker_image_<member>_get
  * For example,
  * to get the \b id of the image use \c docker_image_id_get(img)
  */
 typedef json_object											docker_image;
+
+/**
+ * @brief get the docker image id
+ *
+ * @param img docker image
+ * @return char* docker image id
+ */
 #define docker_image_id_get(img)							get_attr_str((json_object*)img, "Id")
+
+/**
+ * @brief get the docker image container name
+ *
+ * @param img docker image
+ * @return char* container
+ */
 #define docker_image_container_get(img)						get_attr_str((json_object*)img, "Container")
+
+/**
+ * @brief get the docker image comment
+ *
+ * @param img docker image
+ * @return char* comment text
+ */
 #define docker_image_comment_get(img)						get_attr_str((json_object*)img, "Comment")
+
+/**
+ * @brief get the docker image operating system
+ *
+ * @param img docker image
+ * @return char* operating system
+ */
 #define docker_image_os_get(img)							get_attr_str((json_object*)img, "Os")
+
+/**
+ * @brief get the docker image architecture
+ *
+ * @param img docker image
+ * @return char* architecture
+ */
 #define docker_image_architecture_get(img)					get_attr_str((json_object*)img, "Architecture")
+
+/**
+ * @brief get the docker image parent image name
+ *
+ * @param img docker image
+ * @return char* parent
+ */
 #define docker_image_parent_get(img)						get_attr_str((json_object*)img, "Parent")
+
+/**
+ * @brief get the docker version of the docker image
+ *
+ * @param img docker image
+ * @return char* docker version
+ */
 #define docker_image_docker_version_get(img)				get_attr_str((json_object*)img, "DockerVersion")
+
+/**
+ * @brief get the virtual size of the docker image
+ *
+ * @param img docker image
+ * @return long long virtual size
+ */
 #define docker_image_virtual_size_get(img)					get_attr_long_long((json_object*)img, "VirtualSize")
+
+/**
+ * @brief get the size of the docker image
+ *
+ * @param img docker image
+ * @return long long size
+ */
 #define docker_image_size_get(img)							get_attr_long_long((json_object*)img, "Size")
+
+/**
+ * @brief get the author of the docker image
+ *
+ * @param img docker image
+ * @return char* author
+ */
 #define docker_image_author_get(img)						get_attr_str((json_object*)img, "Author")
+
+/**
+ * @brief get the created datetime of the docker image
+ *
+ * @param img docker image
+ * @return unsigned long created datetime (epoch)
+ */
 #define docker_image_created_get(img)						get_attr_unsigned_long((json_object*)img, "Created")
+
+/**
+ * @brief get the docker image repo tags
+ *
+ * Use the \c docker_image_repo_tags_length and
+ * \c docker_image_repo_tags_get_idx to get the
+ * individual repo tags.
+ *
+ * @param img docker image
+ * @return json_object* repo tags
+ */
 #define docker_image_repo_tags_get(img)						get_attr_json_object((json_object*)img, "RepoTags")
+
+/**
+ * @brief get the length of the repo tags array
+ * for the given docker image
+ *
+ * @param img docker image
+ * @return int length of the repo tags array
+ */
 #define docker_image_repo_tags_length(img)					json_object_array_length(docker_image_repo_tags_get(img))
+
+/**
+ * @brief get the ith element of the repo tags array
+ * for the given docker image
+ *
+ * @param img docker image
+ * @param i index
+ * @return char* ith repo tag
+ */
 #define docker_image_repo_tags_get_idx(img, i)				(char*)json_object_get_string(json_object_array_get_idx(docker_image_repo_tags_get(img), i))
+
+/**
+ * @brief get the docker image repo digests
+ *
+ * Use the \c docker_image_repo_digests_length and
+ * \c docker_image_repo_digests_get_idx to get the
+ * individual repo digests.
+ *
+ * @param img docker image
+ * @return json_object* repo digests
+ */
 #define docker_image_repo_digests_get(img)					get_attr_json_object((json_object*)img, "RepoDigests")
+
+/**
+ * @brief get the length of the repo digests array
+ * for the given docker image
+ *
+ * @param img docker image
+ * @return int length of the repo digests array
+ */
 #define docker_image_repo_digests_length(img)				json_object_array_length(docker_image_repo_digests_get(img))
+
+/**
+ * @brief get the ith element of the repo digests array
+ * for the given docker image
+ *
+ * @param img docker image
+ * @param i index
+ * @return char* ith repo digest
+ */
 #define docker_image_repo_digests_get_idx(img, i)			(char*)json_object_get_string(json_object_array_get_idx(docker_image_repo_digests_get(img), i))
 
+/**
+ * @brief Docker Image List object
+ *
+ * This is internally represented as a json array object,
+ * which was parsed from a Docker Image API call response.
+ */
 typedef json_object											docker_image_list;
+
+/**
+ * @brief Free the docker image list object
+ *
+ * @param image list
+ */
 #define free_docker_image_list(image_ls)					json_object_put(image_ls)
+
+/**
+ * @brief Get the list of the docker image list
+ *
+ * @param image_ls image list
+ * @return int image list length
+ */
 #define docker_image_list_length(image_ls)					json_object_array_length(image_ls)
+
+/**
+ * @brief Get the image at index \b i from the image list
+ *
+ * @param image_ls image list
+ * @param i index
+ * @return docker_image image object
+ */
 #define docker_image_list_get_idx(image_ls, i)				(docker_image*) json_object_array_get_idx(image_ls, i)
 
 /**

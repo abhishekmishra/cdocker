@@ -550,13 +550,64 @@ typedef json_object											docker_ctr_process_details;
  */
 #define docker_ctr_process_details_get_idx(ctr_ps_ls, i)	(char*) json_object_array_get_idx(ctr_ps_ls, i)
 
+/**
+ * @brief Docker containers process details object
+ */
 typedef json_object										docker_ctr_ps;
+
+/**
+ * @brief Free the docker containers process details object.
+ * 
+ * @param ctr_ps docker containers process object
+ */
 #define free_docker_ctr(ctr_ps)							json_object_put((json_object*) ctr_ps)
+
+/**
+ * @brief Get the titles of the process details titles list
+ * 
+ * @param ctr_ps docker containers process object
+ * @return json_object* titles list object
+ */
 #define docker_ctr_ps_titles_get(ctr)					get_attr_json_object((json_object*)ctr, "Titles")
+
+/**
+ * @brief Get the titles length of the process details titles list
+ * 
+ * @param ctr_ps docker containers process object
+ * @return size_t titles length
+ */
 #define docker_ctr_ps_titles_length(ctr)				json_object_array_length(docker_ctr_ps_titles_get(ctr))
+
+/**
+ * @brief Get the ith title of the process details titles list
+ * 
+ * @param ctr_ps docker containers process object
+ * @return char* ith title
+ */
 #define docker_ctr_ps_titles_get_idx(ctr, i)			(char*) json_object_get_string(json_object_array_get_idx(docker_ctr_ps_titles_get(ctr), i))
+
+/**
+ * @brief Get the processes list of the process details
+ * 
+ * @param ctr_ps docker containers process object
+ * @return json_object* processes list object
+ */
 #define docker_ctr_ps_processes_get(ctr)				get_attr_json_object((json_object*)ctr, "Processes")
+
+/**
+ * @brief Get the processes length of the process details
+ * 
+ * @param ctr_ps docker containers process object
+ * @return size_t processes length
+ */
 #define docker_ctr_ps_processes_length(ctr)				json_object_array_length(docker_ctr_ps_processes_get(ctr))
+
+/**
+ * @brief Get the ith process of the process details
+ * 
+ * @param ctr_ps docker containers process object
+ * @return docker_ctr_process_details* process details object
+ */
 #define docker_ctr_ps_processes_get_idx(ctr, i)			(docker_ctr_process_details*) json_object_array_get_idx(docker_ctr_ps_processes_get(ctr), i)
 
 /**
@@ -638,7 +689,17 @@ MODULE_API d_err_t docker_container_changes(docker_context* ctx, docker_changes_
 
 /////// Docker container stats
 
+/**
+ * @brief Docker PerCPU usage list json object.
+ */
 typedef json_object													docker_percpu_usage_list;
+
+/**
+ * @brief Get the length of the PerCPU usage list
+ * 
+ * @param percpu_usage_ls percpu usage list
+ * @return size_t length of the percpu usage list
+ */
 #define docker_percpu_usage_list_length(percpu_usage_ls)			json_object_array_length(percpu_usage_ls)
 #define docker_percpu_usage_list_get_idx(percpu_usage_ls, i)		(docker_percpu_usage*) json_object_array_get_idx(percpu_usage_ls, i)
 

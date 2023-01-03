@@ -329,7 +329,7 @@ MODULE_API d_err_t docker_image_create_from_image_cb(docker_context* ctx,
  * \param dockerfile name of the dockerfile. (If NULL, default "Dockerfile" is assumed)
  * \param status_cb callback to call for updates
  * \param cbargs callback args for the upate call
- * \param rest options to the build command
+ * \param ... options to the build command
  * \return error code.
  */
 MODULE_API d_err_t docker_image_build_cb(docker_context* ctx, 

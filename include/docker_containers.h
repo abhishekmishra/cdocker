@@ -278,17 +278,95 @@ MODULE_API d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** 
 MODULE_API d_err_t docker_container_list_filter_str(docker_context* ctx, docker_ctr_list** container_list, 
 	int all, int limit, int size, const char* filters);
 
+/**
+ * @brief Docker Container Creation Parameters json object
+ */
 typedef json_object																docker_ctr_create_params;
+
+/**
+ * @brief Create a new docker container creation params object
+ * 
+ * @return docker_ctr_create_params* container creation params object
+ */
 #define make_docker_ctr_create_params											(docker_ctr_create_params*)json_object_new_object
+
+/**
+ * @brief Free the docker container creation params object
+ * 
+ * @param ctr_create container creation params
+ */
 #define free_docker_ctr_create_params(ctr_create)								json_object_put(ctr_create)
+
+/**
+ * @brief Set the image name of the container creation params
+ * 
+ * @param ctr_create container creation params
+ * @param img image name
+ */
 #define docker_ctr_create_params_image_set(ctr_create, img)						set_attr_str(ctr_create, "Image", img)
+
+/**
+ * @brief Set the entry point of the container creation params
+ * 
+ * @param ctr_create container creation params
+ * @param entry entry point
+ */
 #define docker_ctr_create_params_entrypoint_set(ctr_create, entry)				set_attr_str(ctr_create, "Entrypoint", entry)
+
+/**
+ * @brief Set the command of the container creation params
+ * 
+ * @param ctr_create container creation params
+ * @param cmd Command
+ */
 #define docker_ctr_create_params_cmd_add(ctr_create, cmd)						add_array_str(ctr_create, "Cmd", cmd)
+
+/**
+ * @brief Add the environment to the container creation params
+ * 
+ * @param ctr_create container creation params
+ * @param env Environment
+ */
 #define docker_ctr_create_params_env_add(ctr_create, env)						add_array_str(ctr_create, "Env", env)
+
+/**
+ * @brief Set the tty flag of the container creation params
+ * 
+ * @param ctr_create container creation params
+ * @param tty
+ */
 #define docker_ctr_create_params_tty_set(ctr_create, tty)						set_attr_boolean(ctr_create, "Tty", tty)
+
+/**
+ * @brief Set the OpenStdin flag of the container creation params
+ * 
+ * @param ctr_create container creation params
+ * @param openstdin flag
+ */
 #define docker_ctr_create_params_openstdin_set(ctr_create, openstdin)			set_attr_boolean(ctr_create, "OpenStdin", openstdin)
+
+/**
+ * @brief Set the AttachStdin flag of the container creation params
+ * 
+ * @param ctr_create container creation params
+ * @param attachstdin flag
+ */
 #define docker_ctr_create_params_attachstdin_set(ctr_create, attachstdin)		set_attr_boolean(ctr_create, "AttachStdin", attachstdin)
+
+/**
+ * @brief Set the AttachStdout flag of the container creation params
+ * 
+ * @param ctr_create container creation params
+ * @param attachstdout flag
+ */
 #define docker_ctr_create_params_attachstdout_set(ctr_create, attachstdout)		set_attr_boolean(ctr_create, "AttachStdout", attachstdout)
+
+/**
+ * @brief Set the AttachStderr flag of the container creation params
+ * 
+ * @param ctr_create container creation params
+ * @param attachstderr flag
+ */
 #define docker_ctr_create_params_attachstderr_set(ctr_create, attachstderr)		set_attr_boolean(ctr_create, "AttachStderr", attachstderr)
 
 MODULE_API d_err_t docker_create_container(docker_context* ctx,

@@ -61,18 +61,52 @@ extern "C" {
 #define HEADER_JSON "Content-Type: application/json"
 #define HEADER_TAR "Content-Type: application/x-tar"
 
+/**
+ * @brief Check if the given string input is a HTTP(s) URL.
+ * 
+ * @param url input string
+ * @return bool whether string is an http url
+ */
 MODULE_API bool is_http_url(char* url);
 
+/**
+ * @brief Check if the given string input is a UNIX socket URL.
+ * 
+ * @param url input string
+ * @return bool whether string is a Unix socket.
+ */
 MODULE_API bool is_unix_socket(char* url);
 
+/**
+ * @brief Check if the given string input is an NPIPE URL.
+ * 
+ * @param url input string
+ * @return bool whether string is an Npipe url.
+ */
 MODULE_API bool is_npipe(char* url);
 
+/**
+ * @brief Get the docker api url part of the npipe url.
+ * Removes the npipe:// prefix from the url.
+ * 
+ * @param url input string
+ * @return char* a new string with the docker url part
+ */
 MODULE_API char* npipe_url_only(char* url);
 
+/**
+ * @brief Docker Object type in the Docker API call JSON
+ */
 typedef enum {
 	NONE = 0, CONTAINER = 1, IMAGE = 2, SYSTEM = 3, NETWORK = 4, VOLUME = 5
 } docker_object_type;
 
+/**
+ * @brief Defines a docker result handler function
+ * 
+ * This function type is used to define a result handler by a client
+ * program. The result handler is called when the docker API call returns.
+ */
 typedef void (docker_result_handler_fn) (struct docker_context_t* ctx, docker_result* result);
 
 /**
@@ -146,6 +180,11 @@ MODULE_API d_err_t free_docker_context(docker_context** ctx);
 
 typedef void (status_callback)(char* msg, void* cbargs, void* client_cbargs);
 
+/**
+ * @brief internal datastructure representing a Docker Call object.
+ * 
+ * 
+ */
 typedef struct docker_call_t {
 	// URL Parts
 	char* site_url;
@@ -178,6 +217,18 @@ typedef struct docker_call_t {
 	void* client_cb_args;
 } docker_call;
 
+/**
+ * @brief Create a new generic Docker API Call object.
+ * 
+ * This method is 
+ *
+ * @param dcall
+ * @param site_url
+ * @param object
+ * @param id
+ * @param method
+ * @return MODULE_API
+ */
 MODULE_API d_err_t make_docker_call(docker_call** dcall, char* site_url, docker_object_type object, 
 	const char* id,	const char* method);
 

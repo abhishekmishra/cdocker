@@ -45,8 +45,23 @@ extern "C" {
 */
 MODULE_API d_err_t readlines_dockerignore(const char* contents, arraylist* lines);
 
+//TODO: implement docker ignore check
+/**
+ * @brief Not implemeted
+ * 
+ * @param ignore 
+ * @param path 
+ * @return MODULE_API 
+ */
 MODULE_API int dockerignore_check(arraylist* ignore, const char* path);
 
+/**
+ * @brief List given folder path, while applying the rules in the docker ignore list
+ * 
+ * @param folder_path path to the folder/dir to list
+ * @param dockerignore_path path to the docker ignore file
+ * @return arraylist* list of paths in the folder, which are not ignored.
+ */
 MODULE_API arraylist* list_dir_w_ignore(const char* folder_path, const char* dockerignore_path);
 
 #ifdef __cplusplus 

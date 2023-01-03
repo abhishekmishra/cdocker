@@ -557,36 +557,193 @@ typedef json_object										docker_df_volume_usage_data;
  */
 #define docker_df_container_status_get(ctr)				get_attr_str((json_object*)ctr, "Status")
 
+/**
+ * @brief Get the volume name from the docker df volume object
+ * 
+ * @param ctr docker df volume object
+ * @return char* volume name
+ */
 #define docker_df_volume_name_get(vol)					get_attr_str((json_object*)vol, "Name")
+
+/**
+ * @brief Get the volume driver from the docker df volume object
+ * 
+ * @param ctr docker df volume object
+ * @return char* volume driver
+ */
 #define docker_df_volume_driver_get(vol)				get_attr_str((json_object*)vol, "Driver")
+
+/**
+ * @brief Get the volume mountpoint from the docker df volume object
+ * 
+ * @param ctr docker df volume object
+ * @return char* volume mountpoint
+ */
 #define docker_df_volume_mountpoint_get(vol)			get_attr_str((json_object*)vol, "Mountpoint")
+
+/**
+ * @brief Get the volume scope from the docker df volume object
+ * 
+ * @param ctr docker df volume object
+ * @return char* volume scope
+ */
 #define docker_df_volume_scope_get(vol)					get_attr_str((json_object*)vol, "Scope")
+
+/**
+ * @brief Get the volume usage from the docker df volume object
+ * 
+ * @param ctr docker df volume object
+ * @return json_object* volume usage data
+ */
 #define docker_df_volume_usage_data_get(vol)			(docker_df_volume_usage_data*)get_attr_json_object((json_object*)vol, "UsageData")
 
+/**
+ * @brief Get the volume size from the docker df volume object
+ * 
+ * @param ctr docker df volume object
+ * @return unsigned long volume size
+ */
 #define docker_df_volume_usage_data_size_get(ud)		get_attr_unsigned_long((json_object*)ud, "Size")
+
+/**
+ * @brief Get the volume reference count from the docker df volume object
+ * 
+ * @param ctr docker df volume object
+ * @return unsigned long volume reference count
+ */
 #define docker_df_volume_usage_data_ref_count_get(ud)	get_attr_unsigned_long((json_object*)ud, "RefCount")
 
+/**
+ * @brief Get the container names list from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return char* container names list
+ */
 #define docker_df_container_names_get(ctr)				get_attr_json_object((json_object*)ctr, "Names")
+
+/**
+ * @brief Get the container names list length from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return size_t container names list length
+ */
 #define docker_df_container_names_length(ctr)			json_object_array_length(docker_df_container_names_get(ctr))
+
+/**
+ * @brief Get the ith name from the container names list from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return char* ith name from container names list
+ */
 #define docker_df_container_names_get_idx(ctr, i)		(const char*)json_object_array_get_idx(docker_df_container_names_get(ctr), i)
 
+/**
+ * @brief Get the mounts list from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return json_object* mounts list
+ */
 #define docker_df_container_mounts_get(ctr)				get_attr_json_object((json_object*)ctr, "Mounts")
+
+/**
+ * @brief Get the container mounts list length from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return size_t mounts list length
+ */
 #define docker_df_container_mounts_length(ctr)			json_object_array_length(docker_df_container_mounts_get(ctr))
+
+/**
+ * @brief Get the ith mount from the container mounts list from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return char* ith mount from container mounts list
+ */
 #define docker_df_container_mounts_get_idx(ctr, i)		(const char*)json_object_array_get_idx(docker_df_container_mounts_get(ctr), i)
 
+/**
+ * @brief Free the docker df json object
+ */
 #define free_docker_df(df)								json_object_put((json_object*) df)
+
+/**
+ * @brief Get the layers size from the docker df json object
+ * 
+ * @param df docker df json object
+ * @return unsigned long layers size
+ */
 #define docker_df_layers_size_get(df)					get_attr_unsigned_long((json_object*)df, "LayersSize")
 
+/**
+ * @brief Get the docker images list from the docker df json object
+ * 
+ * @param df docker df json object
+ * @return json_object* docker images list
+ */
 #define docker_df_images_get(df)						get_attr_json_object((json_object*)df, "Images")
+
+/**
+ * @brief Get the docker images list length from the docker df json object
+ * 
+ * @param df docker df json object
+ * @return size_t docker images list length
+ */
 #define docker_df_images_length(df)						json_object_array_length(docker_df_images_get(df))
+
+/**
+ * @brief Get the ith docker image from the docker df json object
+ * 
+ * @param df docker df json object
+ * @return docker_df_image* ith docker image
+ */
 #define docker_df_images_get_idx(df, i)					(docker_df_image*)json_object_array_get_idx(docker_df_images_get(df), i)
 
+/**
+ * @brief Get the docker containers list from the docker df json object
+ * 
+ * @param df docker df json object
+ * @return json_object* docker containers list
+ */
 #define docker_df_containers_get(df)					get_attr_json_object((json_object*)df, "Containers")
+
+/**
+ * @brief Get the docker containers list length from the docker df json object
+ * 
+ * @param df docker df json object
+ * @return size_t docker containers list length
+ */
 #define docker_df_containers_length(df)					json_object_array_length(docker_df_containers_get(df))
+
+/**
+ * @brief Get the ith docker container from the docker df json object
+ * 
+ * @param df docker df json object
+ * @return docker_df_container* ith docker container
+ */
 #define docker_df_containers_get_idx(df, i)				(docker_df_container*)json_object_array_get_idx(docker_df_containers_get(df), i)
 
+/**
+ * @brief Get the docker volumes list from the docker df json object
+ * 
+ * @param df docker df json object
+ * @return json_object* docker volumes list
+ */
 #define docker_df_volumes_get(df)						get_attr_json_object((json_object*)df, "Volumes")
+
+/**
+ * @brief Get the docker volumes list length from the docker df json object
+ * 
+ * @param df docker df json object
+ * @return size_t docker volumes list length
+ */
 #define docker_df_volumes_length(df)					json_object_array_length(docker_df_volumes_get(df))
+
+/**
+ * @brief Get the ith docker volume from the docker df json object
+ * 
+ * @param df docker df json object
+ * @return docker_df_volume* ith docker volume
+ */
 #define docker_df_volumes_get_idx(df, i)				(docker_df_volume*)json_object_array_get_idx(docker_df_volumes_get(df), i)
 
 /**

@@ -149,15 +149,82 @@ typedef json_object									docker_version;
 MODULE_API d_err_t docker_system_version(docker_context* ctx,
 		docker_version** version);
 
+/**
+ * @brief Docker Info json object.
+ * This object represents the response returned from a docker system info call.
+ * 
+ * To access the members of docker info use the getters of the form
+ * \c docker_info_<member>_get
+ */
 typedef json_object									docker_info;
+
+/**
+ * @brief Free the docker info object
+ */
 #define free_docker_info(info)						json_object_put((json_object*) info)
+
+/**
+ * @brief Get the containers count from the docker info
+ * 
+ * @param info docker info object
+ * @return unsigned long containers count
+ */
 #define docker_info_containers_get(info)			get_attr_unsigned_long((json_object*)info, "Containers")
+
+/**
+ * @brief Get the running containers count from the docker info
+ * 
+ * @param info docker info object
+ * @return unsigned long running containers count
+ */
 #define docker_info_containers_running_get(info)	get_attr_unsigned_long((json_object*)info, "ContainersRunning")
+
+/**
+ * @brief Get the paused containers count from the docker info
+ * 
+ * @param info docker info object
+ * @return unsigned long paused containers count
+ */
 #define docker_info_containers_paused_get(info)		get_attr_unsigned_long((json_object*)info, "ContainersPaused")
+
+/**
+ * @brief Get the stopped containers count from the docker info
+ * 
+ * @param info docker info object
+ * @return unsigned long stopped containers count
+ */
 #define docker_info_containers_stopped_get(info)	get_attr_unsigned_long((json_object*)info, "ContainersStopped")
+
+/**
+ * @brief Get the images count from the docker info
+ * 
+ * @param info docker info object
+ * @return unsigned long images count
+ */
 #define docker_info_images_get(info)				get_attr_unsigned_long((json_object*)info, "Images")
+
+/**
+ * @brief Get the docker server name from the docker info
+ * 
+ * @param info docker info object
+ * @return char* docker server name
+ */
 #define docker_info_name_get(info)					get_attr_str((json_object*)info, "Name")
+
+/**
+ * @brief Get the docker server CPU count from the docker info
+ * 
+ * @param info docker info object
+ * @return int CPU count
+ */
 #define docker_info_ncpu_get(info)					get_attr_int((json_object*)info, "NCPU")
+
+/**
+ * @brief Get the docker server total memory from the docker info
+ * 
+ * @param info docker info object
+ * @return unsigned long total docker server memory
+ */
 #define docker_info_mem_total_get(info)				get_attr_unsigned_long((json_object*)info, "MemTotal")
 
 /**

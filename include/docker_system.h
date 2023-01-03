@@ -33,29 +33,110 @@
 extern "C" {
 #endif
 
+//TODO: specific API headers should not include docker_all
 #include "docker_all.h"
 
 #include <json-c/json_object.h>
 
 /**
-* Ping the docker server
+* @brief Ping the docker server. Returns E_SUCCESS(0) if the server is reachable.
 *
 * \param ctx docker context
 * \return error code
 */
 MODULE_API d_err_t docker_ping(docker_context* ctx);
 
+/**
+ * @brief Docker Version json object.
+ * 
+ * To access members of the docker version object use the
+ * getter methods of the form \c docker_version_<member>_get
+ */
 typedef json_object									docker_version;
+
+/**
+ * @brief Free the docker version object.
+ */
 #define free_docker_version(version)				json_object_put((json_object*) version)
+
+/**
+ * @brief Get the docker version string from the docker version object.
+ * 
+ * @param version docker version
+ * @return char* docker version string
+ */
 #define docker_version_version_get(version)			get_attr_str((json_object*)version, "Version")
+
+/**
+ * @brief Get the operating system of the docker server from the docker version object.
+ * 
+ * @param version docker version
+ * @return char* operating system name
+ */
 #define docker_version_os_get(version)				get_attr_str((json_object*)version, "Os")
+
+/**
+ * @brief Get the kernel version string from the docker version object.
+ * 
+ * @param version docker version
+ * @return char* kernel version string
+ */
 #define docker_version_kernel_version_get(version)	get_attr_str((json_object*)version, "KernelVersion")
+
+/**
+ * @brief Get the golang version string from the docker version object.
+ * 
+ * @param version docker version
+ * @return char* golang version string
+ */
 #define docker_version_go_version_get(version)		get_attr_str((json_object*)version, "GoVersion")
+
+/**
+ * @brief Get the git commit id from the docker version object.
+ * 
+ * @param version docker version
+ * @return char* git commit id
+ */
 #define docker_version_git_commit_get(version)		get_attr_str((json_object*)version, "GitCommit")
+
+/**
+ * @brief Get the architecture of the docker server machine from the docker version object.
+ * 
+ * @param version docker version
+ * @return char* architecture of the docker server machine
+ */
 #define docker_version_arch_get(version)			get_attr_str((json_object*)version, "Arch")
+
+/**
+ * @brief Get the api version of the docker server from the docker version object.
+ * 
+ * @param version docker version
+ * @return char* docker server api version
+ */
 #define docker_version_api_version_get(version)		get_attr_str((json_object*)version, "ApiVersion")
+
+/**
+ * @brief Get the minimum api version supported by the docker server from the docker version object.
+ * 
+ * @param version docker version
+ * @return char* minimum api version supported
+ */
 #define docker_version_min_api_version_get(version) get_attr_str((json_object*)version, "MinAPIVersion")
+
+/**
+ * @brief Get the build time of the docker server from the docker version object.
+ * 
+ * @param version docker version
+ * @return char* build time of the docker server
+ */
 #define docker_version_build_time_get(version)		get_attr_str((json_object*)version, "BuildTime")
+
+/**
+ * @brief Get the flag indicating if the docker is running in experimental mode from the docker version object.
+ * 
+ * @param version docker version
+ * @return bool flag indicating experimental mode
+ */
 #define docker_version_experimental_get(version)	get_attr_boolean((json_object*)version, "Experimental")
 
 /**

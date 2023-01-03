@@ -1,6 +1,6 @@
 # clibdocker API Documentation  {#mainpage}
 
-`clibdocker` is a **C** language for the [Docker Engine API v1.39](https://docs.docker.com/engine/api/v1.39/). The C API organization is similar to the reference JSON API specification.
+`clibdocker` is a **C** language implementation of the [Docker Engine API v1.39](https://docs.docker.com/engine/api/v1.39/). The C API organization is similar to the reference JSON API specification.
 
 ## Goals
  * Simplicity: Easy to understand and use API

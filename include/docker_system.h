@@ -282,20 +282,99 @@ MODULE_API d_err_t docker_system_events_cb(docker_context* ctx,
 
 //Docker df
 
+/**
+ * @brief Docker disk usage (df) json object
+ * 
+ * Represents the result of the docker API \c df call.
+ * The json object contains the df objects for:
+ * 	- Images
+ * 	- Volumes (and their usage)
+ * 	- Containers
+ */
 typedef json_object										docker_df;
+
+/**
+ * @brief Docker image disk usage (image df) json object
+ */
 typedef json_object										docker_df_image;
+
+/**
+ * @brief Docker container disk usage (container df) json object
+ */
 typedef json_object										docker_df_container;
+
+/**
+ * @brief Docker volume disk usage (volume df) json object
+ */
 typedef json_object										docker_df_volume;
+
+/**
+ * @brief Docker volume usage (volume usage df) json object
+ */
 typedef json_object										docker_df_volume_usage_data;
 
+/**
+ * @brief Get the image id from the docker df image object
+ * 
+ * @param img docker df image object
+ * @return char* image id
+ */
 #define docker_df_image_id_get(img)						get_attr_str((json_object*)img, "Id")
+
+/**
+ * @brief Get the parent image id from the docker df image object
+ * 
+ * @param img docker df image object
+ * @return char* parent image id
+ */
 #define docker_df_image_parent_id_get(img)				get_attr_str((json_object*)img, "ParentId")
+
+/**
+ * @brief Get the image creation datetime from the docker df image object
+ * 
+ * @param img docker df image object
+ * @return unsigned long image creation datetime
+ */
 #define docker_df_image_created_get(img)				get_attr_unsigned_long((json_object*)img, "Created")
+
+/**
+ * @brief Get the image size from the docker df image object
+ * 
+ * @param img docker df image object
+ * @return unsigned long image size
+ */
 #define docker_df_image_size_get(img)					get_attr_unsigned_long((json_object*)img, "Size")
+
+/**
+ * @brief Get the image shared size from the docker df image object
+ * 
+ * @param img docker df image object
+ * @return unsigned long image shared size
+ */
 #define docker_df_image_shared_size_get(img)			get_attr_unsigned_long((json_object*)img, "SharedSize")
+
+/**
+ * @brief Get the image virtual size from the docker df image object
+ * 
+ * @param img docker df image object
+ * @return unsigned long image virtual size
+ */
 #define docker_df_image_virtual_size_get(img)			get_attr_unsigned_long((json_object*)img, "VirtualSize")
+
+/**
+ * @brief Get the image containers count from the docker df image object
+ * 
+ * @param img docker df image object
+ * @return unsigned long image containers count
+ */
 #define docker_df_image_containers_get(img)				get_attr_unsigned_long((json_object*)img, "Containers")
 
+/**
+ * @brief Get the image repo tags list from the docker df image object
+ * 
+ * @param img docker df image object
+ * @return json_object* repo tags list
+ */
 #define docker_df_image_repo_tags_get(img)				get_attr_json_object((json_object*)img, "RepoTags")
 #define docker_df_image_repo_tags_length(img)			json_object_array_length(docker_df_image_repo_tags_get(img))
 #define docker_df_image_repo_tags_get_idx(img, i)		(const char*)json_object_array_get_idx(docker_df_image_repo_tags_get(img), i)

@@ -452,20 +452,109 @@ typedef json_object										docker_df_volume_usage_data;
  * @return json_object* repo tags list
  */
 #define docker_df_image_repo_tags_get(img)				get_attr_json_object((json_object*)img, "RepoTags")
+
+/**
+ * @brief Get the image repo tags list length from the docker df image object
+ * 
+ * @param img docker df image object
+ * @return size_t length of repo tags list
+ */
 #define docker_df_image_repo_tags_length(img)			json_object_array_length(docker_df_image_repo_tags_get(img))
+
+/**
+ * @brief Get the ith repo tag from the repo tags list of the docker df image object
+
+ * @param img docker df image object
+ * @return char* ith image repo tag
+ */
 #define docker_df_image_repo_tags_get_idx(img, i)		(const char*)json_object_array_get_idx(docker_df_image_repo_tags_get(img), i)
 
+/**
+ * @brief Get the image repo digests list from the docker df image object
+ * 
+ * @param img docker df image object
+ * @return json_object* repo digests list
+ */
 #define docker_df_image_repo_digests_get(img)			get_attr_json_object((json_object*)img, "RepoDigests")
+
+/**
+ * @brief Get the image repo digests list length from the docker df image object
+ * 
+ * @param img docker df image object
+ * @return size_t length of repo digests list
+ */
 #define docker_df_image_repo_digests_length(img)		json_object_array_length(docker_df_image_repo_digests_get(img))
+
+/**
+ * @brief Get the ith repo digest from the repo digests list of the docker df image object
+
+ * @param img docker df image object
+ * @return char* ith image repo digest
+ */
 #define docker_df_image_repo_digests_get_idx(img, i)	(const char*)json_object_array_get_idx(docker_df_image_repo_digests_get(img), i)
 
+/**
+ * @brief Get the container id from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return char* container id
+ */
 #define docker_df_container_id_get(ctr)					get_attr_str((json_object*)ctr, "Id")
+
+/**
+ * @brief Get the container image name from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return char* container image name
+ */
 #define docker_df_container_image_get(ctr)				get_attr_str((json_object*)ctr, "Image")
+
+/**
+ * @brief Get the container image id from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return char* container image id
+ */
 #define docker_df_container_image_id_get(ctr)			get_attr_str((json_object*)ctr, "ImageID")
+
+/**
+ * @brief Get the container command from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return char* container command
+ */
 #define docker_df_container_command_get(ctr)			get_attr_str((json_object*)ctr, "Command")
+
+/**
+ * @brief Get the created time from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return unsigned long created time
+ */
 #define docker_df_container_created_get(ctr)			get_attr_unsigned_long((json_object*)ctr, "Created")
+
+/**
+ * @brief Get the container rootfs size from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return unsigned long container rootfs size
+ */
 #define docker_df_container_size_rootfs_get(ctr)		get_attr_unsigned_long((json_object*)ctr, "SizeRootFs")
+
+/**
+ * @brief Get the container state from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return char* container state
+ */
 #define docker_df_container_state_get(ctr)				get_attr_str((json_object*)ctr, "State")
+
+/**
+ * @brief Get the container status from the docker df container object
+ * 
+ * @param ctr docker df container object
+ * @return char* container status
+ */
 #define docker_df_container_status_get(ctr)				get_attr_str((json_object*)ctr, "Status")
 
 #define docker_df_volume_name_get(vol)					get_attr_str((json_object*)vol, "Name")

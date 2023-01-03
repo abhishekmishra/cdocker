@@ -645,36 +645,97 @@ MODULE_API d_err_t docker_process_list_container(docker_context* ctx,
 MODULE_API d_err_t docker_container_logs(docker_context* ctx, char** log, size_t* log_length, char* id, int follow, 
 	int std_out, int std_err, long since, long until, int timestamps, int tail);
 
+/**
+ * @brief function type for handling log lines received from the get logs api call.
+ */
 typedef void (docker_log_line_handler)(void* handler_args, int stream_id, int line_num, char* line);
 
+/**
+ * @brief Iterate the log lines received from the logs call
+ * 
+ * @param handler_args args passed to each call of log line handler function
+ * @param log log text
+ * @param log_length log text length
+ * @param line_handler the log line handler function to call
+ * @return d_err_t error code
+ */
 MODULE_API d_err_t docker_container_logs_foreach(void* handler_args, char* log, size_t log_length, docker_log_line_handler* line_handler);
 
 ///////////// Get Container FS Changes
 
+/**
+ * @brief Enum for the change type of entry in filesystem changes.
+ */
 typedef enum {
 	DOCKER_FS_MODIFIED = 0, DOCKER_FS_ADDED = 1, DOCKER_FS_DELETED = 2
 } change_kind;
 
+/**
+ * @brief Docker container change struct
+ * 
+ */
 typedef struct docker_container_change_t {
-	char* path;
-	change_kind kind;
+	char* path;			///< path which is changed
+	change_kind kind;	///< change type for the entry
 } docker_container_change;
 
 /**
-	* Create a new container change item.
-	*/
+ * @brief Create a new container change item
+ * 
+ * @param item to create and return
+ * @param path path of file changed
+ * @param kind type of change
+ * @return d_err_t error code
+ */
 MODULE_API d_err_t make_docker_container_change(docker_container_change** item,
 	const char* path, const char* kind);
 
+/**
+ * @brief Free the docker container change item
+ * 
+ * @param item to free
+ */
 MODULE_API void free_docker_container_change(docker_container_change* item);
 
+/**
+ * @brief Docker Changes list json object
+ */
 typedef arraylist docker_changes_list;
 
+/**
+ * @brief Create a new docker changes list json object
+ * 
+ * @param changes_list object to create and return
+ * @return d_err_t error code
+ */
 MODULE_API d_err_t make_docker_changes_list(docker_changes_list** changes_list);
+
+/**
+ * @brief Add a container change item to the docker changes list
+ * 
+ * @param list changes list
+ * @param item change item
+ * @return int error code
+ */
 MODULE_API int docker_changes_list_add(docker_changes_list* list,
 	docker_container_change* item);
+
+/**
+ * @brief Get the ith item from the docker changes list
+ * 
+ * @param list changes list
+ * @param i index
+ * @return docker_container_change* change item at ith index 
+ */
 MODULE_API docker_container_change* docker_changes_list_get_idx(docker_changes_list* list,
 	int i);
+
+/**
+ * @brief Get the length of the docker changes list
+ * 
+ * @param list chnages list
+ * @return size_t length of the changes list
+ */
 MODULE_API size_t docker_changes_list_length(docker_changes_list* list);
 
 /**
@@ -701,53 +762,309 @@ typedef json_object													docker_percpu_usage_list;
  * @return size_t length of the percpu usage list
  */
 #define docker_percpu_usage_list_length(percpu_usage_ls)			json_object_array_length(percpu_usage_ls)
+
+/**
+ * @brief Get the ith cpu usage item from the percpu usage list
+ * 
+ * @param percpu_usage_ls usage list
+ * @param i index
+ * @return docker_percpu_usage* cpu usage object
+ */
 #define docker_percpu_usage_list_get_idx(percpu_usage_ls, i)		(docker_percpu_usage*) json_object_array_get_idx(percpu_usage_ls, i)
 
+/**
+ * @brief Docker cpu usage object
+ */
 typedef json_object													docker_cpu_usage;
+
+/**
+ * @brief Free the docker cpu usage object
+ * 
+ * @param cpu_usg docker cpu usage object
+ */
 #define free_docker_cpu_usage(cpu_usg)								json_object_put((json_object*) cpu_usg)
+
+/**
+ * @brief Get the usermode usage from cpu usage object
+ * 
+ * @param cpu_usg docker cpu usage object
+ * @return long long usermode cpu usage
+ */
 #define docker_cpu_usage_usermode_get(cpu_usg)						get_attr_long_long((json_object*)cpu_usg, "usage_in_usermode")
+
+/**
+ * @brief Get the total cpu usage from the cpu usage object
+ * 
+ * @param cpu_usg docker cpu usage object
+ * @return long long total cpu usage
+ */
 #define docker_cpu_usage_total_get(cpu_usg)							get_attr_long_long((json_object*)cpu_usg, "total_usage")
+
+/**
+ * @brief Get the kernel mode cpu usage from the cpu usage object
+ * 
+ * @param cpu_usg docker cpu usage object
+ * @return long long total kernel mode cpu usage
+ */
 #define docker_cpu_usage_kernelmode_get(cpu_usg)					get_attr_long_long((json_object*)cpu_usg, "usage_in_kernelmode")
+
+/**
+ * @brief Get the percpu usage from the cpu usage object
+ * 
+ * @param cpu_usg docker cpu usage object
+ * @return docker_percpu_usage_list* percpu usage object
+ */
 #define docker_cpu_usage_percpu_usage_get(cpu_usg)					(docker_percpu_usage_list*)get_attr_json_object((json_object*)cpu_usg, "percpu_usage")
 
+/**
+ * @brief Docker Throttling Data json object
+ */
 typedef json_object													docker_throttling_data;
+
+/**
+ * @brief Free the docker throttling data json object
+ * 
+ * @param throt the throttling data object
+ */
 #define free_docker_throttling_data(throt)							json_object_put((json_object*) throt)
+
+/**
+ * @brief Get the data periods from the throttling data object.
+ * 
+ * @param throt the throttling data object
+ * @return long long periods
+ */
 #define docker_throttling_data_periods_get(throt)					get_attr_long_long((json_object*)throt, "periods")
+
+/**
+ * @brief Get the throttled periods from the throttling data object.
+ * 
+ * @param throt the throttling data object
+ * @return long long throttled periods
+ */
 #define docker_throttling_data_throttled_periods_get(throt)			get_attr_long_long((json_object*)throt, "throttled_periods")
+
+/**
+ * @brief Get the throttled time from the throttling data object.
+ * 
+ * @param throt the throttling data object
+ * @return long long throttled time
+ */
 #define docker_throttling_data_throttled_time_get(throt)			get_attr_long_long((json_object*)throt, "throttled_time")
 
+/**
+ * @brief Docker Container CPU stats json object
+ */
 typedef json_object													docker_container_cpu_stats;
+
+/**
+ * @brief Free the docker container cpu stats object
+ * 
+ * @param cpu_stats cpu stats object
+ */
 #define free_docker_container_cpu_stats(cpu_stats)					json_object_put((json_object*) cpu_stats)
+
+/**
+ * @brief Get the system cpu usage from the cpu stats
+ * 
+ * @param cpu_stats cpu stats object
+ * @return long long system cpu usage
+ */
 #define docker_container_cpu_stats_system_cpu_usage_get(cpu_stats)	get_attr_long_long((json_object*)cpu_stats, "system_cpu_usage")
+
+/**
+ * @brief Get the number of online cpus from the cpu stats
+ * 
+ * @param cpu_stats cpu stats object
+ * @return long online cpus
+ */
 #define docker_container_cpu_stats_online_cpus_get(cpu_stats)		get_attr_long((json_object*)cpu_stats, "online_cpus")
+
+/**
+ * @brief Get the cpu usage from the cpu stats
+ * 
+ * @param cpu_stats cpu stats object
+ * @return long long cpu usage
+ */
 #define docker_container_cpu_stats_cpu_usage_get(cpu_stats)			(docker_cpu_usage*)get_attr_json_object((json_object*)cpu_stats, "cpu_usage")
+
+/**
+ * @brief Get the throttling data from the cpu stats
+ * 
+ * @param cpu_stats cpu stats object
+ * @return docker_throttling_data* throttling data object
+ */
 #define docker_container_cpu_stats_throttling_data_get(cpu_stats)	(docker_throttling_data*)get_attr_json_object((json_object*)cpu_stats, "throttling_data")
 
+/**
+ * @brief Docker Container Memory Stats json object
+ */
 typedef json_object													docker_container_mem_stats;
+
+/**
+ * @brief Free the docker container memory stats object
+ * 
+ * @param mem_stats docker container memory stats object
+ */
 #define free_docker_container_mem_stats(mem_stats)					json_object_put((json_object*) mem_stats)
+
+/**
+ * @brief Get the max usage from the memory stats
+ * 
+ * @param mem_stats docker container memory stats object
+ * @return long long max usage
+ */
 #define docker_container_mem_stats_max_usage_get(mem_stats)			get_attr_long_long((json_object*)mem_stats, "max_usage")
+
+/**
+ * @brief Get the usage from the memory stats
+ * 
+ * @param mem_stats docker container memory stats object
+ * @return long long usage
+ */
 #define docker_container_mem_stats_usage_get(mem_stats)				get_attr_long_long((json_object*)mem_stats, "usage")
+
+/**
+ * @brief Get the failcnt from the memory stats
+ * 
+ * @param mem_stats docker container memory stats object
+ * @return long long failcnt
+ */
 #define docker_container_mem_stats_failcnt_get(mem_stats)			get_attr_long_long((json_object*)mem_stats, "failcnt")
+
+/**
+ * @brief Get the limit from the memory stats
+ * 
+ * @param mem_stats docker container memory stats object
+ * @return long long limit
+ */
 #define docker_container_mem_stats_limit_get(mem_stats)				get_attr_long_long((json_object*)mem_stats, "limit")
+
+/**
+ * @brief Get the stats map from the memory stats
+ * 
+ * @param mem_stats docker container memory stats object
+ * @return json_object* stats map
+ */
 #define docker_container_mem_stats_stats_get(mem_stats)				get_attr_json_object((json_object*)mem_stats, "stats")
+
+/**
+ * @brief Iterate the stats map key,value pair
+ * 
+ * @param mem_stats docker container memory stats object
+ */
 #define docker_container_mem_stats_stats_foreach(mem_stats)			json_object_object_foreach(docker_container_mem_stats_stats_get(mem_stats), key, val)
 
+/**
+ * @brief Docker Container Net Stats json object
+ */
 typedef json_object													docker_container_net_stats;
-#define free_docker_container_net_stats(net_stats)					json_object_put((json_object*) net_stats)
-#define docker_container_net_stats_foreach(net_stats)				json_object_object_foreach(net_stats, key, val)
-#define docker_container_net_stats_stats_foreach(net_stats)			json_object_object_foreach(net_stats_val, key, val)
 
+/**
+ * @brief Free the docker container net stats json object
+ * 
+ * @param net stats object
+ */
+#define free_docker_container_net_stats(net_stats)					json_object_put((json_object*) net_stats)
+
+/**
+ * @brief Iterate over the net stats key,value pair
+ * 
+ * @param net_stats net stats object
+ */
+#define docker_container_net_stats_foreach(net_stats)				json_object_object_foreach(net_stats, key, val)
+
+/**
+ * @brief Iterate over stats values key, value pair of each net_stats entry
+ * 
+ * @param net_stats_val the net stats value
+ */
+#define docker_container_net_stats_stats_foreach(net_stats_val)		json_object_object_foreach(net_stats_val, key, val)
+
+/**
+ * @brief Docker Container Pid Stats json object
+ */
 typedef json_object													docker_container_pid_stats;
+
+/**
+ * @brief Free the docker container pid stats object
+ * 
+ * @param pid_stats docker container pid stats object
+ */
 #define free_docker_container_pid_stats(pid_stats)					json_object_put((json_object*) pid_stats)
+
+/**
+ * @brief Iterate over the key value pair of the pid stats entries
+ * 
+ * @param pid_stats docker container pid stats object
+ */
 #define docker_container_pid_stats_foreach(pid_stats)				json_object_object_foreach(pid_stats, key, val)
 
+/**
+ * @brief Docker Container Stats object
+ * 
+ * This is the overall stats object which can be used to access:
+ * 	- Pid stats
+ * 	- Net stats
+ * 	- Memory stats
+ * 	- CPU stats
+ * 	- PerCPU stats
+ */
 typedef json_object													docker_container_stats;
+
+/**
+ * @brief Free the docker container stats object
+ *
+ * @param stats stats object
+ */
 #define free_docker_container_stats(stats)							json_object_put((json_object*) stats)
+
+/**
+ * @brief Get the read member from the stats object
+ * 
+ * @param stats stats object
+ * @return char* read
+ */
 #define docker_container_stats_read_get(stats)						get_attr_str((json_object*)stats, "read")
+
+/**
+ * @brief Get the container pid stats object
+ * 
+ * @param stats stats object
+ * @return docker_container_pid_stats* pid stats object
+ */
 #define docker_container_stats_pid_stats_get(stats)					(docker_container_pid_stats*)get_attr_json_object((json_object*)stats, "pid_stats")
+
+/**
+ * @brief Get the container network stats object
+ * 
+ * @param stats stats object
+ * @return docker_container_net_stats* net stats object
+ */
 #define docker_container_stats_networks_get(stats)					(docker_container_net_stats*)get_attr_json_object((json_object*)stats, "networks")
+
+/**
+ * @brief Get the container memory stats object
+ * 
+ * @param stats stats object
+ * @return docker_container_mem_stats* mem stats object
+ */
 #define docker_container_stats_mem_stats_get(stats)					(docker_container_mem_stats*)get_attr_json_object((json_object*)stats, "memory_stats")
+
+/**
+ * @brief Get the container cpu stats object
+ * 
+ * @param stats stats object
+ * @return docker_container_cpu_stats* cpu stats object
+ */
 #define docker_container_stats_cpu_stats_get(stats)					(docker_container_cpu_stats*)get_attr_json_object((json_object*)stats, "cpu_stats")
+
+/**
+ * @brief Get the container percpu stats object
+ * 
+ * @param stats stats object
+ * @return docker_container_percpu_stats* percpu stats object
+ */
 #define docker_container_stats_precpu_stats_get(stats)				(docker_container_cpu_stats*)get_attr_json_object((json_object*)stats, "precpu_stats")
 
 /**
@@ -775,6 +1092,12 @@ MODULE_API d_err_t docker_container_get_stats_cb(docker_context* ctx,
 	void (*docker_container_stats_cb)(docker_container_stats* stats,
 		void* cbargs), void* cbargs, char* id);
 
+/**
+ * @brief Get the cpu usage percentage from the docker container stats
+ * 
+ * @param stats docker container stats
+ * @return float cpu usage percentage
+ */
 MODULE_API float docker_container_stats_get_cpu_usage_percent(
 		docker_container_stats* stats);
 

@@ -369,26 +369,153 @@ typedef json_object																docker_ctr_create_params;
  */
 #define docker_ctr_create_params_attachstderr_set(ctr_create, attachstderr)		set_attr_boolean(ctr_create, "AttachStderr", attachstderr)
 
+/**
+ * @brief Create a docker container given the container creation params.
+ * 
+ * @param ctx docker context
+ * @param id container id
+ * @param params docker container creation params
+ * @return d_err_t error code
+ */
 MODULE_API d_err_t docker_create_container(docker_context* ctx,
 	char** id, docker_ctr_create_params* params);
 
+/**
+ * @brief Docker Container json object
+ * 
+ * NOTE: this is different from the docker_ctr_ls_item object which is
+ * part of the docker container list query response.
+ * This is largely a quirk of the Docker API.
+ * 
+ */
 typedef json_object									docker_ctr;
+
+/**
+ * @brief Free the docker container object
+ * 
+ * @param ctr docker container object
+ */
 #define free_docker_ctr(ctr)						json_object_put((json_object*) ctr)
+
+/**
+ * @brief Get the id of the docker container
+ * 
+ * @param ctr docker container object
+ * @return char* container id
+ */
 #define docker_ctr_id_get(ctr)						get_attr_str((json_object*)ctr, "Id")
+
+/**
+ * @brief Get the image name of the docker container
+ * 
+ * @param ctr docker container object
+ * @return char* container image name
+ */
 #define docker_ctr_image_get(ctr)					get_attr_str((json_object*)ctr, "Image")
+
+/**
+ * @brief Get the name of the docker container
+ * 
+ * @param ctr docker container object
+ * @return char* name
+ */
 #define docker_ctr_name_get(ctr)					get_attr_str((json_object*)ctr, "Name")
+
+/**
+ * @brief Get the path of the docker container
+ * 
+ * @param ctr docker container object
+ * @return char* path
+ */
 #define docker_ctr_path_get(ctr)					get_attr_str((json_object*)ctr, "Path")
+
+/**
+ * @brief Get the creation datetime of the docker container
+ * 
+ * @param ctr docker container object
+ * @return long long creation datetime
+ */
 #define docker_ctr_created_get(ctr)					get_attr_long_long((json_object*)ctr, "Created")
+
+/**
+ * @brief Get the state of the docker container
+ * 
+ * @param ctr docker container object
+ * @return char* container state
+ */
 #define docker_ctr_state_get(ctr)					get_attr_str((json_object*)ctr, "State")
+
+/**
+ * @brief Get the status of the docker container
+ * 
+ * @param ctr docker container object
+ * @return char* container status
+ */
 #define docker_ctr_status_get(ctr)					get_attr_str((json_object*)ctr, "Status")
+
+/**
+ * @brief Get the size of the docker container
+ * 
+ * @param ctr docker container object
+ * @return long long container size
+ */
 #define docker_ctr_size_rw_get(ctr)					get_attr_long_long((json_object*)ctr, "SizeRw")
+
+/**
+ * @brief Get the rootfs size of the docker container
+ * 
+ * @param ctr docker container object
+ * @return long long rootfs size
+ */
 #define docker_ctr_size_root_fs_get(ctr)			get_attr_long_long((json_object*)ctr, "SizeRootFs")
+
+/**
+ * @brief Get the ports list of the docker container
+ * 
+ * @param ctr docker container object
+ * @return json_object* ports list
+ */
 #define docker_ctr_ports_get(ctr)					get_attr_json_object((json_object*)ctr, "Ports")
+
+/**
+ * @brief Get the ports list length of the docker container
+ * 
+ * @param ctr docker container object
+ * @return size_t ports list length
+ */
 #define docker_ctr_ports_length(ctr)				json_object_array_length(docker_ctr_ports_get(ctr))
+
+/**
+ * @brief Get ith port of the docker container
+ * 
+ * @param ctr docker container object
+ * @return docker_ctr_port* ith container port
+ */
 #define docker_ctr_ports_get_idx(ctr, i)			(docker_ctr_port*) json_object_array_get_idx(docker_ctr_ports_get(ctr), i)
+
+/**
+ * @brief Get the port labels list of the docker container
+ * 
+ * @param ctr docker container object
+ * @return json_object* port labels
+ */
 #define docker_ctr_ports_labels_get(vol)			get_attr_json_object((json_object*)vol, "Labels")
+
+/**
+ * @brief Iterate the port labels of the docker container
+ * 
+ * @param ctr docker container object
+ */
 #define docker_ctr_ports_labels_foreach(vol)		json_object_object_foreach(docker_ctr_ports_labels_get(vol), key, val)
 
+/**
+ * @brief Inspect the docker container given by the id
+ * 
+ * @param ctx docker context
+ * @param id container id
+ * @param size //TODO: remove unused
+ * @return MODULE_API* 
+ */
 MODULE_API docker_ctr* docker_inspect_container(docker_context* ctx, char* id, int size);
 
 // /**
@@ -402,8 +529,25 @@ MODULE_API docker_ctr* docker_inspect_container(docker_context* ctx, char* id, i
 // 	arraylist* processes;
 // } docker_container_ps;
 
+/**
+ * @brief Docker container process list object
+ */
 typedef json_object											docker_ctr_process_details;
+
+/**
+ * @brief Get the Docker containers process details list length
+ * 
+ * @param ctr_ps_ls containers process details list
+ * @return size_t length of the containers process list
+ */
 #define docker_ctr_process_details_length(ctr_ps_ls)		json_object_array_length(ctr_ps_ls)
+
+/**
+ * @brief Get the ith process from the container process details list
+ * 
+ * @param ctr_ps_ls containers process details list
+ * @return char* ith process
+ */
 #define docker_ctr_process_details_get_idx(ctr_ps_ls, i)	(char*) json_object_array_get_idx(ctr_ps_ls, i)
 
 typedef json_object										docker_ctr_ps;

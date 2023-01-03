@@ -257,21 +257,33 @@ MODULE_API d_err_t docker_images_list(docker_context* ctx,
 		int filter_dangling, char* filter_label, char* filter_reference,
 		char* filter_since);
 
+/**
+ * @brief Provides progress detail for docker image creation process.
+ */
 typedef struct docker_progress_detail_t {
-	long current;
-	long total;
+	long current;		///< current value of progress bar
+	long total;			///< total value of progress bar
 } docker_progress_detail;
 
+/**
+ * @brief Docker Image Creation Status is returned when creating a
+ * docker image. It is useful for a user facing application to show
+ * creation progress. 
+ */
 typedef struct docker_image_create_status_t {
-	char* status;
-	char* id;
-	char* progress;
-	docker_progress_detail* progress_detail;
+	char* status;								///< a status message from the docker api
+	char* id;									///< image id
+	char* progress;								///< progress description
+	docker_progress_detail* progress_detail;	///< progress detail (provides current and total steps)
 } docker_image_create_status;
 
+/**
+ * @brief Docker Build Status is used to provide a status
+ * update of the docker image build status. 
+ */
 typedef struct docker_build_status_t {
-	char* stream;
-	char* aux_id;
+	char* stream;			///< the status stream
+	char* aux_id;			///< the aux id
 } docker_build_status;
 
 //Docker Image Create commands

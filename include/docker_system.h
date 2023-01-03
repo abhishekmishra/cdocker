@@ -41,8 +41,8 @@ extern "C" {
 /**
 * @brief Ping the docker server. Returns E_SUCCESS(0) if the server is reachable.
 *
-* \param ctx docker context
-* \return error code
+* @param ctx docker context
+* @return error code
 */
 MODULE_API d_err_t docker_ping(docker_context* ctx);
 
@@ -142,9 +142,9 @@ typedef json_object									docker_version;
 /**
  * Gets the docker version information
  *
- * \param ctx docker context
- * \param version docker version object to return
- * \return error code.
+ * @param ctx docker context
+ * @param version docker version object to return
+ * @return error code.
  */
 MODULE_API d_err_t docker_system_version(docker_context* ctx,
 		docker_version** version);
@@ -230,9 +230,9 @@ typedef json_object									docker_info;
 /**
  * Gets the docker system information
  *
- * \param ctx docker context
- * \param info object to return
- * \return error code.
+ * @param ctx docker context
+ * @param info object to return
+ * @return error code.
  */
 MODULE_API d_err_t docker_system_info(docker_context* ctx,
 		docker_info** info);
@@ -332,11 +332,11 @@ typedef json_object									docker_event;
 /**
  * Get the docker events in a time range.
  *
- * \param ctx the docker context
- * \param events is an array_list containing objects of type docker_event
- * \param start_time
- * \param end_time
- * \return error code
+ * @param ctx the docker context
+ * @param events is an array_list containing objects of type docker_event
+ * @param start_time
+ * @param end_time
+ * @return error code
  */
 MODULE_API d_err_t docker_system_events(docker_context* ctx,
 		arraylist** events, time_t start_time, time_t end_time);
@@ -344,13 +344,13 @@ MODULE_API d_err_t docker_system_events(docker_context* ctx,
 /**
  * Get the docker events in a time range.
  *
- * \param ctx the docker context
- * \param docker_events_cb pointer to callback when an event is received.
- * \param cbargs is a pointer to callback arguments
- * \param events is an array_list containing objects of type docker_event
- * \param start_time
- * \param end_time
- * \return error code
+ * @param ctx the docker context
+ * @param docker_events_cb pointer to callback when an event is received.
+ * @param cbargs is a pointer to callback arguments
+ * @param events is an array_list containing objects of type docker_event
+ * @param start_time
+ * @param end_time
+ * @return error code
  */
 MODULE_API d_err_t docker_system_events_cb(docker_context* ctx,
 		void (*docker_events_cb)(docker_event* evt, void* cbargs), void* cbargs,
@@ -463,8 +463,9 @@ typedef json_object										docker_df_volume_usage_data;
 
 /**
  * @brief Get the ith repo tag from the repo tags list of the docker df image object
-
+ *
  * @param img docker df image object
+ * @param i index
  * @return char* ith image repo tag
  */
 #define docker_df_image_repo_tags_get_idx(img, i)		(const char*)json_object_array_get_idx(docker_df_image_repo_tags_get(img), i)
@@ -487,8 +488,9 @@ typedef json_object										docker_df_volume_usage_data;
 
 /**
  * @brief Get the ith repo digest from the repo digests list of the docker df image object
-
+ *
  * @param img docker df image object
+ * @param i index
  * @return char* ith image repo digest
  */
 #define docker_df_image_repo_digests_get_idx(img, i)	(const char*)json_object_array_get_idx(docker_df_image_repo_digests_get(img), i)
@@ -560,7 +562,7 @@ typedef json_object										docker_df_volume_usage_data;
 /**
  * @brief Get the volume name from the docker df volume object
  * 
- * @param ctr docker df volume object
+ * @param vol docker df volume object
  * @return char* volume name
  */
 #define docker_df_volume_name_get(vol)					get_attr_str((json_object*)vol, "Name")
@@ -568,7 +570,7 @@ typedef json_object										docker_df_volume_usage_data;
 /**
  * @brief Get the volume driver from the docker df volume object
  * 
- * @param ctr docker df volume object
+ * @param vol docker df volume object
  * @return char* volume driver
  */
 #define docker_df_volume_driver_get(vol)				get_attr_str((json_object*)vol, "Driver")
@@ -576,7 +578,7 @@ typedef json_object										docker_df_volume_usage_data;
 /**
  * @brief Get the volume mountpoint from the docker df volume object
  * 
- * @param ctr docker df volume object
+ * @param vol docker df volume object
  * @return char* volume mountpoint
  */
 #define docker_df_volume_mountpoint_get(vol)			get_attr_str((json_object*)vol, "Mountpoint")
@@ -584,7 +586,7 @@ typedef json_object										docker_df_volume_usage_data;
 /**
  * @brief Get the volume scope from the docker df volume object
  * 
- * @param ctr docker df volume object
+ * @param vol docker df volume object
  * @return char* volume scope
  */
 #define docker_df_volume_scope_get(vol)					get_attr_str((json_object*)vol, "Scope")
@@ -592,7 +594,7 @@ typedef json_object										docker_df_volume_usage_data;
 /**
  * @brief Get the volume usage from the docker df volume object
  * 
- * @param ctr docker df volume object
+ * @param vol docker df volume object
  * @return json_object* volume usage data
  */
 #define docker_df_volume_usage_data_get(vol)			(docker_df_volume_usage_data*)get_attr_json_object((json_object*)vol, "UsageData")
@@ -600,7 +602,7 @@ typedef json_object										docker_df_volume_usage_data;
 /**
  * @brief Get the volume size from the docker df volume object
  * 
- * @param ctr docker df volume object
+ * @param ud docker df volume object
  * @return unsigned long volume size
  */
 #define docker_df_volume_usage_data_size_get(ud)		get_attr_unsigned_long((json_object*)ud, "Size")
@@ -608,7 +610,7 @@ typedef json_object										docker_df_volume_usage_data;
 /**
  * @brief Get the volume reference count from the docker df volume object
  * 
- * @param ctr docker df volume object
+ * @param ud docker df volume object
  * @return unsigned long volume reference count
  */
 #define docker_df_volume_usage_data_ref_count_get(ud)	get_attr_unsigned_long((json_object*)ud, "RefCount")
@@ -633,6 +635,7 @@ typedef json_object										docker_df_volume_usage_data;
  * @brief Get the ith name from the container names list from the docker df container object
  * 
  * @param ctr docker df container object
+ * @param i index
  * @return char* ith name from container names list
  */
 #define docker_df_container_names_get_idx(ctr, i)		(const char*)json_object_array_get_idx(docker_df_container_names_get(ctr), i)
@@ -657,12 +660,15 @@ typedef json_object										docker_df_volume_usage_data;
  * @brief Get the ith mount from the container mounts list from the docker df container object
  * 
  * @param ctr docker df container object
+ * @param i index
  * @return char* ith mount from container mounts list
  */
 #define docker_df_container_mounts_get_idx(ctr, i)		(const char*)json_object_array_get_idx(docker_df_container_mounts_get(ctr), i)
 
 /**
  * @brief Free the docker df json object
+ * 
+ * @param df df object
  */
 #define free_docker_df(df)								json_object_put((json_object*) df)
 
@@ -694,6 +700,7 @@ typedef json_object										docker_df_volume_usage_data;
  * @brief Get the ith docker image from the docker df json object
  * 
  * @param df docker df json object
+ * @param i index
  * @return docker_df_image* ith docker image
  */
 #define docker_df_images_get_idx(df, i)					(docker_df_image*)json_object_array_get_idx(docker_df_images_get(df), i)
@@ -718,6 +725,7 @@ typedef json_object										docker_df_volume_usage_data;
  * @brief Get the ith docker container from the docker df json object
  * 
  * @param df docker df json object
+ * @param i index
  * @return docker_df_container* ith docker container
  */
 #define docker_df_containers_get_idx(df, i)				(docker_df_container*)json_object_array_get_idx(docker_df_containers_get(df), i)
@@ -742,6 +750,7 @@ typedef json_object										docker_df_volume_usage_data;
  * @brief Get the ith docker volume from the docker df json object
  * 
  * @param df docker df json object
+ * @param i index
  * @return docker_df_volume* ith docker volume
  */
 #define docker_df_volumes_get_idx(df, i)				(docker_df_volume*)json_object_array_get_idx(docker_df_volumes_get(df), i)
@@ -749,9 +758,9 @@ typedef json_object										docker_df_volume_usage_data;
 /**
  * Gets the docker usage data
  *
- * \param ctx docker context
- * \param docker_df object to return
- * \return error code.
+ * @param ctx docker context
+ * @param df object to return
+ * @return error code.
  */
 MODULE_API d_err_t docker_system_df(docker_context* ctx, docker_df** df);
 

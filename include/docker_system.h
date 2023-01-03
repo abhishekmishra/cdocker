@@ -239,18 +239,94 @@ MODULE_API d_err_t docker_system_info(docker_context* ctx,
 
 // Docker System Events API
 
+/**
+ * @brief Docker Event List json object
+ * 
+ */
 typedef arraylist									docker_event_list;
-#define free_docker_event_list(event_ls)			arraylist_free(event_ls)
-#define docker_event_list_length(event_ls)			arraylist_length(event_ls)
-#define docker_event_list_get_idx(event_ls, i)			arraylist_get(event_ls, i)
 
+/**
+ * @brief Free the docker event list object
+ * 
+ * @param event_ls docker event list
+ */
+#define free_docker_event_list(event_ls)			arraylist_free(event_ls)
+
+/**
+ * @brief Length of docker event list
+ * 
+ * @param event_ls docker event list
+ * @return size_t length of the events list
+ */
+#define docker_event_list_length(event_ls)			arraylist_length(event_ls)
+
+/**
+ * @brief Get the ith event from the docker event list
+ * 
+ * @param event_ls docker event list
+ * @param i index
+ * @return docker_event* ith event in the list
+ */
+#define docker_event_list_get_idx(event_ls, i)		arraylist_get(event_ls, i)
+
+/**
+ * @brief Docker Event json object
+ */
 typedef json_object									docker_event;
+
+/**
+ * @brief Free the docker event json object
+ * 
+ * @param event docker event object
+ */
 #define free_docker_event(event)					json_object_put((json_object*) event)
+
+/**
+ * @brief Get the event type string from the docker event object
+ * 
+ * @param event docker event object
+ * @return char* event type
+ */
 #define docker_event_type_get(event)				get_attr_str((json_object*)event, "Type")
+
+/**
+ * @brief Get the action from the docker event object
+ * 
+ * @param event docker event object
+ * @return char* action
+ */
 #define docker_event_action_get(event)				get_attr_str((json_object*)event, "Action")
+
+/**
+ * @brief Get the event time from the docker event object
+ * 
+ * @param event docker event object
+ * @return unsigned long event time
+ */
 #define docker_event_time_get(event)				get_attr_unsigned_long((json_object*)event, "time")
+
+/**
+ * @brief Get the actor id from the docker event object
+ * 
+ * @param event docker event object
+ * @return char* actor id
+ */
 #define docker_event_actor_id_get(event)			get_attr_str(get_attr_json_object((json_object*)event, "Actor"), "ID")
+
+
+/**
+ * @brief Get the actor attributes from the docker event object
+ * 
+ * @param event docker event object
+ * @return json_object* actor attributes
+ */
 #define docker_event_attributes_get(event)			get_attr_json_object(get_attr_json_object((json_object*)event, "Actor"), "Attributes")
+
+/**
+ * @brief Iterate over the key/val pair of each attribute in the docker event attributes object
+ * 
+ * @param event docker event object
+ */
 #define docker_event_attributes_foreach(event)		json_object_object_foreach(docker_event_attributes_get(event), key, val)
 
 /**

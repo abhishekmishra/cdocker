@@ -479,7 +479,7 @@ void docker_call_cb_args_set(docker_call *dcall, void *cb_args)
 	}
 }
 
-char *docker_call_cb_args_get(docker_call *dcall)
+void *docker_call_cb_args_get(docker_call *dcall)
 {
 	if (dcall != NULL)
 	{
@@ -496,7 +496,7 @@ void docker_call_client_cb_args_set(docker_call *dcall, void *client_cb_args)
 	}
 }
 
-char *docker_call_client_cb_args_get(docker_call *dcall)
+void *docker_call_client_cb_args_get(docker_call *dcall)
 {
 	if (dcall != NULL)
 	{

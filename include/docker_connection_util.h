@@ -110,13 +110,13 @@ typedef enum {
 typedef void (docker_result_handler_fn) (struct docker_context_t* ctx, docker_result* result);
 
 /**
- * A docker context for a specific docker server.
+ * @brief A docker context for a specific docker server.
  */
 typedef struct docker_context_t {
-	char* url;
-	char* api_version;
-	docker_result_handler_fn* result_handler_fn;
-	void* client_args;
+	char* url;										///< Url of the docker server
+	char* api_version;								///< API version expected
+	docker_result_handler_fn* result_handler_fn;	///< Result handler for all responses
+	void* client_args;								///< Client args passed to callback functions
 } docker_context;
 
 /**
@@ -165,10 +165,29 @@ MODULE_API d_err_t make_docker_context_default_local(docker_context** ctx);
  */
 MODULE_API d_err_t docker_context_result_handler_set(docker_context* ctx, docker_result_handler_fn* result_handler_fn);
 
+/**
+ * @brief Get the docker context result handler function
+ * 
+ * @param ctx docker context
+ * @return docker_result_handler_fn* result handler fn
+ */
 MODULE_API docker_result_handler_fn* docker_context_result_handler_get(docker_context* ctx);
 
+/**
+ * @brief Set the client args for the docker context
+ * 
+ * @param ctx docker context
+ * @param client_args a client args value
+ * @return d_err_t error code
+ */
 MODULE_API d_err_t docker_context_client_args_set(docker_context* ctx, void* client_args);
 
+/**
+ * @brief Get the client args for the docker context
+ * 
+ * @param ctx docker context
+ * @return void* client args
+ */
 MODULE_API void* docker_context_client_args_get(docker_context* ctx);
 
 /**
@@ -183,103 +202,255 @@ typedef void (status_callback)(char* msg, void* cbargs, void* client_cbargs);
 /**
  * @brief internal datastructure representing a Docker Call object.
  * 
- * 
+ * All Docker API call implementations internally use this object
+ * to represent a call to the Docker API.
  */
 typedef struct docker_call_t {
 	// URL Parts
-	char* site_url;
-	docker_object_type object;
-	char* id;
-	char* method;
-	coll_al_map* params;
+	char* site_url;					///< site url
+	docker_object_type object;		///< docker object type enum value
+	char* id;						///< docker object id if applicable
+	char* method;					///< docker api request method
+	coll_al_map* params;			///< docker request parameters map
 
 	// HTTP
-	char* request_method;
-	char* content_type_header;
+	char* request_method;			///< http request method
+	char* content_type_header;		///< http request content type header value
 
 	// Request object
-	char* request_data;
-	size_t request_data_len;
+	char* request_data;				///< http request data
+	size_t request_data_len;		///< http request data length
 
 	// Response data
 	// char* response_data;
-	int http_error_code;
+	int http_error_code;			///< http response code
 
 	// HTTP Response Internals
-	char* memory;
-	size_t capacity;
-	size_t size;
-	size_t flush_end;
+	char* memory;					///< internal memory used for response
+	size_t capacity;				///< total capacity of internal response storage
+	size_t size;					///< used size of the storage
+	size_t flush_end;				///< size of storage already flushed
 
 	// Callback Config
-	status_callback* status_cb;
-	void* cb_args;
-	void* client_cb_args;
+	status_callback* status_cb;		///< the status callback method
+	void* cb_args;					///< callback args for internal usage
+	void* client_cb_args;			///< callback args provided by client
 } docker_call;
 
 /**
  * @brief Create a new generic Docker API Call object.
- * 
- * This method is 
  *
- * @param dcall
- * @param site_url
- * @param object
- * @param id
- * @param method
- * @return MODULE_API
+ * The Docker Call object has getters and setters of the form
+ * \c docker_call_<member>_get , and
+ * \c docker_call_<member>_set.
+ * 
+ * @param dcall pointer to \c docker_call* to create and return
+ * @param site_url request url
+ * @param object the docker object type whose endpoint is being called
+ * @param id docker object id
+ * @param method docker request http method
+ * @return d_err_t error code
  */
 MODULE_API d_err_t make_docker_call(docker_call** dcall, char* site_url, docker_object_type object, 
 	const char* id,	const char* method);
 
+/**
+ * @brief Set the docker request HTTP method.
+ * 
+ * @param dcall docker call object
+ * @param method http method
+ */
 MODULE_API void docker_call_request_method_set(docker_call* dcall, char* method);
 
+/**
+ * @brief Get the docker request HTTP method.
+ * 
+ * @param dcall docker call object
+ * @return char* http method
+ */
 MODULE_API char* docker_call_request_method_get(docker_call* dcall);
 
+/**
+ * @brief Set the docker call content type header.
+ * 
+ * @param dcall docker call object
+ * @param content_type_header content type header
+ */
 MODULE_API void docker_call_content_type_header_set(docker_call* dcall, char* content_type_header);
 
+/**
+ * @brief Get the docker request content type header.
+ * 
+ * @param dcall docker call object
+ * @return char* content type header
+ */
 MODULE_API char* docker_call_content_type_header_get(docker_call* dcall);
 
+/**
+ * @brief Set the docker request data.
+ * 
+ * @param dcall docker call object
+ * @param request_data json request data
+ */
 MODULE_API void docker_call_request_data_set(docker_call* dcall, char* request_data);
 
+/**
+ * @brief Get the docker request data.
+ * 
+ * @param dcall docker call object
+ * @return char* request data
+ */
 MODULE_API char* docker_call_request_data_get(docker_call* dcall);
 
+/**
+ * @brief Set the docker request data length
+ * 
+ * @param dcall docker call object
+ * @param request_data_len request data length
+ */
 MODULE_API void docker_call_request_data_len_set(docker_call* dcall, size_t request_data_len);
 
+/**
+ * @brief Get the docker request data length.
+ * 
+ * @param dcall docker call object
+ * @return size_t request data length
+ */
 MODULE_API size_t docker_call_request_data_len_get(docker_call* dcall);
 
 //void docker_call_response_data_set(docker_call* dcall, char* response_data);
 
+/**
+ * @brief Get the docker response data.
+ * 
+ * @param dcall docker call object
+ * @return char* response data
+ */
 MODULE_API char* docker_call_response_data_get(docker_call* dcall);
 
+/**
+ * @brief Get the docker response data length.
+ * 
+ * @param dcall docker call object
+ * @return size_t response data length
+ */
 MODULE_API size_t docker_call_response_data_length(docker_call* dcall);
 
+/**
+ * @brief Get the docker response HTTP code.
+ * 
+ * @param dcall docker call object
+ * @return int HTTP response code
+ */
 MODULE_API int docker_call_http_code_get(docker_call* dcall);
 
+/**
+ * @brief Set the docker respose HTTP code.
+ * 
+ * @param dcall docker call object
+ * @param http_code http response code
+ */
 MODULE_API void docker_call_http_code_set(docker_call* dcall, int http_code);
 
+/**
+ * @brief Set the docker call callback function.
+ * 
+ * @param dcall docker call object
+ * @param status_callback* status callback function for the docker call
+ */
 MODULE_API void docker_call_status_cb_set(docker_call* dcall, status_callback* status_callback);
 
+/**
+ * @brief Get the docker call callback function
+ * 
+ * @param dcall docker call object
+ * @return statuc_callback* callback function
+ */
 MODULE_API status_callback* docker_call_status_cb_get(docker_call* dcall);
 
+/**
+ * @brief Set the docker call callback function callback args.
+ * 
+ * @param dcall docker call object
+ * @param cb_args callback args (argument to callback function)
+ */
 MODULE_API void docker_call_cb_args_set(docker_call* dcall, void* cb_args);
 
-MODULE_API char* docker_call_cb_args_get(docker_call* dcall);
+/**
+ * @brief Get the docker call callback function callback args.
+ * 
+ * @param dcall docker call object
+ * @return void* callback arguments
+ */
+MODULE_API void* docker_call_cb_args_get(docker_call* dcall);
 
+/**
+ * @brief Set the docker call client callback args
+ * 
+ * @param dcall docker call object
+ * @param client_cb_args args set by the client of the api
+ */
 MODULE_API void docker_call_client_cb_args_set(docker_call* dcall, void* client_cb_args);
 
-MODULE_API char* docker_call_client_cb_args_get(docker_call* dcall);
+/**
+ * @brief Get the docker call client callback args
+ * 
+ * @param dcall docker call object
+ * @return void* client callback args
+ */
+MODULE_API void* docker_call_client_cb_args_get(docker_call* dcall);
 
+/**
+ * @brief Free the docker call object.
+ * 
+ * @param dcall docker call object
+ */
 MODULE_API void free_docker_call(docker_call* dcall);
 
+/**
+ * @brief Add a string key/value pair to the docker call parameters.
+ * 
+ * @param dcall docker call object
+ * @param param parameter key
+ * @param value parameter value
+ * @return int error code
+ */
 MODULE_API int docker_call_params_add(docker_call* dcall, char* param, char* value);
 
+/**
+ * @brief Add a string key/boolean value pair to the docker call parameters.
+ * 
+ * @param dcall docker call object
+ * @param param parameter key
+ * @param value parameter value
+ * @return int error code
+ */
 MODULE_API int docker_call_params_add_boolean(docker_call* dcall, char* param, int value);
 
+/**
+ * @brief Get the docker request HTTP url.
+ * 
+ * @param dcall docker call object
+ * @return char* http url
+ */
 MODULE_API char* docker_call_get_url(docker_call* dcall);
 
+/**
+ * @brief Get the docker request service url.
+ * 
+ * @param dcall docker call object
+ * @return char* service url
+ */
 MODULE_API char* docker_call_get_svc_url(docker_call* dcall);
 
+/**
+ * @brief Execute the Docker Call i.e. send the request to the server and get response.
+ * 
+ * @param ctx docker context
+ * @param dcall docker call object
+ * @param response json response object to be set
+ * @return d_err_t error code
+ */
 MODULE_API d_err_t docker_call_exec(docker_context* ctx, docker_call* dcall, json_object** response);
 
 // END: Docker API Calls HTTP Utils V2 

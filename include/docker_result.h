@@ -89,6 +89,7 @@ typedef enum _config_error d_err_t;
  * Also the result object must be freed using free_docker_result,
  * as soon as it is no longer needed.
  */
+/** Internal struct docker_result_t typedef to docker_result */
 typedef struct docker_result_t {
 	d_err_t error_code;			///< Error code of the operation,
 								///< see enum #d_err_t for values

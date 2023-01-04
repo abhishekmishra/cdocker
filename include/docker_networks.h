@@ -111,6 +111,7 @@ typedef json_object											docker_network_ipam;
  * @brief Get ith ipam config
  *
  * @param ipam network ipam object
+ * @param i index
  * @return json_object* ith ipam config object
  */
 #define docker_network_ipam_config_get_idx(ipam, i)			json_object_array_get_idx(get_attr_json_object((json_object*)ipam, "Config"))
@@ -213,15 +214,72 @@ typedef json_object											docker_network;
  * @param net docker network object
  */
 #define docker_network_options_foreach(net)					json_object_object_foreach(docker_network_options_get(net), key, val)
+
+/**
+ * @brief Get the labels list for the docker network
+ * 
+ * @param net docker network object
+ * @return json_object* labels list object
+ */
 #define docker_network_labels_get(net)						get_attr_json_object((json_object*)net, "Labels")
+
+/**
+ * @brief Iterate over the labels of the docker network
+ * 
+ * @param net docker network object
+ */
 #define docker_network_labels_foreach(net)					json_object_object_foreach(docker_network_labels_get(net), key, val)
+
+/**
+ * @brief Get the ipam object for the docker network
+ * 
+ * @param net docker network object
+ * @return docker_network_ipam* ipam object
+ */
 #define docker_network_ipam_get(net)						(docker_network_ipam*)get_attr_json_object((json_object*)net, "IPAM")
+
+/**
+ * @brief Get the containers list for the docker network
+ * 
+ * @param net docker network object
+ * @return json_object* containers list
+ */
 #define docker_network_containers_get(net)					get_attr_json_object((json_object*)net, "Containers")
+
+/**
+ * @brief Iterate over the containers list for the docker network
+ * 
+ * @param net docker network object
+ */
 #define docker_network_containers_foreach(net)				json_object_object_foreach(docker_network_containers_get(net), key, val)
 
+/**
+ * @brief docker network list object
+ */
 typedef json_object											docker_network_list;
+
+/**
+ * @brief Free the docker network list
+ * 
+ * @param network_ls network list object
+ */
 #define free_docker_network_list(network_ls)				json_object_put(network_ls)
+
+/**
+ * @brief Length of the docker network list
+ * 
+ * @param network_ls network list object
+ * @return size_t network list length
+ */
 #define docker_network_list_length(network_ls)				json_object_array_length(network_ls)
+
+/**
+ * @brief Get the ith network object from the docker networks list
+ * 
+ * @param network_ls network list object
+ * @param i index
+ * @return docker_network* network object
+ */
 #define docker_network_list_get_idx(network_ls, i)			(docker_network*) json_object_array_get_idx(network_ls, i)
 
 /**

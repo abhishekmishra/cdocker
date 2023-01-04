@@ -38,6 +38,9 @@ extern "C" {
 #include "docker_result.h"
 #include "docker_util.h"
 
+/**
+ * @brief Default Dockerfile name
+ */
 #define DEFAULT_DOCKER_FILE_NAME "Dockerfile"
 
 /**
@@ -217,7 +220,7 @@ typedef json_object											docker_image_list;
 /**
  * @brief Free the docker image list object
  *
- * @param image list
+ * @param image_ls list
  */
 #define free_docker_image_list(image_ls)					json_object_put(image_ls)
 
@@ -241,16 +244,16 @@ typedef json_object											docker_image_list;
 /**
  * List images matching the filters.
  *
- * \param ctx docker context
- * \param images list of images to be returned
- * \param all (0 indicates false, true otherwise)
- * \param digests add repo digests in return object (0 is false, true otherwise)
- * \param filter_before <image-name>[:<tag>], <image id> or <image@digest>
- * \param filter_dangling 0 is false, true otherwise.
- * \param filter_label label=key or label="key=value" of an image label
- * \param filter_reference <image-name>[:<tag>]
- * \param filter_since <image-name>[:<tag>], <image id> or <image@digest>
- * \return error code
+ * @param ctx docker context
+ * @param images list of images to be returned
+ * @param all (0 indicates false, true otherwise)
+ * @param digests add repo digests in return object (0 is false, true otherwise)
+ * @param filter_before <image-name>[:<tag>], <image id> or <image@digest>
+ * @param filter_dangling 0 is false, true otherwise.
+ * @param filter_label label=key or label="key=value" of an image label
+ * @param filter_reference <image-name>[:<tag>]
+ * @param filter_since <image-name>[:<tag>], <image id> or <image@digest>
+ * @return error code
  */
 MODULE_API d_err_t docker_images_list(docker_context* ctx,
 		docker_image_list** images, int all, int digests, char* filter_before,
@@ -291,12 +294,12 @@ typedef struct docker_build_status_t {
  * see https://docs.docker.com/engine/api/v1.39/#operation/ImageCreate
  * Create a new image by pulling image:tag for platform
  *
- * \param ctx docker context
- * \param from_image image name
- * \param tag which tag to pull, for e.g. "latest"
- * \param platform which platform to pull the image for (format os[/arch[/variant]]),
+ * @param ctx docker context
+ * @param from_image image name
+ * @param tag which tag to pull, for e.g. "latest"
+ * @param platform which platform to pull the image for (format os[/arch[/variant]]),
  * 			default is ""
- * \return error code.
+ * @return error code.
  */
 MODULE_API d_err_t docker_image_create_from_image(docker_context* ctx,
 		char* from_image, char* tag, char* platform);
@@ -305,14 +308,14 @@ MODULE_API d_err_t docker_image_create_from_image(docker_context* ctx,
  * see https://docs.docker.com/engine/api/v1.39/#operation/ImageCreate
  * Create a new image by pulling image:tag for platform, with a progress callback
  *
- * \param ctx docker context
- * \param status_cb callback to call for updates
- * \param cbargs callback args for the upate call
- * \param from_image image name
- * \param tag which tag to pull, for e.g. "latest"
- * \param platform which platform to pull the image for (format os[/arch[/variant]]),
+ * @param ctx docker context
+ * @param status_cb callback to call for updates
+ * @param cbargs callback args for the upate call
+ * @param from_image image name
+ * @param tag which tag to pull, for e.g. "latest"
+ * @param platform which platform to pull the image for (format os[/arch[/variant]]),
  * 			default is ""
- * \return error code.
+ * @return error code.
  */
 MODULE_API d_err_t docker_image_create_from_image_cb(docker_context* ctx,
 		void (*status_cb)(docker_image_create_status*, void* cbargs),
@@ -324,13 +327,13 @@ MODULE_API d_err_t docker_image_create_from_image_cb(docker_context* ctx,
  * see https://docs.docker.com/engine/api/v1.39/#operation/ImageBuild
  * Build a new image from the files in a folder, with a progress callback
  *
- * \param ctx docker context
- * \param folder the folder containing the docker image build files (if NULL, default is current directory)
- * \param dockerfile name of the dockerfile. (If NULL, default "Dockerfile" is assumed)
- * \param status_cb callback to call for updates
- * \param cbargs callback args for the upate call
- * \param ... options to the build command
- * \return error code.
+ * @param ctx docker context
+ * @param folder the folder containing the docker image build files (if NULL, default is current directory)
+ * @param dockerfile name of the dockerfile. (If NULL, default "Dockerfile" is assumed)
+ * @param status_cb callback to call for updates
+ * @param cbargs callback args for the upate call
+ * @param ... options to the build command
+ * @return error code.
  */
 MODULE_API d_err_t docker_image_build_cb(docker_context* ctx, 
 		char* folder, char* dockerfile,

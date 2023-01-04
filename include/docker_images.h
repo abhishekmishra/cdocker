@@ -248,11 +248,11 @@ typedef json_object											docker_image_list;
  * @param images list of images to be returned
  * @param all (0 indicates false, true otherwise)
  * @param digests add repo digests in return object (0 is false, true otherwise)
- * @param filter_before <image-name>[:<tag>], <image id> or <image@digest>
+ * @param filter_before \<image-name>[:\<tag>], \<image id> or \<image\@digest>
  * @param filter_dangling 0 is false, true otherwise.
  * @param filter_label label=key or label="key=value" of an image label
- * @param filter_reference <image-name>[:<tag>]
- * @param filter_since <image-name>[:<tag>], <image id> or <image@digest>
+ * @param filter_reference <image-name>[:\<tag>]
+ * @param filter_since \<image-name>[:\<tag>], \<image id> or \<image\@digest>
  * @return error code
  */
 MODULE_API d_err_t docker_images_list(docker_context* ctx,

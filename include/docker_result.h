@@ -29,9 +29,6 @@
 #ifndef SRC_DOCKER_RESULT_H_
 #define SRC_DOCKER_RESULT_H_
 
-#define DOCKER_PARAM_TRUE 1
-#define DOCKER_PARAM_FALSE 0
-
 #ifdef __cplusplus  
 extern "C" {
 #endif
@@ -39,9 +36,16 @@ extern "C" {
 #include "docker_common.h"
 #include <time.h>
 
+/** True value for boolean type */
+#define DOCKER_PARAM_TRUE 1
+
+/** False value for boolean type */
+#define DOCKER_PARAM_FALSE 0
+
 // The error code usage below based on suggestions at
 // https://stackoverflow.com/questions/6286874/c-naming-suggestion-for-error-code-enums
 
+/** (Internal name) Error code enum for the Docker API calls */
 enum _config_error {
 	E_UNKNOWN_ERROR = 1,
 	E_SUCCESS = 0,
@@ -52,11 +56,16 @@ enum _config_error {
 	E_CONNECTION_FAILED = -5
 };
 
-/* type to provide in your API */
+/** Error code enum for the Docker API calls */
 typedef enum _config_error d_err_t;
 
+/** HTTP GET Method string */
 #define HTTP_GET_STR "GET"
+
+/** HTTP POST Method string */
 #define HTTP_POST_STR "POST"
+
+/** HTTP DELETE Method string */
 #define HTTP_DELETE_STR "DELETE"
 
 /* use this to provide a perror style method to help consumers out */
@@ -121,6 +130,12 @@ MODULE_API d_err_t new_docker_result(docker_result** result);
  */
 MODULE_API void free_docker_result(docker_result* result);
 
+/**
+ * @brief Clone the given docker_result object
+ * 
+ * @param result docker result object
+ * @return docker_result* clone of the given object (can be NULL)
+ */
 MODULE_API docker_result* docker_result_clone(docker_result* result);
 
 /**

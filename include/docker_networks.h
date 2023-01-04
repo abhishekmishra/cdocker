@@ -38,30 +38,180 @@ extern "C" {
 #include "docker_util.h"
 #include "docker_connection_util.h"
 
+/**
+ * @brief Docker Network Container json object
+ * 
+ * This object represents the container details inside the response of
+ * the docker network api call response.
+ */
 typedef json_object											docker_network_container;
+
+/**
+ * @brief Get the name of the container from the docker container
+ * 
+ * @param ctr docker container
+ * @return char* name
+ */
 #define docker_network_container_name_get(ctr)				get_attr_str((json_object*)ctr, "Name")
+
+/**
+ * @brief Get the endpoint id of the container from the docker container
+ * 
+ * @param ctr docker container
+ * @return char* endpoint id
+ */
 #define docker_network_container_endpoint_id_get(ctr)		get_attr_str((json_object*)ctr, "EndpointID")
+
+/**
+ * @brief Get the mac address of the container from the docker container
+ * 
+ * @param ctr docker container
+ * @return char* mac address
+ */
 #define docker_network_container_mac_address_get(ctr)		get_attr_str((json_object*)ctr, "MacAddress")
+
+/**
+ * @brief Get the ipv4 of the container from the docker container
+ * 
+ * @param ctr docker container
+ * @return char* ipv4
+ */
 #define docker_network_container_ipv4_address_get(ctr)		get_attr_str((json_object*)ctr, "IPv4Address")
+
+/**
+ * @brief Get the ipv6 of the container from the docker container
+ * 
+ * @param ctr docker container
+ * @return char* ipv6
+ */
 #define docker_network_container_ipv6_address_get(ctr)		get_attr_str((json_object*)ctr, "IPv6Address")
 
+/**
+ * @brief Docker Network Ipam json object
+ */
 typedef json_object											docker_network_ipam;
+
+/**
+ * @brief Get the ipam driver
+ *
+ * @param ipam network ipam object
+ * @return char* driver
+ */
 #define docker_network_ipam_driver_get(ipam)				get_attr_str((json_object*)ipam, "Driver")
+
+/**
+ * @brief Get the ipam config length
+ *
+ * @param ipam network ipam object
+ * @return size_t ipam config length
+ */
 #define docker_network_ipam_config_length(ipam)				json_object_array_length(get_attr_json_object((json_object*)ipam, "Config"))
+
+/**
+ * @brief Get ith ipam config
+ *
+ * @param ipam network ipam object
+ * @return json_object* ith ipam config object
+ */
 #define docker_network_ipam_config_get_idx(ipam, i)			json_object_array_get_idx(get_attr_json_object((json_object*)ipam, "Config"))
 
+/**
+ * @brief Docker Network json object
+ */
 typedef json_object											docker_network;
+
+/**
+ * @brief Free the docker network object
+ * 
+ * @param net docker network object
+ */
 #define free_docker_network(net)							json_object_put((json_object*) net)
+
+/**
+ * @brief Get the name of the docker network
+ * 
+ * @param net docker network object
+ * @return char* name
+ */
 #define docker_network_name_get(net)						get_attr_str((json_object*)net, "Name")
+
+/**
+ * @brief Get the id of the docker network
+ * 
+ * @param net docker network object
+ * @return char* id
+ */
 #define docker_network_id_get(net)							get_attr_str((json_object*)net, "Id")
+
+/**
+ * @brief Get the created datetime of the docker network
+ * 
+ * @param net docker network object
+ * @return char* created datetime
+ */
 #define docker_network_created_get(net)						get_attr_str((json_object*)net, "Created")
+
+/**
+ * @brief Get the scope of the docker network
+ * 
+ * @param net docker network object
+ * @return char* scope
+ */
 #define docker_network_scope_get(net)						get_attr_str((json_object*)net, "Scope")
+
+/**
+ * @brief Get the network driver of the docker network
+ * 
+ * @param net docker network object
+ * @return char* network driver
+ */
 #define docker_network_driver_get(net)						get_attr_str((json_object*)net, "Driver")
+
+/**
+ * @brief Get the EnableIPv6 flag of the docker network
+ * 
+ * @param net docker network object
+ * @return bool enable ipv6 flag
+ */
 #define docker_network_enable_ipv6_get(net)					get_attr_boolean((json_object*)net, "EnableIPv6")
+
+/**
+ * @brief Get the Internal flag of the docker network
+ * 
+ * @param net docker network object
+ * @return bool internal flag
+ */
 #define docker_network_internal_get(net)					get_attr_boolean((json_object*)net, "Internal")
+
+/**
+ * @brief Get the Attachable flag of the docker network
+ * 
+ * @param net docker network object
+ * @return bool attachable flag
+ */
 #define docker_network_attachable_get(net)					get_attr_boolean((json_object*)net, "Attachable")
+
+/**
+ * @brief Get the Ingress flag of the docker network
+ * 
+ * @param net docker network object
+ * @return bool ingress flag
+ */
 #define docker_network_ingress_get(net)						get_attr_boolean((json_object*)net, "Ingress")
+
+/**
+ * @brief Get the network options json object of the docker network
+ * 
+ * @param net docker network object
+ * @return json_object* network options
+ */
 #define docker_network_options_get(net)						get_attr_json_object((json_object*)net, "Options")
+
+/**
+ * @brief Iterate the network options of the docker network
+ * 
+ * @param net docker network object
+ */
 #define docker_network_options_foreach(net)					json_object_object_foreach(docker_network_options_get(net), key, val)
 #define docker_network_labels_get(net)						get_attr_json_object((json_object*)net, "Labels")
 #define docker_network_labels_foreach(net)					json_object_object_foreach(docker_network_labels_get(net), key, val)

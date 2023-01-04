@@ -1,0 +1,6 @@
+<map id="include/docker_log.h" name="include/docker_log.h">
+<area shape="rect" id="node1" title="Docker API logger for internal use mainly. It is based on rxi&#39;s log implementation with minor changes..." alt="" coords="56,5,211,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,80,72,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="96,80,171,107"/>
+<area shape="rect" id="node4" href="$docker__common_8h.html" title="Some common declarations." alt="" coords="195,80,336,107"/>
+</map>

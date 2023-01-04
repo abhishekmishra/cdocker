@@ -1,0 +1,4 @@
+<map id="docker_image_create_status_t" name="docker_image_create_status_t">
+<area shape="rect" id="node1" title="Docker Image Creation Status is returned when creating a docker image. It is useful for a user facing..." alt="" coords="17,95,178,136"/>
+<area shape="rect" id="node2" href="$structdocker__progress__detail__t.html" title="Provides progress detail for docker image creation process." alt="" coords="5,5,189,32"/>
+</map>

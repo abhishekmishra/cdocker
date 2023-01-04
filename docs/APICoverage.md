@@ -1,6 +1,6 @@
-## API Completeness
+## API Coverage
 
-(Measuring completeness against current \[v1.39\] Docker API documentation at https://docs.docker.com/engine/api/v1.39/)
+(Measuring coverage against current \[v1.39\] Docker API documentation at https://docs.docker.com/engine/api/v1.39/)
 
 ----
 ### Docker Context

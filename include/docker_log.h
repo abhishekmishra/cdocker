@@ -23,8 +23,10 @@
 extern "C" {
 #endif
 
+/** LOG API Version*/
 #define LOG_VERSION "0.1.0"
 
+/** function type for a lock implementation to be used by the logger if locking is enabled*/
 typedef void (*log_LockFn)(void *udata, int lock);
 
 enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
@@ -103,7 +105,6 @@ MODULE_API void docker_log_set_level(int level);
  * @brief Turn off the given log level
  * 
  * @param enable level nubmer (see log levels enum)
- * @return MODULE_API 
  */
 MODULE_API void docker_log_set_quiet(int enable);
 

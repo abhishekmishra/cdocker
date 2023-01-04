@@ -30,12 +30,6 @@
 
 #include "docker_connection_util.h"
 
-/**
- * Ping the docker server
- *
- * \param ctx docker context
- * \return error code
- */
 d_err_t docker_ping(docker_context* ctx) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, SYSTEM, NULL, "_ping") != 0) {
@@ -52,13 +46,6 @@ d_err_t docker_ping(docker_context* ctx) {
 	return E_SUCCESS;
 }
 
-/**
- * Gets the docker version information
- *
- * \param ctx docker context
- * \param version object to return
- * \return error code.
- */
 d_err_t docker_system_version(docker_context* ctx,
 		docker_version** version) {
 	docker_call* call;
@@ -72,13 +59,6 @@ d_err_t docker_system_version(docker_context* ctx,
 	return err;
 }
 
-/**
- * Gets the docker system information
- *
- * \param ctx docker context
- * \param info object to return
- * \return error code.
- */
 d_err_t docker_system_info(docker_context* ctx,
 		docker_info** info) {
 	docker_call* call;
@@ -105,15 +85,6 @@ void parse_events_cb(char* msg, void* cb, void* cbargs) {
 	}
 }
 
-/**
- * Get the docker events in a time range.
- *
- * \param ctx the docker context
- * \param events is an arraylist containing objects of type docker_event
- * \param start_time
- * \param end_time
- * \return error code
- */
 d_err_t docker_system_events(docker_context* ctx,
 		arraylist** events, time_t start_time, time_t end_time) {
 	if (end_time <= 0) {
@@ -127,17 +98,6 @@ d_err_t docker_system_events(docker_context* ctx,
 	}
 }
 
-/**
- * Get the docker events in a time range.
- *
- * \param ctx the docker context
- * \param docker_events_cb pointer to callback when an event is received.
- * \param cbargs is a pointer to callback arguments
- * \param events is an arraylist containing objects of type docker_event
- * \param start_time
- * \param end_time
- * \return error code
- */
 d_err_t docker_system_events_cb(docker_context* ctx,
 		void (*docker_events_cb)(docker_event* evt, void* cbargs), void* cbargs,
 		arraylist** events, time_t start_time, time_t end_time) {

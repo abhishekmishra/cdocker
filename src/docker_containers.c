@@ -36,18 +36,6 @@
 #include <errno.h>
 #include "docker_connection_util.h"
 
- /**
-  * List docker containers
-  *
-  * \param ctx the docker context
-  * \param result the result object to return
-  * \param container_list array_list of containers to be returned
-  * \param all all or running only
-  * \param limit max containers to return
-  * \param size return the size of containers in response
-  * \param varargs pairs of filters char* filter_name, char* filter_value (terminated by a NULL)
-  * \return error code
-  */
 d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** container_list,
 	int all, int limit, int size, ...) {
 	docker_call* call;
@@ -96,17 +84,6 @@ d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** container_l
 
 }
 
-/**
-* List docker containers
-*
-* \param ctx the docker context
-* \param container_list array_list of containers to be returned
-* \param all all or running only
-* \param limit max containers to return
-* \param size return the size of containers in response
-* \param filters filters json object as string
-* \return error code
-*/
 MODULE_API d_err_t docker_container_list_filter_str(docker_context* ctx, docker_ctr_list** container_list, 
 	int all, int limit, int size, const char* filters) {
 			docker_call* call;
@@ -183,14 +160,6 @@ docker_ctr* docker_inspect_container(docker_context* ctx, char* id, int size) {
 	return ctr;
 }
 
-/**
- * List all processes in a container identified by id.
- *
- * \param ctx is a docker context
- * \param id is the container id
- * \param ps_args is the command line args to be passed to the ps command (can be NULL).
- * \return the process details as docker_container_ps list.
- */
 d_err_t docker_process_list_container(docker_context* ctx,
 	docker_ctr_ps** ps, char* id, char* process_args) {
 	docker_call* call;
@@ -300,9 +269,6 @@ d_err_t docker_container_logs_foreach(void* handler_args, char* log, size_t log_
 }
 ///////////// Get Container FS Changes
 
-/**
- * Create a new container change item.
- */
 d_err_t make_docker_container_change(docker_container_change** item,
 	const char* path, const char* kind) {
 	(*item) = (docker_container_change*)calloc(1,
@@ -349,18 +315,11 @@ docker_container_change* docker_changes_list_get_idx(docker_changes_list* list,
 	int i) {
 	return (docker_container_change*)arraylist_get(list, i);
 }
+
 size_t docker_changes_list_length(docker_changes_list* list) {
 	return arraylist_length(list);
 }
 
-/**
- * Get the file system changes for the docker container.
- *
- * \param ctx docker context
- * \param changes pointer to struct to be returned.
- * \param id container id
- * \return error code
- */
 d_err_t docker_container_changes(docker_context* ctx, docker_changes_list** changes, char* id) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, id, "changes") != 0) {
@@ -398,14 +357,6 @@ d_err_t docker_container_changes(docker_context* ctx, docker_changes_list** chan
 
 /////// Docker container stats
 
-/**
- * Get stats from a running container. (the non-streaming version)
- *
- * \param ctx docker context
- * \param stats the stats object to return
- * \param id container id
- * \return error code
- */
 d_err_t docker_container_get_stats(docker_context* ctx, docker_container_stats** stats,
 	char* id) {
 	if (id == NULL || strlen(id) == 0) {
@@ -437,15 +388,6 @@ void parse_container_stats_cb(char* msg, void* cb, void* cbargs) {
 	}
 }
 
-/**
- * Get stats from a running container. (the streaming version)
- *
- * \param ctx docker context
- * \param docker_container_stats_cb the callback which receives the stats object, and any client args
- * \param cbargs client args to be passed on to the callback (closure)
- * \param id container id
- * \return error code
- */
 d_err_t docker_container_get_stats_cb(docker_context* ctx,
 	void (*docker_container_stats_cb)(docker_container_stats* stats,
 		void* cbargs), void* cbargs, char* id) {
@@ -486,14 +428,6 @@ float docker_container_stats_get_cpu_usage_percent(
 	return cpu_percent;
 }
 
-/**
- * Start a container
- *
- * \param ctx docker context
- * \param id container id
- * \param detachKeys (optional, pass NULL if not needed) key combination for detaching a container.
- * \return error code
- */
 d_err_t docker_start_container(docker_context* ctx, char* id, char* detachKeys) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, id, "start") != 0) {
@@ -514,14 +448,6 @@ d_err_t docker_start_container(docker_context* ctx, char* id, char* detachKeys) 
 	return ret;
 }
 
-/**
- * Stop a container
- *
- * \param ctx docker context
- * \param id container id
- * \param t number of seconds to wait before killing the container
- * \return error code
- */
 d_err_t docker_stop_container(docker_context* ctx, char* id, int t) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, id, "stop") != 0) {
@@ -557,14 +483,6 @@ d_err_t docker_stop_container(docker_context* ctx, char* id, int t) {
 	return ret;
 }
 
-/**
- * Restart a container
- *
- * \param ctx docker context
- * \param id container id
- * \param t number of seconds to wait before killing the container
- * \return error code
- */
 d_err_t docker_restart_container(docker_context* ctx, char* id, int t) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, id, "restart") != 0) {
@@ -595,14 +513,6 @@ d_err_t docker_restart_container(docker_context* ctx, char* id, int t) {
 	return ret;
 }
 
-/**
- * Kill a container
- *
- * \param ctx docker context
- * \param id container id
- * \param signal (optional - NULL for default i.e. SIGKILL) signal name to send
- * \return error code
- */
 d_err_t docker_kill_container(docker_context* ctx, char* id, char* signal) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, id, "kill") != 0) {
@@ -631,14 +541,6 @@ d_err_t docker_kill_container(docker_context* ctx, char* id, char* signal) {
 	return ret;
 }
 
-/**
- * Rename a container
- *
- * \param ctx docker context
- * \param id container id
- * \param name new name for the container
- * \return error code
- */
 d_err_t docker_rename_container(docker_context* ctx, char* id, char* name) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, id, "rename") != 0) {
@@ -667,13 +569,6 @@ d_err_t docker_rename_container(docker_context* ctx, char* id, char* name) {
 	return ret;
 }
 
-/**
- * Pause a container
- *
- * \param ctx docker context
- * \param id container id
- * \return error code
- */
 d_err_t docker_pause_container(docker_context* ctx, char* id) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, id, "pause") != 0) {
@@ -695,13 +590,6 @@ d_err_t docker_pause_container(docker_context* ctx, char* id) {
 	return ret;
 }
 
-/**
- * Unpause a container
- *
- * \param ctx docker context
- * \param id container id
- * \return error code
- */
 d_err_t docker_unpause_container(docker_context* ctx, char* id) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, id, "unpause") != 0) {
@@ -723,14 +611,6 @@ d_err_t docker_unpause_container(docker_context* ctx, char* id) {
 	return ret;
 }
 
-/**
- * Wait for a container
- *
- * \param ctx docker context
- * \param id container id
- * \param condition (optional - NULL for default "not-running") condition to wait for
- * \return error code
- */
 d_err_t docker_wait_container(docker_context* ctx, char* id, char* condition) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, id, "wait") != 0) {
@@ -751,17 +631,6 @@ d_err_t docker_wait_container(docker_context* ctx, char* id, char* condition) {
 	return ret;
 }
 
-/**
- * Remove a container
- *
- * \param ctx docker context
- * \param result pointer to docker_result
- * \param id container id
- * \param v remove volumes associated with the container
- * \param force if the container is running, kill it before removing it.
- * \param link remove specified link
- * \return error code
- */
 d_err_t docker_remove_container(docker_context* ctx, char* id, int v, int force, int link) {
 	docker_call* call;
 	if (make_docker_call(&call, ctx->url, CONTAINER, NULL, id) != 0) {

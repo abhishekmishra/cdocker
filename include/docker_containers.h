@@ -114,6 +114,7 @@ typedef json_object										docker_ctr_ls_item;
  * @brief Get the ith name of the docker container
  * 
  * @param ctr docker container object
+ * @param i index
  * @return char* ith name of the docker container
  */
 #define docker_ctr_ls_item_names_get_idx(ctr, i)		(char*) json_object_get_string(json_object_array_get_idx(docker_ctr_ls_item_names_get(ctr), i))
@@ -202,6 +203,7 @@ typedef json_object										docker_ctr_ls_item;
  * @brief Get the ith port of the docker container
  * 
  * @param ctr docker container object
+ * @param i index
  * @return docker_ctr_port* ith port docker container
  */
 #define docker_ctr_ls_item_ports_get_idx(ctr, i)		(docker_ctr_port*) json_object_array_get_idx(docker_ctr_ls_item_ports_get(ctr), i)
@@ -212,14 +214,14 @@ typedef json_object										docker_ctr_ls_item;
  * @param ctr docker container object
  * @return json_object* port labels
  */
-#define docker_ctr_ls_item_ports_labels_get(vol)		get_attr_json_object((json_object*)vol, "Labels")
+#define docker_ctr_ls_item_ports_labels_get(ctr)		get_attr_json_object((json_object*)ctr, "Labels")
 
 /**
  * @brief Iterate over the port labels of the docker container
  * 
  * @param ctr docker container object
  */
-#define docker_ctr_ls_item_ports_labels_foreach(vol)	json_object_object_foreach(docker_ctr_ls_item_ports_labels_get(vol), key, val)
+#define docker_ctr_ls_item_ports_labels_foreach(ctr)	json_object_object_foreach(docker_ctr_ls_item_ports_labels_get(ctr), key, val)
 
 /**
  * @brief Docker Container List json object
@@ -246,6 +248,7 @@ typedef json_object										docker_ctr_list;
  * @brief Get the ith container list item from the docker container list
  * 
  * @param ctr_ls docker container list
+ * @param i index
  * @return docker_ctr* container object
  */
 #define docker_ctr_list_get_idx(ctr_ls, i)				(docker_ctr*) json_object_array_get_idx(ctr_ls, i)
@@ -253,13 +256,13 @@ typedef json_object										docker_ctr_list;
 /**
 * List docker containers
 *
-* \param ctx the docker context
-* \param container_list array_list of containers to be returned
-* \param all all or running only
-* \param limit max containers to return
-* \param size return the size of containers in response
-* \param varargs pairs of filters char* filter_name, char* filter_value (terminated by a NULL)
-* \return error code
+* @param ctx the docker context
+* @param container_list array_list of containers to be returned
+* @param all all or running only
+* @param limit max containers to return
+* @param size return the size of containers in response
+* @param ... pairs of filters char* filter_name, char* filter_value (terminated by a NULL)
+* @return error code
 */
 MODULE_API d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** container_list, 
 	int all, int limit, int size, ...);
@@ -267,13 +270,13 @@ MODULE_API d_err_t docker_container_list(docker_context* ctx, docker_ctr_list** 
 /**
 * List docker containers
 *
-* \param ctx the docker context
-* \param container_list array_list of containers to be returned
-* \param all all or running only
-* \param limit max containers to return
-* \param size return the size of containers in response
-* \param filters filters json object as string
-* \return error code
+* @param ctx the docker context
+* @param container_list array_list of containers to be returned
+* @param all all or running only
+* @param limit max containers to return
+* @param size return the size of containers in response
+* @param filters filters json object as string
+* @return error code
 */
 MODULE_API d_err_t docker_container_list_filter_str(docker_context* ctx, docker_ctr_list** container_list, 
 	int all, int limit, int size, const char* filters);
@@ -489,6 +492,7 @@ typedef json_object									docker_ctr;
  * @brief Get ith port of the docker container
  * 
  * @param ctr docker container object
+ * @param i index
  * @return docker_ctr_port* ith container port
  */
 #define docker_ctr_ports_get_idx(ctr, i)			(docker_ctr_port*) json_object_array_get_idx(docker_ctr_ports_get(ctr), i)
@@ -499,14 +503,14 @@ typedef json_object									docker_ctr;
  * @param ctr docker container object
  * @return json_object* port labels
  */
-#define docker_ctr_ports_labels_get(vol)			get_attr_json_object((json_object*)vol, "Labels")
+#define docker_ctr_ports_labels_get(ctr)			get_attr_json_object((json_object*)ctr, "Labels")
 
 /**
  * @brief Iterate the port labels of the docker container
  * 
  * @param ctr docker container object
  */
-#define docker_ctr_ports_labels_foreach(vol)		json_object_object_foreach(docker_ctr_ports_labels_get(vol), key, val)
+#define docker_ctr_ports_labels_foreach(ctr)		json_object_object_foreach(docker_ctr_ports_labels_get(ctr), key, val)
 
 /**
  * @brief Inspect the docker container given by the id
@@ -546,6 +550,7 @@ typedef json_object											docker_ctr_process_details;
  * @brief Get the ith process from the container process details list
  * 
  * @param ctr_ps_ls containers process details list
+ * @param i index
  * @return char* ith process
  */
 #define docker_ctr_process_details_get_idx(ctr_ps_ls, i)	(char*) json_object_array_get_idx(ctr_ps_ls, i)
@@ -560,7 +565,7 @@ typedef json_object										docker_ctr_ps;
  * 
  * @param ctr_ps docker containers process object
  */
-#define free_docker_ctr(ctr_ps)							json_object_put((json_object*) ctr_ps)
+#define free_docker_ctr_ps(ctr_ps)							json_object_put((json_object*) ctr_ps)
 
 /**
  * @brief Get the titles of the process details titles list
@@ -568,7 +573,7 @@ typedef json_object										docker_ctr_ps;
  * @param ctr_ps docker containers process object
  * @return json_object* titles list object
  */
-#define docker_ctr_ps_titles_get(ctr)					get_attr_json_object((json_object*)ctr, "Titles")
+#define docker_ctr_ps_titles_get(ctr_ps)				get_attr_json_object((json_object*)ctr_ps, "Titles")
 
 /**
  * @brief Get the titles length of the process details titles list
@@ -576,15 +581,16 @@ typedef json_object										docker_ctr_ps;
  * @param ctr_ps docker containers process object
  * @return size_t titles length
  */
-#define docker_ctr_ps_titles_length(ctr)				json_object_array_length(docker_ctr_ps_titles_get(ctr))
+#define docker_ctr_ps_titles_length(ctr_ps)				json_object_array_length(docker_ctr_ps_titles_get(ctr_ps))
 
 /**
  * @brief Get the ith title of the process details titles list
  * 
  * @param ctr_ps docker containers process object
+ * @param i index
  * @return char* ith title
  */
-#define docker_ctr_ps_titles_get_idx(ctr, i)			(char*) json_object_get_string(json_object_array_get_idx(docker_ctr_ps_titles_get(ctr), i))
+#define docker_ctr_ps_titles_get_idx(ctr_ps, i)			(char*) json_object_get_string(json_object_array_get_idx(docker_ctr_ps_titles_get(ctr_ps), i))
 
 /**
  * @brief Get the processes list of the process details
@@ -592,7 +598,7 @@ typedef json_object										docker_ctr_ps;
  * @param ctr_ps docker containers process object
  * @return json_object* processes list object
  */
-#define docker_ctr_ps_processes_get(ctr)				get_attr_json_object((json_object*)ctr, "Processes")
+#define docker_ctr_ps_processes_get(ctr_ps)				get_attr_json_object((json_object*)ctr_ps, "Processes")
 
 /**
  * @brief Get the processes length of the process details
@@ -600,25 +606,25 @@ typedef json_object										docker_ctr_ps;
  * @param ctr_ps docker containers process object
  * @return size_t processes length
  */
-#define docker_ctr_ps_processes_length(ctr)				json_object_array_length(docker_ctr_ps_processes_get(ctr))
+#define docker_ctr_ps_processes_length(ctr_ps)				json_object_array_length(docker_ctr_ps_processes_get(ctr_ps))
 
 /**
  * @brief Get the ith process of the process details
  * 
  * @param ctr_ps docker containers process object
+ * @param i index
  * @return docker_ctr_process_details* process details object
  */
-#define docker_ctr_ps_processes_get_idx(ctr, i)			(docker_ctr_process_details*) json_object_array_get_idx(docker_ctr_ps_processes_get(ctr), i)
+#define docker_ctr_ps_processes_get_idx(ctr_ps, i)			(docker_ctr_process_details*) json_object_array_get_idx(docker_ctr_ps_processes_get(ctr_ps), i)
 
 /**
-* List all processes in a container identified by id.
+* @brief List all processes in a container identified by id.
 *
-* \param ctx is a docker context
-* \param ps is the pointer to the process list to be returned.
-* \param id is the container id
-* \param ps_args is the command line args to be passed to the ps command (can be NULL).
-* \return the process details as docker_container_ps list.
-* \return error code of the result
+* @param ctx is a docker context
+* @param ps is the pointer to the process list to be returned.
+* @param id is the container id
+* @param process_args is the command line args to be passed to the ps command (can be NULL).
+* @return error code of the result
 */
 MODULE_API d_err_t docker_process_list_container(docker_context* ctx,
 	docker_ctr_ps** ps, char* id,	char* process_args);
@@ -626,21 +632,20 @@ MODULE_API d_err_t docker_process_list_container(docker_context* ctx,
 ///////////// Get Container Logs
 
 /**
-* Get the logs for the docker container.
+* @brief Get the logs for the docker container.
 *
-* \param ctx docker context
-* \param result pointer to docker_result
-* \param log pointer to buffer of chars to be returned. (Not null terminated string).
-* \param log_length pointer to log_length to be returned.
-* \param id container id
-* \param follow - this param has no effect for now, as socket support is not implemented.
-* \param stdout whether to get stdout (>0 means yes)
-* \param stderr whether to get stdin (>0 means yes)
-* \param since time since which the logs are to be fetched (unix timestamp)
-* \param until time till which the logs are to be fetched (unix timestamp)
-* \param timestamps add timestamps to log lines (>0 means yes)
-* \param tail 0 means all, any positive number indicates the number of lines to fetch.
-* \return error code
+* @param ctx docker context
+* @param log pointer to buffer of chars to be returned. (Not null terminated string).
+* @param log_length pointer to log_length to be returned.
+* @param id container id
+* @param follow - this param has no effect for now, as socket support is not implemented.
+* @param std_out whether to get stdout (>0 means yes)
+* @param std_err whether to get stdin (>0 means yes)
+* @param since time since which the logs are to be fetched (unix timestamp)
+* @param until time till which the logs are to be fetched (unix timestamp)
+* @param timestamps add timestamps to log lines (>0 means yes)
+* @param tail 0 means all, any positive number indicates the number of lines to fetch.
+* @return error code
 */
 MODULE_API d_err_t docker_container_logs(docker_context* ctx, char** log, size_t* log_length, char* id, int follow, 
 	int std_out, int std_err, long since, long until, int timestamps, int tail);
@@ -741,10 +746,10 @@ MODULE_API size_t docker_changes_list_length(docker_changes_list* list);
 /**
 * Get the file system changes for the docker container.
 *
-* \param ctx docker context
-* \param changes pointer to struct to be returned.
-* \param id container id
-* \return error code
+* @param ctx docker context
+* @param changes pointer to struct to be returned.
+* @param id container id
+* @return error code
 */
 MODULE_API d_err_t docker_container_changes(docker_context* ctx, docker_changes_list** changes, char* id);
 
@@ -963,7 +968,7 @@ typedef json_object													docker_container_net_stats;
 /**
  * @brief Free the docker container net stats json object
  * 
- * @param net stats object
+ * @param net_stats stats object
  */
 #define free_docker_container_net_stats(net_stats)					json_object_put((json_object*) net_stats)
 
@@ -1068,25 +1073,24 @@ typedef json_object													docker_container_stats;
 #define docker_container_stats_precpu_stats_get(stats)				(docker_container_cpu_stats*)get_attr_json_object((json_object*)stats, "precpu_stats")
 
 /**
-* Get stats from a running container. (the non-streaming version)
+* @brief Get stats from a running container. (the non-streaming version)
 *
-* \param ctx docker context
-* \param stats the stats object to return
-* \param id container id
-* \return error code
+* @param ctx docker context
+* @param stats the stats object to return
+* @param id container id
+* @return error code
 */
 MODULE_API d_err_t docker_container_get_stats(docker_context* ctx,
 	docker_container_stats** stats, char* id);
 
 /**
-* Get stats from a running container. (the streaming version)
+* @brief Get stats from a running container. (the streaming version)
 *
-* \param ctx docker context
-* \param result pointer to docker_result
-* \param docker_container_stats_cb the callback which receives the stats object, and any client args
-* \param cbargs client args to be passed on to the callback (closure)
-* \param id container id
-* \return error code
+* @param ctx docker context
+* @param docker_container_stats_cb the callback which receives the stats object, and any client args
+* @param cbargs client args to be passed on to the callback (closure)
+* @param id container id
+* @return error code
 */
 MODULE_API d_err_t docker_container_get_stats_cb(docker_context* ctx,
 	void (*docker_container_stats_cb)(docker_container_stats* stats,
@@ -1104,114 +1108,119 @@ MODULE_API float docker_container_stats_get_cpu_usage_percent(
 ///////////// Get Container Start, Stop, Restart, Kill, Rename, Pause, Unpause, Wait
 
 /**
-* Start a container
+* @brief Start a container
 *
-* \param ctx docker context
-* \param id container id
-* \param detachKeys (optional) key combination for detaching a container.
-* \return error code
+* @param ctx docker context
+* @param id container id
+* @param detachKeys (optional) key combination for detaching a container.
+* @return error code
 */
 MODULE_API d_err_t docker_start_container(docker_context* ctx,
 	char* id, char* detachKeys);
 
 /**
-* Stop a container
+* @brief Stop a container
 *
-* \param ctx docker context
-* \param id container id
-* \param t number of seconds to wait before killing the container
-* \return error code
+* @param ctx docker context
+* @param id container id
+* @param t number of seconds to wait before killing the container
+* @return error code
 */
 MODULE_API d_err_t docker_stop_container(docker_context* ctx,
 	char* id, int t);
 
 /**
-* Restart a container
+* @brief Restart a container
 *
-* \param ctx docker context
-* \param id container id
-* \param t number of seconds to wait before killing the container
-* \return error code
+* @param ctx docker context
+* @param id container id
+* @param t number of seconds to wait before killing the container
+* @return error code
 */
 MODULE_API d_err_t docker_restart_container(docker_context* ctx,
 	char* id, int t);
 
 /**
-* Kill a container
+* @brief Kill a container
 *
-* \param ctx docker context
-* \param id container id
-* \param signal (optional - NULL for default i.e. SIGKILL) signal name to send
-* \return error code
+* @param ctx docker context
+* @param id container id
+* @param signal (optional - NULL for default i.e. SIGKILL) signal name to send
+* @return error code
 */
 MODULE_API d_err_t docker_kill_container(docker_context* ctx,
 	char* id, char* signal);
 
 /**
-* Rename a container
+* @brief Rename a container
 *
-* \param ctx docker context
-* \param result pointer to docker_result
-* \param id container id
-* \param name new name for the container
-* \return error code
+* @param ctx docker context
+* @param id container id
+* @param name new name for the container
+* @return error code
 */
 MODULE_API d_err_t docker_rename_container(docker_context* ctx,
 	char* id, char* name);
 
 /**
-* Pause a container
+* @brief Pause a container
 *
-* \param ctx docker context
-* \param id container id
-* \return error code
+* @param ctx docker context
+* @param id container id
+* @return error code
 */
 MODULE_API d_err_t docker_pause_container(docker_context* ctx,
 	char* id);
 
 /**
-* Unpause a container
+* @brief Unpause a container
 *
-* \param ctx docker context
-* \param id container id
-* \return error code
+* @param ctx docker context
+* @param id container id
+* @return error code
 */
 MODULE_API d_err_t docker_unpause_container(docker_context* ctx, 
 	char* id);
 
 //TODO: implement wait status code in API.
 /**
-* Wait for a container
+* @brief Wait for a container
 *
-* \param ctx docker context
-* \param id container id
-* \param condition (optional - NULL for default "not-running") condition to wait for
-* \return error code
+* @param ctx docker context
+* @param id container id
+* @param condition (optional - NULL for default "not-running") condition to wait for
+* @return error code
 */
 MODULE_API d_err_t docker_wait_container(docker_context* ctx, 
 	char* id, char* condition);
 
 
 /**
-* Remove a container
+* @brief Remove a container
 *
-* \param ctx docker context
-* \param id container id
-* \param v remove volumes associated with the container
-* \param force if the container is running, kill it before removing it.
-* \param link remove specified link
-* \return error code
+* @param ctx docker context
+* @param id container id
+* @param v remove volumes associated with the container
+* @param force if the container is running, kill it before removing it.
+* @param link remove specified link
+* @return error code
 */
 MODULE_API d_err_t docker_remove_container(docker_context* ctx, 
 	char* id, int v, int force, int link);
 
 /**
-* Attach to a container
-*
-* \param ctx docker context
-* \param id container id
-* \return error code
-*/
+ * @brief Attach to a container
+ * 
+ * @param ctx docker context
+ * @param id container id
+ * @param detach_keys detach keys
+ * @param logs logs enabled
+ * @param stream stream enabled
+ * @param attach_stdin attach stdin flag
+ * @param attach_stdout attach stdout flag
+ * @param attach_stderr attach stderr flag
+ * @return d_err_t error code
+ */
 MODULE_API d_err_t docker_container_attach_default(docker_context* ctx,	char* id,
 	char* detach_keys, int logs, int stream, int attach_stdin, int attach_stdout, int attach_stderr);
 

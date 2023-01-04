@@ -44,10 +44,29 @@ extern "C" {
 #include <curl/curl.h>
 #include "docker_result.h"
 
+/**
+ * @brief Currently supported Docker API Version
+ */
 #define DOCKER_API_VERSION_1_39 "1.39"
+
+/**
+ * @brief Docker UNIX Socket URL
+ */
 #define DOCKER_DEFAULT_UNIX_SOCKET "/var/run/docker.sock"
+
+/**
+ * @brief Window NPIPE URL Prefix
+ */
 #define DOCKER_NPIPE_URL_PREFIX "npipe://"
+
+/**
+ * @brief Default Windows Docker NPIPE URL
+ */
 #define DOCKER_DEFAULT_WINDOWS_NAMED_PIPE "npipe:////./pipe/docker_engine"
+
+/**
+ * @brief Default Docker HTTP URL
+ */
 #define DOCKER_DEFAULT_LOCALHOST_URL "http://localhost:2375/"
 
 #if defined(_WIN32)
@@ -58,7 +77,14 @@ extern "C" {
 #define DOCKER_DEFAULT_SOCKET DOCKER_DEFAULT_UNIX_SOCKET
 #endif
 
+/**
+ * @brief JSON Content Type Header
+ */
 #define HEADER_JSON "Content-Type: application/json"
+
+/**
+ * @brief TAR Content Type Header
+ */
 #define HEADER_TAR "Content-Type: application/x-tar"
 
 /**
@@ -197,6 +223,9 @@ MODULE_API d_err_t free_docker_context(docker_context** ctx);
 
 // BEGIN: Docker API Calls HTTP Utils V2 
 
+/**
+ * @brief Status callback function type. This is used to get a status callback from docker calls.
+ */
 typedef void (status_callback)(char* msg, void* cbargs, void* client_cbargs);
 
 /**

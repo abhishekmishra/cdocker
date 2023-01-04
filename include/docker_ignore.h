@@ -21,6 +21,12 @@
  *
  */
 
+
+/**
+ * \file docker_ignore.h
+ * \brief Docker Ignore Fiel API
+ */
+
 #ifndef SRC_DOCKER_IGNORE_H_
 #define SRC_DOCKER_IGNORE_H_
 
@@ -31,9 +37,13 @@ extern "C" {
 #include "docker_util.h"
 #include <coll_arraylist.h>
 
+/** Docker ignore file is null error code*/
 #define DOCKER_IGNORE_NULL	501
+/** Docker ignore file is empty error code*/
 #define DOCKER_IGNORE_EMPTY	502
+/** Docker ignore list is null error code*/
 #define DOCKER_IGNORE_LIST_NULL 503
+/** Docker ignore allocation error code*/
 #define DOCKER_IGNORE_ALLOC_ERROR 504
 
 /**

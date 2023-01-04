@@ -9,11 +9,30 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: "true"
+
       - name: Create build/docs folder
         run: mkdir -p build/docs
         shell: bash
+
+      - name: Install Doxygen
+        run: sudo apt-get install doxygen graphviz -y
+        shell: bash
+
+      - name: Generate Doxygen Documentation
+        run: doxygen Doxyfile
+        shell: bash
         
-      - uses: DenverCoder1/doxygen-github-pages-action@v1.2.0
+      - name: Create .nojekyll (ensures pages with underscores work on gh pages)
+        run: touch ./build/docs/html/.nojekyll
+        shell: bash
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          folder: build/docs/html
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
+          folder: ./build/docs/html

@@ -24,7 +24,7 @@
 
 /**
  * \file docker_ignore.h
- * \brief Docker Ignore Fiel API
+ * \brief Docker Ignore File API
  */
 
 #ifndef SRC_DOCKER_IGNORE_H_

@@ -10,11 +10,13 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS 1)
 set( CLIBDOCKER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
 set( CLIBDOCKER_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} )
 
-# It's useful to setup the current version of our code in the build system
-# using a `semver` style
-set ( CLIBDOCKER_VERSION_MAJOR 1 )
-set ( CLIBDOCKER_VERSION_MINOR 0 )
-set ( CLIBDOCKER_VERSION_PATCH 0 )
+# version numbers in semver style
+# matching the release tag version
+set ( CLIBDOCKER_VERSION_MAJOR "0" )
+set ( CLIBDOCKER_VERSION_MINOR "1" )
+set ( CLIBDOCKER_VERSION_PATCH "0" )
+set ( CLIBDOCKER_VERSION_PRERELEASE "-alpha.0" )
+set ( CLIBDOCKER_VERSION_STR ${CLIBDOCKER_VERSION_MAJOR}.${CLIBDOCKER_VERSION_MINOR}.${CLIBDOCKER_VERSION_PATCH}${CLIBDOCKER_VERSION_PRERELEASE})
 
 # TODO: remove shared lib for lua when all builds move to shared lib builds
 # https://stackoverflow.com/a/47260387/9483968

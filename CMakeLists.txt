@@ -137,6 +137,12 @@ find_package(CURL CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
 target_link_libraries(${LUA_CLIBDOCKER} PUBLIC CURL::libcurl)
 
+# link to winsock on windows
+if(WIN32)
+  target_link_libraries(${PROJECT_NAME} PUBLIC wsock32 ws2_32)
+  target_link_libraries(${LUA_CLIBDOCKER} PUBLIC wsock32 ws2_32)
+endif()
+
 # To find and use libarchive, as the vcpkg build does not have cmake config
 # See https://github.com/microsoft/vcpkg/issues/8839#issuecomment-558066466
 # for additional lookup to ZLIB

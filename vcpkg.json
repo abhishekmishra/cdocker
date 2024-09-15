@@ -4,8 +4,9 @@
     "cmocka",
     "curl",
     "json-c",
+    "libarchive",
     "libxml2",
     "lz4",
-    "libarchive"
+    "lua"
   ]
 }

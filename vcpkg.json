@@ -1,0 +1,11 @@
+{
+  "dependencies": [
+    "bzip2",
+    "cmocka",
+    "curl",
+    "json-c",
+    "libxml2",
+    "lz4",
+    "libarchive"
+  ]
+}

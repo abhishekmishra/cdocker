@@ -83,3 +83,5 @@ _deps
 
 build
 out
+
+vcpkg_installed/
